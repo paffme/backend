@@ -3,15 +3,10 @@
 
 name: Node.js CI
 
-on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: push
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     strategy:
@@ -36,7 +31,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
-    - run: npm run build --if-present
     - run: npm test
       env:
         NODE_ENV: production
