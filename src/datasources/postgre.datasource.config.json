@@ -1,0 +1,10 @@
+{
+  "name": "Postgre",
+  "connector": "postgresql",
+  "url": "",
+  "host": "localhost",
+  "port": 5432,
+  "user": "paffme",
+  "password": "paffme",
+  "database": "paffme"
+}
