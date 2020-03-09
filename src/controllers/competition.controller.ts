@@ -22,7 +22,7 @@ import {CompetitionRepository} from '../repositories';
 export class CompetitionController {
   constructor(
     @repository(CompetitionRepository)
-    public competitionRepository : CompetitionRepository,
+    public competitionRepository: CompetitionRepository,
   ) {}
 
   @post('/competitions', {
@@ -120,7 +120,8 @@ export class CompetitionController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.filter(Competition, {exclude: 'where'}) filter?: FilterExcludingWhere<Competition>
+    @param.filter(Competition, {exclude: 'where'})
+    filter?: FilterExcludingWhere<Competition>,
   ): Promise<Competition> {
     return this.competitionRepository.findById(id, filter);
   }
