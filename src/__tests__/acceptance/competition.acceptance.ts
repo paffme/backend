@@ -20,6 +20,8 @@ describe('Product (acceptance)', function() {
   it('retrieves competitions', async () => {
     const competition = await givenCompetition();
     const response = await client.get('/competitions').expect(200);
-    expect(response.body.map((c: Competition) => c.id)).to.containEql(competition.id);
+    expect(response.body.map((c: Competition) => c.id)).to.containEql(
+      competition.id,
+    );
   });
 });
