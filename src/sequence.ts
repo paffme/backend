@@ -1,4 +1,4 @@
-import {Context, inject} from '@loopback/context';
+import {inject} from '@loopback/context';
 import {
   FindRoute,
   InvokeMethod,
