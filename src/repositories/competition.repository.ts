@@ -8,9 +8,7 @@ export class CompetitionRepository extends DefaultCrudRepository<
   typeof Competition.prototype.id,
   CompetitionRelations
 > {
-  constructor(
-    @inject('datasources.Postgre') dataSource: PostgreDataSource,
-  ) {
+  constructor(@inject('datasources.Postgre') dataSource: PostgreDataSource) {
     super(Competition, dataSource);
   }
 }
