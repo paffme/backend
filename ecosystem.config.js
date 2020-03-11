@@ -1,0 +1,18 @@
+module.exports = {
+  apps: [
+    {
+      name: 'paffme',
+      script: 'npm',
+      args: 'start',
+      env: {
+        NODE_ENV: 'development',
+      },
+      // eslint-disable-next-line @typescript-eslint/camelcase
+      env_production: {
+        PAFFME_HOST: '0.0.0.0',
+        PAFFME_PORT: '4000',
+        NODE_ENV: 'production',
+      },
+    },
+  ],
+};
