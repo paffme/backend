@@ -1,10 +1,14 @@
 import {PaffmeApplication} from './application';
-import {ApplicationConfig} from '@loopback/core';
-
 export {PaffmeApplication};
 
-export async function main(options: ApplicationConfig = {}) {
-  const app = new PaffmeApplication(options);
+export async function main() {
+  const app = new PaffmeApplication({
+    rest: {
+      host: process.env.PAFFME_HOST,
+      port: process.env.PAFFME_PORT,
+    },
+  });
+
   await app.boot();
   await app.start();
 
