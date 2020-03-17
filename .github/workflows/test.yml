@@ -22,11 +22,15 @@ jobs:
           POSTGRES_DB: paffme
         ports:
         - 5432:5432
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
-        with:
-          args: ---with-uuid=ossp
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
+    - name: Set-up PostgreSQL
+      run: docker exec -ti postgres sh -c "sudo su – postgres && psql -c 'CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";'"
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
