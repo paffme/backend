@@ -1,4 +1,9 @@
-import {DefaultCrudRepository, Getter, HasOneRepositoryFactory, repository} from '@loopback/repository';
+import {
+  DefaultCrudRepository,
+  Getter,
+  HasOneRepositoryFactory,
+  repository,
+} from '@loopback/repository';
 import {User, UserRelations} from '../models';
 import {PostgreDataSource} from '../datasources';
 import {inject} from '@loopback/core';
@@ -25,7 +30,7 @@ export class UserRepository extends DefaultCrudRepository<
     @repository.getter('UserCredentialsRepository')
     protected userCredentialsRepositoryGetter: Getter<
       UserCredentialsRepository
-      >,
+    >,
   ) {
     super(User, dataSource);
 
@@ -34,7 +39,10 @@ export class UserRepository extends DefaultCrudRepository<
       userCredentialsRepositoryGetter,
     );
 
-    this.registerInclusionResolver('userCredentials', this.userCredentials.inclusionResolver);
+    this.registerInclusionResolver(
+      'userCredentials',
+      this.userCredentials.inclusionResolver,
+    );
   }
 
   async findCredentials(

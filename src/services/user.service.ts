@@ -6,7 +6,7 @@ import {PasswordHasherBindings} from '../keys';
 import {PasswordHasher} from './bcrypt.service';
 import {HttpErrors} from '@loopback/rest/dist';
 import {Credentials, UserRepository} from '../repositories';
-import {UserProfile, securityId} from '@loopback/security'
+import {UserProfile, securityId} from '@loopback/security';
 
 export class CustomUserService implements UserService<User, Credentials> {
   constructor(
@@ -48,7 +48,7 @@ export class CustomUserService implements UserService<User, Credentials> {
     return {
       [securityId]: String(user.id),
       email: user.email,
-      name: userName
+      name: userName,
     };
   }
 }

@@ -39,6 +39,6 @@ export class JWTAuthenticationStrategy implements AuthenticationStrategy {
       );
     }
 
-    return  parts[1];
+    return parts[1];
   }
 }

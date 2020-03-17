@@ -1,10 +1,5 @@
-import {
-  BelongsToAccessor,
-  DefaultCrudRepository,
-  Getter,
-  repository,
-} from '@loopback/repository';
-import {User, UserCredentials, UserCredentialsRelations} from '../models';
+import {DefaultCrudRepository, Getter, repository} from '@loopback/repository';
+import {UserCredentials, UserCredentialsRelations} from '../models';
 import {inject} from '@loopback/core';
 import {PostgreDataSource} from '../datasources';
 import {UserRepository} from './user.repository';

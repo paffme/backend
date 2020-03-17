@@ -29,4 +29,5 @@ export class UserCredentials extends Entity {
 }
 
 export interface UserCredentialsRelations {}
-export type UserCredentialsWithRelations = UserCredentials & UserCredentialsRelations;
+export type UserCredentialsWithRelations = UserCredentials &
+  UserCredentialsRelations;

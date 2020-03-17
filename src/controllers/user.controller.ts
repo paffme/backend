@@ -49,7 +49,7 @@ export const CredentialsRequestBody = {
 export class UserController {
   constructor(
     @repository(UserRepository)
-    public userRepository : UserRepository,
+    public userRepository: UserRepository,
     @inject(TokenServiceBindings.TOKEN_SERVICE)
     public jwtService: TokenService,
     @inject(UserServiceBindings.USER_SERVICE)
@@ -110,7 +110,8 @@ export class UserController {
     },
   })
   async find(
-    @param.query.object('filter', getFilterSchemaFor(User)) filter?: Filter<User>,
+    @param.query.object('filter', getFilterSchemaFor(User))
+    filter?: Filter<User>,
   ): Promise<User[]> {
     return this.userRepository.find(filter);
   }
@@ -151,7 +152,8 @@ export class UserController {
   })
   async findById(
     @param.path.number('id') id: number,
-    @param.query.object('filter', getFilterSchemaFor(User)) filter?: Filter<User>
+    @param.query.object('filter', getFilterSchemaFor(User))
+    filter?: Filter<User>,
   ): Promise<User> {
     return this.userRepository.findById(id, filter);
   }

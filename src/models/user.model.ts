@@ -15,8 +15,8 @@ export class User extends Entity {
     type: 'string',
     required: true,
     index: {
-      unique: true
-    }
+      unique: true,
+    },
   })
   email: string;
 
