@@ -15,11 +15,11 @@ jobs:
 
     services:
       postgres:
-        image: postgres:12.2
+        image: bitnami/postgresql:12
         env:
-          POSTGRES_USER: paffme
-          POSTGRES_PASSWORD: paffme
-          POSTGRES_DB: paffme
+          POSTGRESQL_USERNAME: paffme
+          POSTGRESQL_PASSWORD: paffme
+          POSTGRESQL_DATABASE: paffme
         ports:
         - 5432:5432
         options: >-
@@ -29,8 +29,6 @@ jobs:
           --health-retries 5
 
     steps:
-    - name: Set-up PostgreSQL
-      run: docker exec -ti postgres sh -c "sudo su – postgres && psql -c 'CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";'"
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
