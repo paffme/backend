@@ -17,7 +17,7 @@ jobs:
       postgres:
         image: bitnami/postgresql:12
         env:
-          POSTGRESQL_POSTGRES_PASSWORD: paffme
+          POSTGRESQL_PASSWORD: paffme
           POSTGRESQL_DATABASE: paffme
         ports:
         - 5432:5432
