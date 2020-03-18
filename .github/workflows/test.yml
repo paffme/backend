@@ -1,6 +1,3 @@
-# This workflow will do a clean install of node dependencies, build the source code and run tests across different versions of node
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
-
 name: Node.js CI
 
 on: push
@@ -15,10 +12,11 @@ jobs:
 
     services:
       postgres:
-        image: bitnami/postgresql:12
+        image: postgres:12
         env:
-          POSTGRESQL_PASSWORD: paffme
-          POSTGRESQL_DATABASE: paffme
+          POSTGRES_USER: paffme
+          POSTGRES_PASSWORD: paffme
+          POSTGRES_DB: paffme
         ports:
         - 5432:5432
         options: >-
@@ -26,8 +24,11 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+          --name postgres
 
     steps:
+    - name: Enable uuid support in PostgreSQL
+      run: docker exec -ti postgres sh -c "sudo -u postgres psql -c \"CREATE EXTENSION IF NOT EXISTS 'uuid-ossp';\""
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
@@ -38,7 +39,7 @@ jobs:
     - run: npm run migrate
     - run: npm test
       env:
-        POSTGRESQL_USER: postgres
+        POSTGRESQL_USER: paffme
         POSTGRESQL_PASSWORD: paffme
         POSTGRESQL_DATABASE: paffme
         NODE_ENV: production
