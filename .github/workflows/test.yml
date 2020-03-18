@@ -24,11 +24,11 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-          --name postgres
+          --label postgres=postgres
 
     steps:
     - name: Enable uuid support in PostgreSQL
-      run: docker exec -ti postgres sh -c "sudo -u postgres psql -c \"CREATE EXTENSION IF NOT EXISTS 'uuid-ossp';\""
+      run: docker exec -ti $(docker ps -aqf "postgres=postgres") sh -c "sudo -u postgres psql -c \"CREATE EXTENSION IF NOT EXISTS 'uuid-ossp';\""
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
