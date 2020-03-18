@@ -38,7 +38,7 @@ jobs:
     - run: npm run migrate
     - run: npm test
       env:
-        POSTGRESQL_USER: postgre
+        POSTGRESQL_USER: postgres
         POSTGRESQL_PASSWORD: paffme
         POSTGRESQL_DATABASE: paffme
         NODE_ENV: production
