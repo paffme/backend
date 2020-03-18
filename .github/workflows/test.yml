@@ -17,8 +17,7 @@ jobs:
       postgres:
         image: bitnami/postgresql:12
         env:
-          POSTGRESQL_USERNAME: paffme
-          POSTGRESQL_PASSWORD: paffme
+          POSTGRESQL_POSTGRES_PASSWORD: paffme
           POSTGRESQL_DATABASE: paffme
         ports:
         - 5432:5432
@@ -39,5 +38,8 @@ jobs:
     - run: npm run migrate
     - run: npm test
       env:
+        POSTGRESQL_USER: postgre
+        POSTGRESQL_PASSWORD: paffme
+        POSTGRESQL_DATABASE: paffme
         NODE_ENV: production
         CI: true
