@@ -30,7 +30,7 @@ jobs:
     - name: Enable uuid support in PostgreSQL
       run: |
       docker ps
-      CONTAINER_ID=$(docker ps -aqf "label=postgres")
+      CONTAINER_ID=`docker ps -aqf "label=postgres"`
       echo $CONTAINER_ID
       docker exec -ti $CONTAINER_ID sh -c "sudo -u postgres psql -c \"CREATE EXTENSION IF NOT EXISTS 'uuid-ossp';\""
     - uses: actions/checkout@v2
