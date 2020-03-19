@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x]
+        node-version: [12.x]
 
     services:
       postgres:
@@ -27,8 +27,8 @@ jobs:
           --label postgres=postgres
 
     steps:
-    # - name: Enable uuid support in PostgreSQL
-    #  run: docker exec -i $(docker ps -aqf "label=postgres") sh -c "psql --username paffme --password paffme -c 'CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";'"
+    - name: Enable uuid support in PostgreSQL
+      run: docker exec -i $(docker ps -aqf "label=postgres") sh -c "psql --username paffme --password paffme -c 'CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";'"
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
@@ -37,6 +37,10 @@ jobs:
     - run: npm ci
     - run: npm run pretest
     - run: npm run migrate
+      env:
+        POSTGRESQL_USER: paffme
+        POSTGRESQL_PASSWORD: paffme
+        POSTGRESQL_DATABASE: paffme
     - run: npm test
       env:
         POSTGRESQL_USER: paffme
