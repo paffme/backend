@@ -15,7 +15,7 @@ import {PasswordHasher} from '../../services/bcrypt.service';
 import {validateCredentials} from '../../services/validators';
 import {setupApplication} from '../helpers/setup.helper';
 
-describe('authentication services', function() {
+describe('Authentication services', function() {
   // eslint-disable-next-line no-invalid-this
   this.timeout(5000);
   let app: PaffmeApplication;
@@ -24,7 +24,6 @@ describe('authentication services', function() {
     email: 'unittest@loopback.io',
     firstName: 'unit',
     lastName: 'test',
-    roles: ['customer'],
   };
 
   const userPassword = 'p4ssw0rd';
@@ -112,10 +111,10 @@ describe('authentication services', function() {
   it('user service convertToUserProfile() succeeds', () => {
     const expectedUserProfile = {
       [securityId]: newUser.id,
-      id: newUser.id,
+      email: newUser.email,
       name: `${newUser.firstName} ${newUser.lastName}`,
-      roles: ['customer'],
     };
+
     const userProfile = userService.convertToUserProfile(newUser);
     expect(expectedUserProfile).to.deepEqual(userProfile);
   });
@@ -128,7 +127,7 @@ describe('authentication services', function() {
     const userProfile = userService.convertToUserProfile(
       userWithoutFirstOrLastName,
     );
-    expect(userProfile[securityId]).to.equal(newUser.id);
+    expect(Number(userProfile[securityId])).to.equal(newUser.id);
     expect(userProfile.name).to.equal('');
   });
 
@@ -137,7 +136,7 @@ describe('authentication services', function() {
     delete userWithoutLastName.lastName;
 
     const userProfile = userService.convertToUserProfile(userWithoutLastName);
-    expect(userProfile[securityId]).to.equal(newUser.id);
+    expect(Number(userProfile[securityId])).to.equal(newUser.id);
     expect(userProfile.name).to.equal(newUser.firstName);
   });
 
@@ -146,7 +145,7 @@ describe('authentication services', function() {
     delete userWithoutFirstName.firstName;
 
     const userProfile = userService.convertToUserProfile(userWithoutFirstName);
-    expect(userProfile[securityId]).to.equal(newUser.id);
+    expect(Number(userProfile[securityId])).to.equal(newUser.id);
     expect(userProfile.name).to.equal(newUser.lastName);
   });
 
@@ -166,7 +165,7 @@ describe('authentication services', function() {
 
   it('token service verifyToken() fails', async () => {
     const expectedError = new HttpErrors.Unauthorized(
-      `Error verifying token : invalid token`,
+      `Error verifying token: invalid token`,
     );
     const invalidToken = 'aaa.bbb.ccc';
     await expect(jwtService.verifyToken(invalidToken)).to.be.rejectedWith(

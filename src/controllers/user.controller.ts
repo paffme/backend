@@ -37,6 +37,7 @@ import {PasswordHasher} from '../services/bcrypt.service';
 import {validateCredentials} from '../services/validators';
 import _ from 'lodash';
 import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
+import {HttpErrors} from '@loopback/rest/dist';
 
 const CredentialsSchema = {
   type: 'object',
@@ -65,7 +66,7 @@ export const UserProfileSchema = {
   type: 'object',
   required: ['id'],
   properties: {
-    id: {type: 'string'},
+    id: {type: 'number'},
     email: {type: 'string'},
     name: {type: 'string'},
   },
@@ -96,7 +97,13 @@ export class UserController {
     responses: {
       '200': {
         description: 'User model instance',
-        content: {'application/json': {schema: getModelSchemaRef(User)}},
+        content: {
+          'application/json': {
+            schema: {
+              'x-ts-type': User,
+            },
+          },
+        },
       },
     },
   })
@@ -118,13 +125,21 @@ export class UserController {
       newUserRequest.password,
     );
 
-    const savedUser = await this.userRepository.create(
-      _.omit(newUserRequest, 'password'),
-    );
+    try {
+      const savedUser = await this.userRepository.create(
+        _.omit(newUserRequest, 'password'),
+      );
 
-    await this.userRepository.userCredentials(savedUser.id).create({password});
+      await this.userRepository.userCredentials(savedUser.id).create({password});
 
-    return savedUser;
+      return savedUser;
+    } catch (err) {
+      if (err.code === '23505' && err.constraint === 'user_email_idx') {
+        throw new HttpErrors.Conflict('Email value is already taken');
+      }
+
+      throw err;
+    }
   }
 
   @get('/users/count', {
@@ -297,7 +312,7 @@ export class UserController {
     @inject(SecurityBindings.USER)
     currentUserProfile: UserProfile,
   ): Promise<UserProfile> {
-    currentUserProfile.id = currentUserProfile[securityId];
+    currentUserProfile.id = Number(currentUserProfile[securityId]);
     delete currentUserProfile[securityId];
     return currentUserProfile;
   }

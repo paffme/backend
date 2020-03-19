@@ -18,7 +18,6 @@ describe('UserController', () => {
     email: 'test@paffme.fr',
     firstName: 'Example',
     lastName: 'User',
-    roles: ['customer'],
   };
 
   const userPassword = 'p4ssw0rd';
@@ -50,6 +49,7 @@ describe('UserController', () => {
     expect(res.body.firstName).to.equal('Example');
     expect(res.body.lastName).to.equal('User');
     expect(res.body).to.have.property('id');
+    expect(res.body.id).to.be.type('number');
     expect(res.body).to.not.have.property('password');
   });
 
@@ -114,8 +114,8 @@ describe('UserController', () => {
   it('throws error for POST /users with an existing email', async () => {
     await client
       .post('/users')
-      .send({...userData, password: userPassword})
-      .expect(200);
+      .send({...userData, password: userPassword});
+
     const res = await client
       .post('/users')
       .send({...userData, password: userPassword})
@@ -176,9 +176,7 @@ describe('UserController', () => {
 
       const userProfile = res.body;
       expect(userProfile.id).to.equal(newUser.id);
-      expect(userProfile.firstName).to.equal(newUser.firstName);
-      expect(userProfile.lastName).to.equal(newUser.lastName);
-      expect(userProfile.roles).to.deepEqual(newUser.roles);
+      expect(userProfile.name).to.equal(newUser.firstName + ' ' + newUser.lastName);
     });
 
     it('users/me returns an error when a JWT token is not provided', async () => {
@@ -196,7 +194,7 @@ describe('UserController', () => {
         .expect(401);
 
       expect(res.body.error.message).to.equal(
-        'Error verifying token : invalid token',
+        'Error verifying token: invalid token',
       );
     });
 
@@ -218,7 +216,7 @@ describe('UserController', () => {
         .expect(401);
 
       expect(res.body.error.message).to.equal(
-        'Error verifying token : jwt expired',
+        'Error verifying token: jwt expired',
       );
     });
   });

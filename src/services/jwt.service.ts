@@ -40,12 +40,15 @@ export class JWTService implements TokenService {
       throw new HttpErrors.Unauthorized(
         'Error generating token: userProfile is null',
       );
-    }
+    }securityId
 
     let token: string;
 
     try {
-      token = jwt.sign(userProfile, this.jwtSecret, {
+      token = jwt.sign({
+        ...userProfile,
+        id: userProfile[securityId],
+      }, this.jwtSecret, {
         expiresIn: Number(this.jwtExpiresIn),
       });
     } catch (error) {

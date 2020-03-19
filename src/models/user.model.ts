@@ -36,8 +36,9 @@ export class User extends Entity {
   @property({
     type: 'array',
     itemType: 'string',
+    default: [],
   })
-  roles?: string[];
+  roles: string[];
 
   constructor(data?: Partial<User>) {
     super(data);

@@ -16,22 +16,31 @@ export class CustomUserService implements UserService<User, Credentials> {
   ) {}
 
   async verifyCredentials(credentials: Credentials): Promise<User> {
+    const errorMessage = 'Invalid email or password.';
+
     const foundUser = await this.userRepository.findOne({
       where: {email: credentials.email},
     });
 
     if (!foundUser) {
-      throw new HttpErrors.NotFound(
-        `User with email ${credentials.email} not found.`,
-      );
+      throw new HttpErrors.Unauthorized(errorMessage);
     }
+
+    const credentialsFound = await this.userRepository.findCredentials(
+      foundUser.id,
+    );
+
+    if (!credentialsFound) {
+      throw new HttpErrors.Unauthorized(errorMessage);
+    }
+
     const passwordMatched = await this.passwordHasher.comparePassword(
       credentials.password,
-      foundUser.userCredentials.password,
+      credentialsFound.password,
     );
 
     if (!passwordMatched) {
-      throw new HttpErrors.Unauthorized('The credentials are not correct.');
+      throw new HttpErrors.Unauthorized(errorMessage);
     }
 
     return foundUser;
