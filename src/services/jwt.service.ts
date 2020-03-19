@@ -40,21 +40,21 @@ export class JWTService implements TokenService {
       throw new HttpErrors.Unauthorized(
         'Error generating token: userProfile is null',
       );
-    }securityId
-
-    let token: string;
+    }
 
     try {
-      token = jwt.sign({
-        ...userProfile,
-        id: userProfile[securityId],
-      }, this.jwtSecret, {
-        expiresIn: Number(this.jwtExpiresIn),
-      });
+      return jwt.sign(
+        {
+          ...userProfile,
+          id: userProfile[securityId],
+        },
+        this.jwtSecret,
+        {
+          expiresIn: Number(this.jwtExpiresIn),
+        },
+      );
     } catch (error) {
       throw new HttpErrors.Unauthorized(`Error encoding token: ${error}`);
     }
-
-    return token;
   }
 }

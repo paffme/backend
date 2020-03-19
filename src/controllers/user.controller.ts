@@ -130,7 +130,9 @@ export class UserController {
         _.omit(newUserRequest, 'password'),
       );
 
-      await this.userRepository.userCredentials(savedUser.id).create({password});
+      await this.userRepository
+        .userCredentials(savedUser.id)
+        .create({password});
 
       return savedUser;
     } catch (err) {

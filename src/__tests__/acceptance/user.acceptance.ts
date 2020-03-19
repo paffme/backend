@@ -112,9 +112,7 @@ describe('UserController', () => {
   });
 
   it('throws error for POST /users with an existing email', async () => {
-    await client
-      .post('/users')
-      .send({...userData, password: userPassword});
+    await client.post('/users').send({...userData, password: userPassword});
 
     const res = await client
       .post('/users')
@@ -176,7 +174,9 @@ describe('UserController', () => {
 
       const userProfile = res.body;
       expect(userProfile.id).to.equal(newUser.id);
-      expect(userProfile.name).to.equal(newUser.firstName + ' ' + newUser.lastName);
+      expect(userProfile.name).to.equal(
+        newUser.firstName + ' ' + newUser.lastName,
+      );
     });
 
     it('users/me returns an error when a JWT token is not provided', async () => {
