@@ -27,8 +27,8 @@ jobs:
           --label postgres=postgres
 
     steps:
-    - name: Enable uuid support in PostgreSQL
-      run: docker exec -i $(docker ps -aqf "label=postgres") sh -c "psql --username paffme --password paffme -c 'CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";'"
+    # - name: Enable uuid support in PostgreSQL
+    #  run: docker exec -i $(docker ps -aqf "label=postgres") sh -c "psql --username paffme --password paffme -c 'CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";'"
     - uses: actions/checkout@v2
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
