@@ -1,6 +1,6 @@
 name: Node.js CI
 
-on: push
+on: ["push", "pull_request"]
 
 jobs:
   build:
@@ -48,3 +48,9 @@ jobs:
         POSTGRESQL_DATABASE: paffme
         NODE_ENV: production
         CI: true
+    - name: Coverage
+      run: npm run coverage:ci
+    - name: Upload to coveralls
+      uses: coverallsapp/github-action@master
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}

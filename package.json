@@ -23,7 +23,7 @@
     "eslint:fix": "npm run eslint -- --fix",
     "precoverage": "npm test",
     "coverage": "open coverage/index.html",
-    "coverage:ci": "lb-nyc report --reporter=text-lcov | coveralls",
+    "coverage:ci": "lb-nyc report --reporter=lcov",
     "test:ci": "lb-nyc npm run mocha --scripts-prepend-node-path",
     "pretest": "npm run clean && npm run build",
     "mocha": "lb-mocha \"dist/__tests__/**/*.js\"",
