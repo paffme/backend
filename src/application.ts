@@ -1,17 +1,38 @@
 import {BootMixin} from '@loopback/boot';
-import {ApplicationConfig} from '@loopback/core';
+import {ApplicationConfig, BindingKey} from '@loopback/core';
 import {
   RestExplorerBindings,
   RestExplorerComponent,
 } from '@loopback/rest-explorer';
-import {AuthenticationComponent} from '@loopback/authentication';
+import {
+  AuthenticationComponent,
+  registerAuthenticationStrategy,
+} from '@loopback/authentication';
 import {RepositoryMixin} from '@loopback/repository';
 import {RestApplication} from '@loopback/rest';
 import {ServiceMixin} from '@loopback/service-proxy';
 import path from 'path';
 import {MySequence} from './sequence';
 import {JWTService} from './services/jwt.service';
-import {TokenServiceBindings, TokenServiceConstants} from './keys';
+import {
+  PasswordHasherBindings,
+  TokenServiceBindings,
+  TokenServiceConstants,
+  UserServiceBindings,
+} from './keys';
+import {JWTAuthenticationStrategy} from './authentication/jwt.strategy';
+import {BcryptHasher} from './services/bcrypt.service';
+import {CustomUserService} from './services/user.service';
+import {SECURITY_SCHEME_SPEC} from './utils/security-spec';
+
+export interface PackageInfo {
+  name: string;
+  version: string;
+  description: string;
+}
+export const PackageKey = BindingKey.create<PackageInfo>('application.package');
+
+const pkg: PackageInfo = require('../package.json');
 
 export class PaffmeApplication extends BootMixin(
   ServiceMixin(RepositoryMixin(RestApplication)),
@@ -19,11 +40,6 @@ export class PaffmeApplication extends BootMixin(
   constructor(options: ApplicationConfig = {}) {
     super(options);
 
-    this.sequence(MySequence);
-    this.setUpBindings();
-    this.static('/', path.join(__dirname, '../public'));
-    this.component(RestExplorerComponent);
-    this.component(AuthenticationComponent);
     this.projectRoot = __dirname;
 
     this.bootOptions = {
@@ -33,6 +49,21 @@ export class PaffmeApplication extends BootMixin(
         nested: true,
       },
     };
+
+    this.api({
+      openapi: '3.0.0',
+      info: {title: pkg.name, version: pkg.version},
+      paths: {},
+      components: {securitySchemes: SECURITY_SCHEME_SPEC},
+      servers: [{url: '/'}],
+    });
+
+    this.setUpBindings();
+    this.component(RestExplorerComponent);
+    this.component(AuthenticationComponent);
+    registerAuthenticationStrategy(this, JWTAuthenticationStrategy);
+    this.sequence(MySequence);
+    this.static('/', path.join(__dirname, '../public'));
   }
 
   setUpBindings(): void {
@@ -49,5 +80,10 @@ export class PaffmeApplication extends BootMixin(
     );
 
     this.bind(TokenServiceBindings.TOKEN_SERVICE).toClass(JWTService);
+
+    this.bind(PasswordHasherBindings.ROUNDS).to(10);
+    this.bind(PasswordHasherBindings.PASSWORD_HASHER).toClass(BcryptHasher);
+
+    this.bind(UserServiceBindings.USER_SERVICE).toClass(CustomUserService);
   }
 }

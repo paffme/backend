@@ -2,6 +2,8 @@ import {
   Count,
   CountSchema,
   Filter,
+  model,
+  property,
   repository,
   Where,
 } from '@loopback/repository';
@@ -20,8 +22,21 @@ import {
 import {User} from '../models';
 import {Credentials, UserRepository} from '../repositories';
 import {inject} from '@loopback/context';
-import {TokenServiceBindings, UserServiceBindings} from '../keys';
-import {TokenService, UserService} from '@loopback/authentication';
+import {
+  PasswordHasherBindings,
+  TokenServiceBindings,
+  UserServiceBindings,
+} from '../keys';
+import {
+  authenticate,
+  TokenService,
+  UserService,
+} from '@loopback/authentication';
+import {securityId, UserProfile, SecurityBindings} from '@loopback/security';
+import {PasswordHasher} from '../services/bcrypt.service';
+import {validateCredentials} from '../services/validators';
+import _ from 'lodash';
+import {OPERATION_SECURITY_SPEC} from '../utils/security-spec';
 
 const CredentialsSchema = {
   type: 'object',
@@ -46,10 +61,31 @@ export const CredentialsRequestBody = {
   },
 };
 
+export const UserProfileSchema = {
+  type: 'object',
+  required: ['id'],
+  properties: {
+    id: {type: 'string'},
+    email: {type: 'string'},
+    name: {type: 'string'},
+  },
+};
+
+@model()
+export class NewUserRequest extends User {
+  @property({
+    type: 'string',
+    required: true,
+  })
+  password: string;
+}
+
 export class UserController {
   constructor(
     @repository(UserRepository)
     public userRepository: UserRepository,
+    @inject(PasswordHasherBindings.PASSWORD_HASHER)
+    public passwordHasher: PasswordHasher,
     @inject(TokenServiceBindings.TOKEN_SERVICE)
     public jwtService: TokenService,
     @inject(UserServiceBindings.USER_SERVICE)
@@ -68,16 +104,27 @@ export class UserController {
     @requestBody({
       content: {
         'application/json': {
-          schema: getModelSchemaRef(User, {
+          schema: getModelSchemaRef(NewUserRequest, {
             title: 'NewUser',
-            exclude: ['id'],
           }),
         },
       },
     })
-    user: Omit<User, 'id'>,
+    newUserRequest: NewUserRequest,
   ): Promise<User> {
-    return this.userRepository.create(user);
+    validateCredentials(newUserRequest);
+
+    const password = await this.passwordHasher.hashPassword(
+      newUserRequest.password,
+    );
+
+    const savedUser = await this.userRepository.create(
+      _.omit(newUserRequest, 'password'),
+    );
+
+    await this.userRepository.userCredentials(savedUser.id).create({password});
+
+    return savedUser;
   }
 
   @get('/users/count', {
@@ -230,5 +277,28 @@ export class UserController {
     const userProfile = this.userService.convertToUserProfile(user);
     const token = await this.jwtService.generateToken(userProfile);
     return {token};
+  }
+
+  @get('/users/me', {
+    security: OPERATION_SECURITY_SPEC,
+    responses: {
+      '200': {
+        description: 'The current user profile',
+        content: {
+          'application/json': {
+            schema: UserProfileSchema,
+          },
+        },
+      },
+    },
+  })
+  @authenticate('jwt')
+  async printCurrentUser(
+    @inject(SecurityBindings.USER)
+    currentUserProfile: UserProfile,
+  ): Promise<UserProfile> {
+    currentUserProfile.id = currentUserProfile[securityId];
+    delete currentUserProfile[securityId];
+    return currentUserProfile;
   }
 }
