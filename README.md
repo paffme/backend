@@ -1,3 +1,7 @@
 # paffme
 
-[![LoopBack](https://github.com/strongloop/loopback-next/raw/master/docs/site/imgs/branding/Powered-by-LoopBack-Badge-(blue)-@2x.png)](http://loopback.io/)
+PaFFME
+
+[![Coverage Status](https://coveralls.io/repos/github/paffme/backend/badge.svg?branch=auth)](https://coveralls.io/github/paffme/backend?branch=master)
+![CI](https://github.com/paffme/backend/workflows/Node.js%20CI/badge.svg)
+![CD](https://github.com/paffme/backend/workflows/Deploy/badge.svg)
