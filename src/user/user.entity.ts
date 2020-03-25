@@ -15,11 +15,9 @@ export class User extends BaseEntity<User> {
   @Property()
   lastName?: string;
 
-  @Property({
-    default: [],
-  })
-  roles: UserRole[];
+  @Property()
+  roles: UserRole[] = [];
 
-  @Property({ hidden: true })
+  @Property({ hidden: true, length: 512 })
   password: string;
 }

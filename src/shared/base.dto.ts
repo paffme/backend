@@ -7,5 +7,5 @@ export class BaseDto {
   @ApiModelProperty({ type: String, format: 'date-time' })
   updatedAt: Date;
 
-  @ApiModelProperty() id?: number;
+  @ApiModelProperty() id: number;
 }

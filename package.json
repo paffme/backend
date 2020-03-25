@@ -15,10 +15,12 @@
     "prettier:fix": "npm run prettier:cli -- --write",
     "eslint": "eslint --report-unused-disable-directives .",
     "eslint:fix": "npm run eslint -- --fix",
-    "test": "jest --config=jest.json",
-    "test:watch": "jest --watch --config=jest.json",
-    "test:coverage": "jest --config=jest.json --coverage --coverageDirectory=coverage",
-    "test:e2e": "APIURL=http://localhost:3000/api ./e2e/run-api-tests.sh"
+    "test": "jest --detectOpenHandles --forceExit",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test:e2e": "jest --detectOpenHandles --forceExit --config ./test/jest-e2e.json",
+    "migrate": "ts-node src/migrate.ts"
   },
   "repository": {
     "type": "git"
@@ -49,6 +51,7 @@
     "@types/jest": "^24.0.23",
     "@types/jsonwebtoken": "^8.3.8",
     "@types/node": "^12.12.7",
+    "@types/uuid": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^2.24.0",
     "@typescript-eslint/parser": "^2.24.0",
     "eslint": "^6.8.0",
@@ -60,7 +63,7 @@
     "nodemon": "^1.19.4",
     "prettier": "^2.0.1",
     "supertest": "^3.0.0",
-    "ts-jest": "^24.1.0",
+    "ts-jest": "^24.3.0",
     "ts-node": "^8.5.0",
     "typescript": "^3.8.3"
   },
@@ -70,5 +73,19 @@
       "./src/mikro-orm.config.ts",
       "./dist/mikro-orm.config.js"
     ]
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": "test",
+    "testRegex": "spec.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
   }
 }

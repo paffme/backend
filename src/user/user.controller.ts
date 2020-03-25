@@ -47,16 +47,6 @@ import { User as GetUser } from '../shared/decorators/user.decorator';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get()
-  @Roles(UserRole.Admin)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @ApiOkResponse({ type: UserDto, isArray: true })
-  @ApiOperation(GetOperationId(User.constructor.name, 'GetUsers'))
-  async getUsers(@Res() res): Promise<void> {
-    const users = await this.userService.getUsers();
-    res.json(this.userService.mapper.mapArray(users));
-  }
-
   @Post()
   @ApiCreatedResponse({ type: UserDto })
   @ApiConflictResponse({ type: ApiException })

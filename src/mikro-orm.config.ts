@@ -1,17 +1,18 @@
 import { Options } from 'mikro-orm';
 import { User } from './user/user.entity';
 import { BaseEntity } from './shared/base.entity';
-const env = process.env;
+import { ConfigurationService } from './shared/configuration/configuration.service';
+const configService = new ConfigurationService();
 
-const config = {
+const config: Options = {
   type: 'postgresql',
   host: 'localhost',
   port: 5432,
-  username: env.POSTGRESQL_USER,
-  password: env.POSTGRESQL_PASSWORD,
-  dbName: env.POSTGRESQL_DATABASE,
+  user: configService.get('POSTGRESQL_USER'),
+  password: configService.get('POSTGRESQL_PASSWORD'),
+  dbName: configService.get('POSTGRESQL_DATABASE'),
   entities: [BaseEntity, User],
   entitiesDirsTs: ['src'],
-} as Options;
+};
 
 export default config;

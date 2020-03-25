@@ -4,7 +4,7 @@ import { ApiModelProperty } from '@nestjs/swagger/dist/decorators/api-model-prop
 export class BaseEntity<T> implements IdEntity<BaseEntity<T>> {
   @PrimaryKey()
   @ApiModelProperty()
-  id: number;
+  id!: number;
 
   @Property()
   @ApiModelProperty({ type: String, format: 'date-time' })

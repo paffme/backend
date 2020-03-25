@@ -111,10 +111,10 @@ export class UserService extends BaseService<User, UserDto> {
         },
         HttpStatus.BAD_REQUEST,
       );
-    } else {
-      await this.userRepository.persistAndFlush(newUser);
-      return newUser;
     }
+
+    await this.userRepository.persistAndFlush(newUser);
+    return newUser;
   }
 
   async login(dto: CredentialsDto): Promise<TokenResponseDto> {
@@ -170,10 +170,6 @@ export class UserService extends BaseService<User, UserDto> {
     wrap(user).assign(dto);
     await this.userRepository.flush();
     return user;
-  }
-
-  async getUsers(): Promise<User[]> {
-    return this.userRepository.findAll();
   }
 
   async findUserById(userId: typeof User.prototype.id): Promise<User> {
