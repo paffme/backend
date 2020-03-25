@@ -40,7 +40,6 @@ describe('UserController (e2e)', () => {
 
   function checkUser(expectedUser, user: UserDto): void {
     expect(user.email).toEqual(expectedUser.email);
-    expect(user.roles).toEqual([]);
     expect((user as any).password).toBeUndefined();
     expect(user).toHaveProperty('id');
     expect(user).toHaveProperty('createdAt');
@@ -112,7 +111,7 @@ describe('UserController (e2e)', () => {
     const auth = await utils.login(user);
 
     await api
-      .get('/api/users/blabla')
+      .get('/api/users/999999999')
       .set('Authorization', 'Bearer ' + auth.token)
       .expect(404);
   });
@@ -126,7 +125,6 @@ describe('UserController (e2e)', () => {
       .set('Authorization', 'Bearer ' + auth.token)
       .send({
         email: 'new@email.fr',
-        locale: 'de',
       })
       .expect(200)
       .then((res) => {
@@ -134,7 +132,6 @@ describe('UserController (e2e)', () => {
           {
             ...user,
             email: 'new@email.fr',
-            locale: 'de',
           },
           res.body,
         );

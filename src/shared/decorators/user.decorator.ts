@@ -3,6 +3,6 @@ import { User as UserEntity } from '../../user/user.entity';
 
 export const User = createParamDecorator(
   (data, req): UserEntity => {
-    return req.user;
+    return req.switchToHttp().getRequest().user;
   },
 );

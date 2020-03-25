@@ -136,7 +136,7 @@ export class UserService extends BaseService<User, UserDto> {
 
     const payload: JwtPayload = {
       email: user.email,
-      roles: user.roles,
+      systemRole: user.systemRole,
       id: user.id,
     };
 

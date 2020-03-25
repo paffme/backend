@@ -1,5 +1,4 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserRole } from '../user-role.enum';
 import { BaseDto } from '../../shared/base.dto';
 
 export class UserDto extends BaseDto {
@@ -11,10 +10,4 @@ export class UserDto extends BaseDto {
 
   @ApiPropertyOptional()
   readonly lastName?: string;
-
-  @ApiProperty({
-    enum: UserRole,
-    isArray: true,
-  })
-  readonly roles: UserRole[];
 }

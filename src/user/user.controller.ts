@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Res,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -34,10 +33,10 @@ import { UserDto } from './dto/user.dto';
 import { UserService } from './user.service';
 import { UpdateParamsDto } from './dto/update-params.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Roles } from '../shared/decorators/roles.decorator';
-import { UserRole } from './user-role.enum';
+import { AllowedSystemRoles } from '../shared/decorators/roles.decorator';
+import { SystemRole } from './user-role.enum';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../shared/guards/roles.guard';
+import { SystemRoleGuard } from '../shared/guards/system-role.guard';
 import { FindByIdParamsDto } from './dto/find-by-id-params.dto';
 import { User as GetUser } from '../shared/decorators/user.decorator';
 
@@ -67,8 +66,8 @@ export class UserController {
   }
 
   @Get(':userId')
-  @Roles(UserRole.Admin, UserRole.User)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
   @ApiOkResponse({ type: UserDto })
   @ApiUnprocessableEntityResponse({ type: ApiException })
   @ApiNotFoundResponse({ type: ApiException })
@@ -81,17 +80,17 @@ export class UserController {
 
   @Delete(':userId')
   @HttpCode(204)
-  @Roles(UserRole.Admin, UserRole.User)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
   @ApiNoContentResponse({})
   @ApiNotFoundResponse({ type: ApiException })
   @ApiOperation(GetOperationId(User.constructor.name, 'DeleteById'))
   @ApiParam({ name: 'userId', required: true })
   async deleteById(
     @Param() params: FindByIdParamsDto,
-    @GetUser() user,
+    @GetUser() user: User,
   ): Promise<void> {
-    if (user.role === UserRole.User && user._id.toString() !== params.userId) {
+    if (user.systemRole === SystemRole.User && user.id !== params.userId) {
       throw new ForbiddenException('Not you');
     }
 
@@ -99,8 +98,8 @@ export class UserController {
   }
 
   @Patch(':userId')
-  @Roles(UserRole.Admin, UserRole.User)
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
   @ApiOkResponse({ type: UserDto })
   @ApiUnprocessableEntityResponse({ type: ApiException })
   @ApiNotFoundResponse({ type: ApiException })
@@ -109,7 +108,7 @@ export class UserController {
   async update(
     @Param() params: UpdateParamsDto,
     @Body() dto: UpdateUserDto,
-    @GetUser() user,
+    @GetUser() user: User,
   ): Promise<UserDto> {
     const updatedUser = await this.userService.updateUser(
       params.userId,

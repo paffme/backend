@@ -6,15 +6,18 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from '../../user/user-role.enum';
+import { SystemRole } from '../../user/user-role.enum';
 import { User } from '../../user/user.entity';
 
 @Injectable()
-export class RolesGuard implements CanActivate {
+export class SystemRoleGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext): boolean {
-    const roles = this.reflector.get<UserRole[]>('roles', context.getHandler());
+  canActivate(context: ExecutionContext) {
+    const roles = this.reflector.get<SystemRole[]>(
+      'systemRoles',
+      context.getHandler(),
+    );
 
     if (!roles || roles.length === 0) {
       return true;
@@ -23,14 +26,12 @@ export class RolesGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user: User = request.user;
 
-    const hasRoles = (): boolean => roles.every((r) => user.roles.includes(r));
-
-    if (user && user.roles && hasRoles()) {
+    if (user && roles.includes(user.systemRole)) {
       return true;
     }
 
     throw new HttpException(
-      'You do not have permission (Roles)',
+      'You do not have permission (AllowedSystemRoles)',
       HttpStatus.UNAUTHORIZED,
     );
   }

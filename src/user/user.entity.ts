@@ -1,6 +1,6 @@
 import { IsEmail } from 'class-validator';
 import { Entity, Property } from 'mikro-orm';
-import { UserRole } from './user-role.enum';
+import { SystemRole } from './user-role.enum';
 import { BaseEntity } from '../shared/base.entity';
 
 @Entity()
@@ -15,8 +15,11 @@ export class User extends BaseEntity<User> {
   @Property()
   lastName?: string;
 
-  @Property()
-  roles: UserRole[] = [];
+  @Property({
+    type: String,
+    hidden: true,
+  })
+  systemRole: SystemRole = SystemRole.User;
 
   @Property({ hidden: true, length: 512 })
   password: string;
