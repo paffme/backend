@@ -7,10 +7,16 @@ import { UserModule } from './user/user.module';
 import { ConfigurationService } from './shared/configuration/configuration.service';
 import { SharedModule } from './shared/shared.module';
 import { AppService } from './app.service';
+import { CompetitionModule } from './competition/competition.module';
 
 @Module({
   controllers: [AppController],
-  imports: [MikroOrmModule.forRoot(config), SharedModule, UserModule],
+  imports: [
+    MikroOrmModule.forRoot(config),
+    SharedModule,
+    UserModule,
+    CompetitionModule,
+  ],
   providers: [AppService],
 })
 export class AppModule {
