@@ -107,7 +107,7 @@ export class UserService extends BaseService<User, UserDto> {
       throw new HttpException(
         {
           message: 'Input data validation failed',
-          errors: { username: 'User input is not valid.' },
+          errors,
         },
         HttpStatus.BAD_REQUEST,
       );
