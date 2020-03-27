@@ -15,7 +15,7 @@
     "prettier:fix": "npm run prettier:cli -- --write",
     "eslint": "eslint --report-unused-disable-directives .",
     "eslint:fix": "npm run eslint -- --fix",
-    "test": "jest --coverage",
+    "test": "jest --forceExit --coverage",
     "migrate": "ts-node src/migrate.ts"
   },
   "repository": {
