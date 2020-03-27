@@ -1,4 +1,4 @@
-import * as supertest from 'supertest';
+import supertest from 'supertest';
 import * as uuid from 'uuid';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';

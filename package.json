@@ -50,6 +50,7 @@
     "@types/ms": "^0.7.31",
     "@types/node": "^12.12.7",
     "@types/passport-jwt": "^3.0.3",
+    "@types/supertest": "^2.0.8",
     "@types/uuid": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^2.24.0",
     "@typescript-eslint/parser": "^2.24.0",
