@@ -64,3 +64,6 @@ typings/
 *.tsbuildinfo
 
 .idea
+
+migrations
+temp

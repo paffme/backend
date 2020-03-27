@@ -1,3 +1,5 @@
 dist
 *.json
 coverage
+migrations
+temp

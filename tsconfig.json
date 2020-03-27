@@ -1,11 +1,15 @@
 {
-  "$schema": "http://json.schemastore.org/tsconfig",
-  "extends": "@loopback/build/config/tsconfig.common.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "esnext",
     "sourceMap": true,
-    "strict": true
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "resolveJsonModule": true
   },
-  "include": ["src"]
+  "exclude": ["node_modules"]
 }

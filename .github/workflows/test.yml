@@ -35,7 +35,7 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
-    - run: npm run pretest
+    - run: npm run lint
     - run: npm run migrate
       env:
         POSTGRESQL_USER: paffme
@@ -48,8 +48,6 @@ jobs:
         POSTGRESQL_DATABASE: paffme
         NODE_ENV: production
         CI: true
-    - name: Coverage
-      run: npm run coverage:ci
     - name: Upload to coveralls
       uses: coverallsapp/github-action@master
       with:

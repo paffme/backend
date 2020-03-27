@@ -1,20 +1,22 @@
-import {PaffmeApplication} from './application';
+import { MikroORM } from 'mikro-orm';
+import config from './mikro-orm.config';
 
-export async function migrate(args: string[]) {
-  const existingSchema = args.includes('--rebuild') ? 'drop' : 'alter';
-  console.log('Migrating schemas (%s existing schema)', existingSchema);
+(async (): Promise<void> => {
+  const orm = await MikroORM.init({
+    ...config,
+    migrations: {
+      path: 'migrations',
+      transactional: true,
+      allOrNothing: true,
+      emit: 'ts',
+    },
+  });
 
-  const app = new PaffmeApplication();
-  await app.boot();
-  await app.migrateSchema({existingSchema});
+  const generator = await orm.getSchemaGenerator();
+  await generator.updateSchema();
 
-  // Connectors usually keep a pool of opened connections,
-  // this keeps the process running even after all work is done.
-  // We need to exit explicitly.
-  process.exit(0);
-}
-
-migrate(process.argv).catch(err => {
-  console.error('Cannot migrate database schema', err);
+  await orm.close(true);
+})().catch((err) => {
+  console.error(err);
   process.exit(1);
 });

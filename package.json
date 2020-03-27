@@ -2,80 +2,52 @@
   "name": "paffme",
   "version": "1.0.0",
   "description": "paffme",
-  "keywords": [
-    "loopback-application",
-    "loopback"
-  ],
-  "main": "index.js",
-  "engines": {
-    "node": ">=8.9"
-  },
+  "main": "dist/main.js",
   "scripts": {
-    "build": "lb-tsc",
-    "build:watch": "lb-tsc --watch",
-    "clean": "lb-clean dist *.tsbuildinfo",
+    "start:dev": "ts-node src/main.ts",
+    "start:watch": "nodemon",
+    "prestart:prod": "tsc",
+    "start:prod": "node dist/main.js",
     "lint": "npm run prettier:check && npm run eslint",
     "lint:fix": "npm run eslint:fix && npm run prettier:fix",
-    "prettier:cli": "lb-prettier \"**/*.ts\" \"**/*.js\"",
+    "prettier:cli": "prettier \"**/*.ts\" \"**/*.js\"",
     "prettier:check": "npm run prettier:cli -- -l",
     "prettier:fix": "npm run prettier:cli -- --write",
-    "eslint": "lb-eslint --report-unused-disable-directives .",
+    "eslint": "eslint --report-unused-disable-directives .",
     "eslint:fix": "npm run eslint -- --fix",
-    "precoverage": "npm test",
-    "coverage": "open coverage/index.html",
-    "coverage:ci": "lb-nyc report --reporter=lcov",
-    "test:ci": "lb-nyc npm run mocha --scripts-prepend-node-path",
-    "pretest": "npm run clean && npm run build",
-    "mocha": "lb-mocha \"dist/__tests__/**/*.js\"",
-    "acceptance": "npm run pretest && lb-mocha \"dist/__tests__/acceptance/**/*.js\"",
-    "test": "lb-nyc npm run mocha --scripts-prepend-node-path",
-    "posttest": "npm run lint",
-    "test:dev": "lb-mocha --allow-console-logs dist/__tests__/**/*.js && npm run posttest",
-    "docker:build": "docker build -t paffme .",
-    "docker:run": "docker run -p 3000:3000 -d paffme",
-    "migrate": "node ./dist/migrate",
-    "prestart": "npm run build",
-    "start": "node -r source-map-support/register .",
-    "prepublishOnly": "npm run test"
+    "test": "jest --forceExit --coverage",
+    "migrate": "ts-node src/migrate.ts"
   },
   "repository": {
     "type": "git"
   },
-  "author": "",
-  "license": "",
-  "files": [
-    "README.md",
-    "index.js",
-    "index.d.ts",
-    "dist",
-    "src",
-    "!*/__tests__"
-  ],
   "dependencies": {
-    "@loopback/authentication": "^4.1.0",
-    "@loopback/boot": "^2.0.1",
-    "@loopback/context": "^3.1.0",
-    "@loopback/core": "^2.1.0",
-    "@loopback/openapi-v3": "^3.1.0",
-    "@loopback/repository": "^2.0.1",
-    "@loopback/rest": "^3.0.1",
-    "@loopback/rest-explorer": "^2.0.1",
-    "@loopback/service-proxy": "^2.0.1",
-    "bcrypt": "^4.0.1",
-    "isemail": "^3.2.0",
-    "jsonwebtoken": "^8.5.1",
-    "lodash": "^4.17.15",
-    "loopback-connector-postgresql": "^3.9.0",
-    "openapi-to-graphql-cli": "^2.0.0"
+    "@nestjs/common": "^7.0.5",
+    "@nestjs/core": "^7.0.5",
+    "@nestjs/jwt": "^7.0.0",
+    "@nestjs/microservices": "^7.0.5",
+    "@nestjs/passport": "^7.0.0",
+    "@nestjs/platform-express": "^7.0.5",
+    "@nestjs/swagger": "^4.4.0",
+    "@nestjs/testing": "^7.0.5",
+    "class-transformer": "^0.2.3",
+    "class-validator": "^0.11.1",
+    "config": "^3.3.0",
+    "mikro-orm": "^3.5.0",
+    "morphism": "^1.12.3",
+    "nestjs-mikro-orm": "^1.0.3",
+    "passport": "^0.4.1",
+    "passport-jwt": "^4.0.0",
+    "pg": "^7.18.2",
+    "reflect-metadata": "^0.1.13",
+    "swagger-ui-express": "^4.1.4"
   },
   "devDependencies": {
-    "@loopback/build": "^4.0.1",
-    "@loopback/eslint-config": "^6.0.1",
-    "@loopback/testlab": "^2.0.1",
-    "@types/bcrypt": "^3.0.0",
+    "@types/express": "^4.17.3",
+    "@types/jest": "^24.0.23",
     "@types/jsonwebtoken": "^8.3.8",
-    "@types/lodash": "^4.14.149",
-    "@types/node": "^12.12.30",
+    "@types/node": "^12.12.7",
+    "@types/passport-jwt": "^3.0.3",
     "@types/uuid": "^7.0.2",
     "@typescript-eslint/eslint-plugin": "^2.24.0",
     "@typescript-eslint/parser": "^2.24.0",
@@ -83,8 +55,33 @@
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-eslint-plugin": "^2.2.1",
     "eslint-plugin-mocha": "^6.3.0",
-    "source-map-support": "^0.5.16",
-    "typescript": "^3.8.3",
-    "uuid": "^7.0.2"
+    "eslint-plugin-prettier": "^3.1.2",
+    "jest": "^24.9.0",
+    "nodemon": "^1.19.4",
+    "prettier": "^2.0.1",
+    "supertest": "^3.0.0",
+    "ts-jest": "^24.3.0",
+    "ts-node": "^8.5.0",
+    "typescript": "^3.8.3"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": ".",
+    "testRegex": "spec.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "testEnvironment": "node"
   }
 }
