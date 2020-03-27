@@ -6,7 +6,7 @@
   "scripts": {
     "start:dev": "ts-node src/main.ts",
     "start:watch": "nodemon",
-    "prestart:prod": "tsc",
+    "prestart:prod": "rimraf dist && tsc",
     "start:prod": "node dist/main.js",
     "lint": "npm run prettier:check && npm run eslint",
     "lint:fix": "npm run eslint:fix && npm run prettier:fix",
@@ -59,6 +59,7 @@
     "jest": "^24.9.0",
     "nodemon": "^1.19.4",
     "prettier": "^2.0.1",
+    "rimraf": "^3.0.2",
     "supertest": "^3.0.0",
     "ts-jest": "^24.3.0",
     "ts-node": "^8.5.0",
