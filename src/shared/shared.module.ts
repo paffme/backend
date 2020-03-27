@@ -6,11 +6,18 @@ import { ConfigurationService } from './configuration/configuration.service';
 import { UserMapper } from './mappers/user.mapper';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
+import { CompetitionMapper } from './mappers/competition.mapper';
 
 @Global()
 @Module({
-  providers: [ConfigurationService, AuthService, JwtStrategy, UserMapper],
-  exports: [ConfigurationService, AuthService, UserMapper],
+  providers: [
+    ConfigurationService,
+    AuthService,
+    JwtStrategy,
+    UserMapper,
+    CompetitionMapper,
+  ],
+  exports: [ConfigurationService, AuthService, UserMapper, CompetitionMapper],
   imports: [
     UserModule,
     PassportModule,

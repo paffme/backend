@@ -29,7 +29,7 @@ export class CompetitionService extends BaseService<
 
   async createCompetition(dto: CreateCompetitionDTO): Promise<Competition> {
     const newCompetition = new Competition();
-    Object.apply(newCompetition, dto);
+    Object.assign(newCompetition, dto);
 
     const errors = await validate(newCompetition);
 

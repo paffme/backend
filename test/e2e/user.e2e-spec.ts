@@ -10,7 +10,7 @@ import TestUtils from './utils';
 import { UserService } from '../../src/user/user.service';
 import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
 
-describe('UserController (e2e)', () => {
+describe('User (e2e)', () => {
   let app: INestApplication;
   let userService: UserService;
   let configService: ConfigurationService;
@@ -84,7 +84,7 @@ describe('UserController (e2e)', () => {
   });
 
   it('/users/{userId} (DELETE)', async () => {
-    const user = await utils.createUser();
+    const user = await utils.givenUser();
     const auth = await utils.login(user);
 
     await api
@@ -94,7 +94,7 @@ describe('UserController (e2e)', () => {
   });
 
   it('/users/{userId} (GET)', async () => {
-    const user = await utils.createUser();
+    const user = await utils.givenUser();
     const auth = await utils.login(user);
 
     await api
@@ -107,7 +107,7 @@ describe('UserController (e2e)', () => {
   });
 
   it('/users/{userId} (GET) returns 404 when not found', async () => {
-    const user = await utils.createUser();
+    const user = await utils.givenUser();
     const auth = await utils.login(user);
 
     await api
@@ -117,7 +117,7 @@ describe('UserController (e2e)', () => {
   });
 
   it('/users/{userId} (PATCH)', async () => {
-    const user = await utils.createUser();
+    const user = await utils.givenUser();
     const auth = await utils.login(user);
 
     await api
@@ -139,7 +139,7 @@ describe('UserController (e2e)', () => {
   });
 
   it('/users/token (POST)', async () => {
-    const user = await utils.createUser();
+    const user = await utils.givenUser();
 
     await api
       .post('/api/users/token')
