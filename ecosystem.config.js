@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'paffme',
       script: 'npm',
-      args: 'start',
+      args: 'start:prod',
       env: {
         NODE_ENV: 'development',
       },
