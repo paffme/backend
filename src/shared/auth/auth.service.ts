@@ -1,6 +1,6 @@
 import * as uuid from 'uuid';
 import { Algorithm, SignOptions } from 'jsonwebtoken';
-import * as ms from 'ms';
+import ms from 'ms';
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { UserService } from '../../user/user.service';
 import { JwtPayload } from './jwt-payload.interface';
