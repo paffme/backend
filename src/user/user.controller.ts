@@ -80,7 +80,7 @@ export class UserController {
   @ApiOperation(GetOperationId(User.constructor.name, 'FindById'))
   @ApiParam({ name: 'userId', required: true })
   async findById(@Param() params: FindByIdParamsDto): Promise<UserDto> {
-    const user = await this.userService.getUserOrFail(params.userId);
+    const user = await this.userService.getOrFail(params.userId);
     return this.userService.mapper.map(user);
   }
 

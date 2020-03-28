@@ -1,8 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { BaseDtoWithID } from '../../shared/base.dto';
-import { Category, CompetitionType } from '../competition.entity';
+import { Category, CompetitionType } from '../../../competition.entity';
 
-export class CompetitionDto extends BaseDtoWithID {
+export class CreateCompetitionDTO {
   @ApiProperty()
   name: string;
 

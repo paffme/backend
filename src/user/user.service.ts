@@ -158,7 +158,7 @@ export class UserService extends BaseService<User, UserDto> {
     dto: UpdateUserDto,
     authenticatedUser: User,
   ): Promise<User> {
-    const user = await this.getUserOrFail(userId);
+    const user = await this.getOrFail(userId);
 
     if (user.id !== authenticatedUser.id) {
       throw new ForbiddenException('You do not own this user');
@@ -173,7 +173,7 @@ export class UserService extends BaseService<User, UserDto> {
     return user;
   }
 
-  async getUserOrFail(
+  async getOrFail(
     userId: typeof User.prototype.id,
     populate?: string[],
   ): Promise<User> {
@@ -187,14 +187,14 @@ export class UserService extends BaseService<User, UserDto> {
   }
 
   async deleteById(userId: typeof User.prototype.id): Promise<void> {
-    const entity = await this.getUserOrFail(userId);
+    const entity = await this.getOrFail(userId);
     await this.userRepository.removeAndFlush(entity);
   }
 
   async getUserRegistrations(
     userId: typeof User.prototype.id,
   ): Promise<CompetitionRegistration[]> {
-    const user = await this.getUserOrFail(userId, ['registrations']);
+    const user = await this.getOrFail(userId, ['registrations']);
     return user.registrations.getItems();
   }
 }

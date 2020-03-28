@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';
 import { Competition } from '../../competition/competition.entity';
-import { CompetitionDto } from '../../competition/dto/competition.dto';
+import { CompetitionDto } from '../../competition/dto/out/competition.dto';
 
 @Injectable()
 export class CompetitionMapper extends BaseMapper<CompetitionDto, Competition> {
