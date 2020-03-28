@@ -21,6 +21,7 @@ import { validate } from 'class-validator';
 import { UserMapper } from '../shared/mappers/user.mapper';
 import { BaseService } from '../shared/base.service';
 import { UserDto } from './dto/user.dto';
+import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 
 @Injectable()
 export class UserService extends BaseService<User, UserDto> {
@@ -157,7 +158,7 @@ export class UserService extends BaseService<User, UserDto> {
     dto: UpdateUserDto,
     authenticatedUser: User,
   ): Promise<User> {
-    const user = await this.findUserById(userId);
+    const user = await this.getUserOrFail(userId);
 
     if (user.id !== authenticatedUser.id) {
       throw new ForbiddenException('You do not own this user');
@@ -172,18 +173,28 @@ export class UserService extends BaseService<User, UserDto> {
     return user;
   }
 
-  async findUserById(userId: typeof User.prototype.id): Promise<User> {
-    const user = await this.userRepository.findOne(userId);
+  async getUserOrFail(
+    userId: typeof User.prototype.id,
+    populate?: string[],
+  ): Promise<User> {
+    const user = await this.userRepository.findOne(userId, populate);
 
     if (!user) {
-      throw new NotFoundException();
+      throw new NotFoundException('User not found');
     }
 
     return user;
   }
 
   async deleteById(userId: typeof User.prototype.id): Promise<void> {
-    const entity = await this.findUserById(userId);
+    const entity = await this.getUserOrFail(userId);
     await this.userRepository.removeAndFlush(entity);
+  }
+
+  async getUserRegistrations(
+    userId: typeof User.prototype.id,
+  ): Promise<CompetitionRegistration[]> {
+    const user = await this.getUserOrFail(userId, ['registrations']);
+    return user.registrations.getItems();
   }
 }

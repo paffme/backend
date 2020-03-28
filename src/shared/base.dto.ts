@@ -1,4 +1,5 @@
 import { ApiModelProperty } from '@nestjs/swagger/dist/decorators/api-model-property.decorator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class BaseDto {
   @ApiModelProperty({ type: String, format: 'date-time' })
@@ -6,6 +7,8 @@ export class BaseDto {
 
   @ApiModelProperty({ type: String, format: 'date-time' })
   updatedAt: Date;
+}
 
-  @ApiModelProperty() id: number;
+export class BaseDtoWithID extends BaseDto {
+  @ApiPropertyOptional() id: number;
 }

@@ -7,6 +7,7 @@ import { UserMapper } from './mappers/user.mapper';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { CompetitionMapper } from './mappers/competition.mapper';
+import { CompetitionRegistrationMapper } from './mappers/competition-registration.mapper';
 
 @Global()
 @Module({
@@ -16,8 +17,15 @@ import { CompetitionMapper } from './mappers/competition.mapper';
     JwtStrategy,
     UserMapper,
     CompetitionMapper,
+    CompetitionRegistrationMapper,
   ],
-  exports: [ConfigurationService, AuthService, UserMapper, CompetitionMapper],
+  exports: [
+    ConfigurationService,
+    AuthService,
+    UserMapper,
+    CompetitionMapper,
+    CompetitionRegistrationMapper,
+  ],
   imports: [
     UserModule,
     PassportModule,

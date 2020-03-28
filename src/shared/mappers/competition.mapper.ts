@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { UserDto } from '../../user/dto/user.dto';
-import { User } from '../../user/user.entity';
 import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';
 import { Competition } from '../../competition/competition.entity';

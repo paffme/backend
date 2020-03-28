@@ -3,6 +3,7 @@ import { UserController } from './user.controller';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 import { MikroOrmModule } from 'nestjs-mikro-orm';
+import { Timestamp } from '../shared/entity/timestamp.entity';
 
 @Module({
   controllers: [UserController],

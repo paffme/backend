@@ -1,5 +1,6 @@
-import { Entity, Property } from 'mikro-orm';
+import { Collection, Entity, OneToMany, Property } from 'mikro-orm';
 import { BaseEntity } from '../shared/base.entity';
+import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 
 export enum CompetitionType {
   Bouldering = 'bouldering',
@@ -30,7 +31,7 @@ export interface Category {
 }
 
 @Entity()
-export class Competition extends BaseEntity<Competition> {
+export class Competition extends BaseEntity {
   @Property()
   name: string;
 
@@ -56,4 +57,10 @@ export class Competition extends BaseEntity<Competition> {
 
   @Property()
   categories: Category[];
+
+  @OneToMany(
+    () => CompetitionRegistration,
+    (registration) => registration.competition,
+  )
+  registrations = new Collection<CompetitionRegistration>(this);
 }
