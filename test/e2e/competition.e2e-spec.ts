@@ -6,6 +6,7 @@ import { configure } from '../../src/app.configuration';
 import TestUtils from './utils';
 import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
 import { CompetitionService } from '../../src/competition/competition.service';
+import { CreateCompetitionRegistrationDto } from '../../src/competition/dto/create-competition-registration.dto';
 
 describe('Competition (e2e)', () => {
   let app: INestApplication;
@@ -67,5 +68,40 @@ describe('Competition (e2e)', () => {
         expect(res.body).toHaveProperty('createdAt');
         expect(res.body).toHaveProperty('updatedAt');
       });
+  });
+
+  it('POST /competitions/{competitionId}/registrations', async function () {
+    const user = await utils.givenUser();
+    const token = await utils.login(user);
+    const competition = await utils.givenCompetition(token);
+
+    const dto: CreateCompetitionRegistrationDto = {
+      userId: user.id,
+    };
+
+    return api
+      .post(`/api/competitions/${competition.id}/registrations`)
+      .set('Authorization', `Bearer ${token.token}`)
+      .send(dto)
+      .expect(204);
+  });
+
+  it('GET /competitions/{competitionId}/registrations', async function () {
+    const user = await utils.givenUser();
+    const token = await utils.login(user);
+    const competition = await utils.givenCompetition(token);
+    await utils.registerUserInCompetition(user, token, competition);
+
+    const res = await api
+      .get(`/api/competitions/${competition.id}/registrations`)
+      .expect(200);
+
+    const registration = res.body.find(
+      (r) => r.userId === user.id && r.competitionId === competition.id,
+    );
+
+    expect(registration).toBeTruthy();
+    expect(registration).toHaveProperty('createdAt');
+    expect(registration).toHaveProperty('updatedAt');
   });
 });

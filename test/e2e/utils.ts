@@ -10,6 +10,7 @@ import {
   CompetitionType,
   Sex,
 } from '../../src/competition/competition.entity';
+import { CreateCompetitionRegistrationDto } from '../../src/competition/dto/create-competition-registration.dto';
 
 export default class TestUtils {
   constructor(private readonly api) {}
@@ -105,5 +106,21 @@ export default class TestUtils {
         })
         .catch(reject);
     });
+  }
+
+  async registerUserInCompetition(
+    user: UserDto,
+    token: TokenResponseDto,
+    competition: CompetitionDto,
+  ): Promise<void> {
+    const dto: CreateCompetitionRegistrationDto = {
+      userId: user.id,
+    };
+
+    await this.api
+      .post(`/api/competitions/${competition.id}/registrations`)
+      .set('Authorization', `Bearer ${token.token}`)
+      .send(dto)
+      .expect(204);
   }
 }

@@ -39,12 +39,18 @@ import { AuthGuard } from '@nestjs/passport';
 import { SystemRoleGuard } from '../shared/guards/system-role.guard';
 import { FindByIdParamsDto } from './dto/find-by-id-params.dto';
 import { User as GetUser } from '../shared/decorators/user.decorator';
+import { CompetitionRegistrationDto } from '../competition/dto/out/competition-registration.dto';
+import { GetUserCompetitionRegistrationsParamsDto } from './dto/in/get-user-competition-registrations-params.dto';
+import { CompetitionRegistrationMapper } from '../shared/mappers/competition-registration.mapper';
 
 @Controller('users')
 @ApiTags(User.constructor.name)
 @ApiBearerAuth()
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly competitionRegistrationMapper: CompetitionRegistrationMapper,
+  ) {}
 
   @Post()
   @ApiCreatedResponse({ type: UserDto })
@@ -74,7 +80,7 @@ export class UserController {
   @ApiOperation(GetOperationId(User.constructor.name, 'FindById'))
   @ApiParam({ name: 'userId', required: true })
   async findById(@Param() params: FindByIdParamsDto): Promise<UserDto> {
-    const user = await this.userService.findUserById(params.userId);
+    const user = await this.userService.getUserOrFail(params.userId);
     return this.userService.mapper.map(user);
   }
 
@@ -117,5 +123,20 @@ export class UserController {
     );
 
     return this.userService.mapper.map(updatedUser);
+  }
+
+  @Get('/:userId/registrations')
+  @ApiOkResponse({ isArray: true, type: CompetitionRegistrationDto })
+  @ApiOperation(GetOperationId(User.constructor.name, 'GetRegistrations'))
+  async getCompetitionRegistrations(
+    @Param() params: GetUserCompetitionRegistrationsParamsDto,
+  ): Promise<CompetitionRegistrationDto[]> {
+    const competitionRegistrations = await this.userService.getUserRegistrations(
+      params.userId,
+    );
+
+    return this.competitionRegistrationMapper.mapArray(
+      competitionRegistrations,
+    );
   }
 }

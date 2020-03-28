@@ -1,7 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { BaseDto } from '../../shared/base.dto';
+import { BaseDtoWithID } from '../../shared/base.dto';
 
-export class UserDto extends BaseDto {
+export class UserDto extends BaseDtoWithID {
   @ApiProperty()
   readonly email: string;
 

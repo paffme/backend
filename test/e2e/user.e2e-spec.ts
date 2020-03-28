@@ -156,4 +156,23 @@ describe('User (e2e)', () => {
         expect(res.body).toHaveProperty('createdAt');
       });
   });
+
+  it('GET /users/{userId}/registrations', async function () {
+    const user = await utils.givenUser();
+    const token = await utils.login(user);
+    const competition = await utils.givenCompetition(token);
+    await utils.registerUserInCompetition(user, token, competition);
+
+    const res = await api
+      .get(`/api/users/${user.id}/registrations`)
+      .expect(200);
+
+    const registration = res.body.find(
+      (r) => r.userId === user.id && r.competitionId === competition.id,
+    );
+
+    expect(registration).toBeTruthy();
+    expect(registration).toHaveProperty('createdAt');
+    expect(registration).toHaveProperty('updatedAt');
+  });
 });
