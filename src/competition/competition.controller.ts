@@ -26,7 +26,7 @@ import { CompetitionRegistrationDto } from './dto/out/competition-registration.d
 import { Competition } from './competition.entity';
 import { CompetitionRegistrationMapper } from '../shared/mappers/competition-registration.mapper';
 import { GetCompetitionRegistrationsParamsDto } from './dto/in/params/get-competition-registrations-params.dto';
-import { UserDto } from '../user/dto/user.dto';
+import { UserDto } from '../user/dto/out/user.dto';
 import { UserMapper } from '../shared/mappers/user.mapper';
 import { GetCompetitionJuryPresidentsParamsDto } from './dto/in/params/get-competition-jury-presidents-params.dto';
 import { GetCompetitionJudgesParamsDto } from './dto/in/params/get-competition-judges-params.dto';

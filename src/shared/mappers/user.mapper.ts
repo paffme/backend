@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UserDto } from '../../user/dto/user.dto';
+import { UserDto } from '../../user/dto/out/user.dto';
 import { User } from '../../user/user.entity';
 import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';

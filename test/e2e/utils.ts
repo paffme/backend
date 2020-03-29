@@ -1,8 +1,8 @@
-import { RegisterDto } from '../../src/user/dto/register.dto';
+import { RegisterDto } from '../../src/user/dto/in/body/register.dto';
 import * as uuid from 'uuid';
-import { TokenResponseDto } from '../../src/user/dto/token-response.dto';
-import { CredentialsDto } from '../../src/user/dto/credentials.dto';
-import { UserDto } from '../../src/user/dto/user.dto';
+import { TokenResponseDto } from '../../src/user/dto/out/token-response.dto';
+import { CredentialsDto } from '../../src/user/dto/in/body/credentials.dto';
+import { UserDto } from '../../src/user/dto/out/user.dto';
 import { CreateCompetitionDTO } from '../../src/competition/dto/in/body/create-competition.dto';
 import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
 import {
