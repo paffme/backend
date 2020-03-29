@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   Param,
@@ -43,6 +44,11 @@ import { AddRouteSetterParamsDto } from './dto/in/params/add-route-setter-params
 import { AddRouteSetterDto } from './dto/in/body/add-route-setter.dto';
 import { AddTechnicalDelegateParamsDto } from './dto/in/params/add-technical-delegate-params.dto';
 import { AddTechnicalDelegateDto } from './dto/in/body/add-technical-delegate.dto';
+import { RemoveRegistrationParamsDto } from './dto/in/params/remove-registration-params.dto';
+import { RemoveRouteSetterParamsDto } from './dto/in/params/remove-route-setter-params.dto';
+import { RemoveJudgeParamsDto } from './dto/in/params/remove-judge-params.dto';
+import { RemoveTechnicalDelegateParamsDto } from './dto/in/params/remove-technical-delegate-params.dto';
+import { RemoveJuryPresidentParamsDto } from './dto/in/params/remove-jury-president-params.dto';
 
 @Controller('competitions')
 export class CompetitionController {
@@ -66,9 +72,7 @@ export class CompetitionController {
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
   @ApiOkResponse({ type: CompetitionDto })
-  @ApiOperation(
-    GetOperationId(Competition.constructor.name, 'CreateCompetition'),
-  )
+  @ApiOperation(GetOperationId(Competition.name, 'CreateCompetition'))
   async create(@Body() dto: CreateCompetitionDTO): Promise<CompetitionDto> {
     const competition = await this.competitionService.create(dto);
     return this.competitionService.mapper.map(competition);
@@ -78,7 +82,7 @@ export class CompetitionController {
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
   @ApiNoContentResponse()
-  @ApiOperation(GetOperationId(Competition.constructor.name, 'Register'))
+  @ApiOperation(GetOperationId(Competition.name, 'Register'))
   @HttpCode(204)
   async register(
     @Param() params: RegisterParamsDto,
@@ -89,9 +93,7 @@ export class CompetitionController {
 
   @Get('/:competitionId/registrations')
   @ApiOkResponse({ isArray: true, type: CompetitionRegistrationDto })
-  @ApiOperation(
-    GetOperationId(Competition.constructor.name, 'GetRegistrations'),
-  )
+  @ApiOperation(GetOperationId(Competition.name, 'GetRegistrations'))
   async getRegistrations(
     @Param() params: GetCompetitionRegistrationsParamsDto,
   ): Promise<CompetitionRegistrationDto[]> {
@@ -104,11 +106,24 @@ export class CompetitionController {
     );
   }
 
+  @Delete('/:competitionId/registrations/:userId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @ApiNoContentResponse()
+  @HttpCode(204)
+  @ApiOperation(GetOperationId(Competition.name, 'RemoveRegistration'))
+  async removeRegistration(
+    @Param() params: RemoveRegistrationParamsDto,
+  ): Promise<void> {
+    await this.competitionService.removeRegistration(
+      params.competitionId,
+      params.userId,
+    );
+  }
+
   @Get('/:competitionId/jury-presidents')
   @ApiOkResponse({ isArray: true, type: UserDto })
-  @ApiOperation(
-    GetOperationId(Competition.constructor.name, 'GetJuryPresidents'),
-  )
+  @ApiOperation(GetOperationId(Competition.name, 'GetJuryPresidents'))
   async getJuryPresidents(
     @Param() params: GetCompetitionJuryPresidentsParamsDto,
   ): Promise<UserDto[]> {
@@ -123,9 +138,7 @@ export class CompetitionController {
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
   @ApiNoContentResponse()
-  @ApiOperation(
-    GetOperationId(Competition.constructor.name, 'AddJuryPresident'),
-  )
+  @ApiOperation(GetOperationId(Competition.name, 'AddJuryPresident'))
   @HttpCode(204)
   async addJuryPresident(
     @Param() params: AddJuryPresidentParamsDto,
@@ -134,9 +147,24 @@ export class CompetitionController {
     await this.competitionService.addJuryPresident(params.competitionId, dto);
   }
 
+  @Delete('/:competitionId/jury-presidents/:userId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @ApiNoContentResponse()
+  @HttpCode(204)
+  @ApiOperation(GetOperationId(Competition.name, 'RemoveJuryPresident'))
+  async removeJuryPresident(
+    @Param() params: RemoveJuryPresidentParamsDto,
+  ): Promise<void> {
+    await this.competitionService.removeJuryPresident(
+      params.competitionId,
+      params.userId,
+    );
+  }
+
   @Get('/:competitionId/judges')
   @ApiOkResponse({ isArray: true, type: UserDto })
-  @ApiOperation(GetOperationId(Competition.constructor.name, 'GetJudges'))
+  @ApiOperation(GetOperationId(Competition.name, 'GetJudges'))
   async getJudges(
     @Param() params: GetCompetitionJudgesParamsDto,
   ): Promise<UserDto[]> {
@@ -151,7 +179,7 @@ export class CompetitionController {
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
   @ApiNoContentResponse()
-  @ApiOperation(GetOperationId(Competition.constructor.name, 'AddJudge'))
+  @ApiOperation(GetOperationId(Competition.name, 'AddJudge'))
   @HttpCode(204)
   async addJudge(
     @Param() params: AddJudgeParamsDto,
@@ -160,11 +188,22 @@ export class CompetitionController {
     await this.competitionService.addJudge(params.competitionId, dto);
   }
 
+  @Delete('/:competitionId/judges/:userId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @ApiNoContentResponse()
+  @HttpCode(204)
+  @ApiOperation(GetOperationId(Competition.name, 'RemoveJudge'))
+  async removeJudge(@Param() params: RemoveJudgeParamsDto): Promise<void> {
+    await this.competitionService.removeJudge(
+      params.competitionId,
+      params.userId,
+    );
+  }
+
   @Get('/:competitionId/chief-route-setters')
   @ApiOkResponse({ isArray: true, type: UserDto })
-  @ApiOperation(
-    GetOperationId(Competition.constructor.name, 'GetChiefRouteSetters'),
-  )
+  @ApiOperation(GetOperationId(Competition.name, 'GetChiefRouteSetters'))
   async getChiefRouteSetters(
     @Param() params: GetCompetitionChiefRouteSettersParamsDto,
   ): Promise<UserDto[]> {
@@ -179,9 +218,7 @@ export class CompetitionController {
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
   @ApiNoContentResponse()
-  @ApiOperation(
-    GetOperationId(Competition.constructor.name, 'AddChiefRouteSetter'),
-  )
+  @ApiOperation(GetOperationId(Competition.name, 'AddChiefRouteSetter'))
   @HttpCode(204)
   async addChiefRouteSetter(
     @Param() params: AddChiefRouteSetterParamsDto,
@@ -193,9 +230,24 @@ export class CompetitionController {
     );
   }
 
+  @Delete('/:competitionId/chief-route-setters/:userId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @ApiNoContentResponse()
+  @HttpCode(204)
+  @ApiOperation(GetOperationId(Competition.name, 'RemoveChiefRouteSetter'))
+  async removeChiefRouteSetter(
+    @Param() params: RemoveJudgeParamsDto,
+  ): Promise<void> {
+    await this.competitionService.removeChiefRouteSetter(
+      params.competitionId,
+      params.userId,
+    );
+  }
+
   @Get('/:competitionId/route-setters')
   @ApiOkResponse({ isArray: true, type: UserDto })
-  @ApiOperation(GetOperationId(Competition.constructor.name, 'GetRouteSetters'))
+  @ApiOperation(GetOperationId(Competition.name, 'GetRouteSetters'))
   async getRouteSetters(
     @Param() params: GetCompetitionRouteSettersParamsDto,
   ): Promise<UserDto[]> {
@@ -210,7 +262,7 @@ export class CompetitionController {
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
   @ApiNoContentResponse()
-  @ApiOperation(GetOperationId(Competition.constructor.name, 'AddRouteSetter'))
+  @ApiOperation(GetOperationId(Competition.name, 'AddRouteSetter'))
   @HttpCode(204)
   async addRouteSetter(
     @Param() params: AddRouteSetterParamsDto,
@@ -219,11 +271,24 @@ export class CompetitionController {
     await this.competitionService.addRouteSetter(params.competitionId, dto);
   }
 
+  @Delete('/:competitionId/route-setters/:userId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @ApiNoContentResponse()
+  @HttpCode(204)
+  @ApiOperation(GetOperationId(Competition.name, 'RemoveRouteSetter'))
+  async removeRouteSetter(
+    @Param() params: RemoveRouteSetterParamsDto,
+  ): Promise<void> {
+    await this.competitionService.removeRouteSetter(
+      params.competitionId,
+      params.userId,
+    );
+  }
+
   @Get('/:competitionId/technical-delegates')
   @ApiOkResponse({ isArray: true, type: UserDto })
-  @ApiOperation(
-    GetOperationId(Competition.constructor.name, 'GetTechnicalDelegates'),
-  )
+  @ApiOperation(GetOperationId(Competition.name, 'GetTechnicalDelegates'))
   async getTechnicalDelegates(
     @Param() params: GetCompetitionTechnicalDelegatesParamsDto,
   ): Promise<UserDto[]> {
@@ -238,9 +303,7 @@ export class CompetitionController {
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
   @ApiNoContentResponse()
-  @ApiOperation(
-    GetOperationId(Competition.constructor.name, 'AddTechnicalDelegate'),
-  )
+  @ApiOperation(GetOperationId(Competition.name, 'AddTechnicalDelegate'))
   @HttpCode(204)
   async addTechnicalDelegate(
     @Param() params: AddTechnicalDelegateParamsDto,
@@ -249,6 +312,21 @@ export class CompetitionController {
     await this.competitionService.addTechnicalDelegate(
       params.competitionId,
       dto,
+    );
+  }
+
+  @Delete('/:competitionId/technical-delegates/:userId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @ApiNoContentResponse()
+  @HttpCode(204)
+  @ApiOperation(GetOperationId(Competition.name, 'RemoveTechnicalDelegate'))
+  async removeTechnicalDelegate(
+    @Param() params: RemoveTechnicalDelegateParamsDto,
+  ): Promise<void> {
+    await this.competitionService.removeTechnicalDelegate(
+      params.competitionId,
+      params.userId,
     );
   }
 }

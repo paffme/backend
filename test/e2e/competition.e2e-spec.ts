@@ -117,6 +117,26 @@ describe('Competition (e2e)', () => {
       expect(registration).toHaveProperty('createdAt');
       expect(registration).toHaveProperty('updatedAt');
     });
+
+    it('DELETE /competitions/{competitionId}/registrations/{userId}', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.registerUserInCompetition(user, token, competition);
+
+      await api
+        .delete(`/api/competitions/${competition.id}/registrations/${user.id}`)
+        .set('Authorization', `Bearer ${token.token}`)
+        .expect(204);
+
+      const registrations = await utils.getRegistrations(competition);
+
+      const registration = registrations.find(
+        (r) => r.userId === user.id && r.competitionId === competition.id,
+      );
+
+      expect(registration).toBeUndefined();
+    });
   });
 
   describe('Jury presidents', function () {
@@ -152,6 +172,24 @@ describe('Competition (e2e)', () => {
 
       const juryPresident = res.body.find((r) => r.id === user.id);
       expect(juryPresident).toBeTruthy();
+    });
+
+    it('DELETE /competitions/{competitionId}/jury-presidents/{userId}', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.addJuryPresidentInCompetition(user, token, competition);
+
+      await api
+        .delete(
+          `/api/competitions/${competition.id}/jury-presidents/${user.id}`,
+        )
+        .set('Authorization', `Bearer ${token.token}`)
+        .expect(204);
+
+      const juryPresidents = await utils.getJuryPresidents(competition);
+      const juryPresident = juryPresidents.find((r) => r.id === user.id);
+      expect(juryPresident).toBeUndefined();
     });
   });
 
@@ -189,6 +227,22 @@ describe('Competition (e2e)', () => {
       const judge = res.body.find((r) => r.id === user.id);
       expect(judge).toBeTruthy();
     });
+
+    it('DELETE /competitions/{competitionId}/judges/{userId}', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.addJudgeInCompetition(user, token, competition);
+
+      await api
+        .delete(`/api/competitions/${competition.id}/judges/${user.id}`)
+        .set('Authorization', `Bearer ${token.token}`)
+        .expect(204);
+
+      const judges = await utils.getJudges(competition);
+      const judge = judges.find((r) => r.id === user.id);
+      expect(judge).toBeUndefined();
+    });
   });
 
   describe('Chief route setters', function () {
@@ -225,6 +279,24 @@ describe('Competition (e2e)', () => {
       const chiefRouteSetter = res.body.find((r) => r.id === user.id);
       expect(chiefRouteSetter).toBeTruthy();
     });
+
+    it('DELETE /competitions/{competitionId}/chief-route-setters/{userId}', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.addChiefRouteSetterInCompetition(user, token, competition);
+
+      await api
+        .delete(
+          `/api/competitions/${competition.id}/chief-route-setters/${user.id}`,
+        )
+        .set('Authorization', `Bearer ${token.token}`)
+        .expect(204);
+
+      const chiefRouteSetters = await utils.getChiefRouteSetters(competition);
+      const chiefRouteSetter = chiefRouteSetters.find((r) => r.id === user.id);
+      expect(chiefRouteSetter).toBeUndefined();
+    });
   });
 
   describe('Route setters', function () {
@@ -260,6 +332,22 @@ describe('Competition (e2e)', () => {
 
       const routeSetter = res.body.find((r) => r.id === user.id);
       expect(routeSetter).toBeTruthy();
+    });
+
+    it('DELETE /competitions/{competitionId}/route-setters/{userId}', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.addRouteSetterInCompetition(user, token, competition);
+
+      await api
+        .delete(`/api/competitions/${competition.id}/route-setters/${user.id}`)
+        .set('Authorization', `Bearer ${token.token}`)
+        .expect(204);
+
+      const routeSetters = await utils.getRouteSetters(competition);
+      const routeSetter = routeSetters.find((r) => r.id === user.id);
+      expect(routeSetter).toBeUndefined();
     });
   });
 
@@ -298,6 +386,27 @@ describe('Competition (e2e)', () => {
 
       const technicalDelegate = res.body.find((r) => r.id === user.id);
       expect(technicalDelegate).toBeTruthy();
+    });
+
+    it('DELETE /competitions/{competitionId}/technical-delegates/{userId}', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.addTechnicalDelegateInCompetition(user, token, competition);
+
+      await api
+        .delete(
+          `/api/competitions/${competition.id}/technical-delegates/${user.id}`,
+        )
+        .set('Authorization', `Bearer ${token.token}`)
+        .expect(204);
+
+      const technicalDelegates = await utils.getTechnicalDelegates(competition);
+      const technicalDelegate = technicalDelegates.find(
+        (r) => r.id === user.id,
+      );
+
+      expect(technicalDelegate).toBeUndefined();
     });
   });
 });
