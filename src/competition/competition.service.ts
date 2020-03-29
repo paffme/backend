@@ -102,6 +102,27 @@ export class CompetitionService extends BaseService<
     return competition.registrations.getItems();
   }
 
+  async removeRegistration(
+    competitionId: typeof Competition.prototype.id,
+    userId: typeof User.prototype.id,
+  ): Promise<void> {
+    const [competition, climber] = await Promise.all([
+      this.getOrFail(competitionId),
+      this.userService.getOrFail(userId),
+    ]);
+
+    const registration = await this.competitionRegistrationRepository.findOne({
+      competition,
+      climber,
+    });
+
+    if (!registration) {
+      throw new NotFoundException('Registration not found');
+    }
+
+    await this.competitionRegistrationRepository.removeAndFlush(registration);
+  }
+
   async addJuryPresident(
     competitionId: typeof Competition.prototype.id,
     dto: AddJuryPresidentDto,
@@ -119,6 +140,24 @@ export class CompetitionService extends BaseService<
     return competition.juryPresidents.getItems();
   }
 
+  async removeJuryPresident(
+    competitionId: typeof Competition.prototype.id,
+    userId: typeof User.prototype.id,
+  ): Promise<void> {
+    const [competition, user] = await Promise.all([
+      this.getOrFail(competitionId, ['juryPresidents']),
+      this.userService.getOrFail(userId),
+    ]);
+
+    if (competition.juryPresidents.contains(user)) {
+      competition.juryPresidents.remove(user);
+    } else {
+      throw new NotFoundException('Jury president not found');
+    }
+
+    await this.competitionRepository.persistAndFlush(competition);
+  }
+
   async addJudge(
     competitionId: typeof Competition.prototype.id,
     dto: AddJudgeDto,
@@ -134,6 +173,24 @@ export class CompetitionService extends BaseService<
   ): Promise<User[]> {
     const competition = await this.getOrFail(competitionId, ['judges']);
     return competition.judges.getItems();
+  }
+
+  async removeJudge(
+    competitionId: typeof Competition.prototype.id,
+    userId: typeof User.prototype.id,
+  ): Promise<void> {
+    const [competition, user] = await Promise.all([
+      this.getOrFail(competitionId, ['judges']),
+      this.userService.getOrFail(userId),
+    ]);
+
+    if (competition.judges.contains(user)) {
+      competition.judges.remove(user);
+    } else {
+      throw new NotFoundException('Judge not found');
+    }
+
+    await this.competitionRepository.persistAndFlush(competition);
   }
 
   async addChiefRouteSetter(
@@ -159,6 +216,24 @@ export class CompetitionService extends BaseService<
     return competition.chiefRouteSetters.getItems();
   }
 
+  async removeChiefRouteSetter(
+    competitionId: typeof Competition.prototype.id,
+    userId: typeof User.prototype.id,
+  ): Promise<void> {
+    const [competition, user] = await Promise.all([
+      this.getOrFail(competitionId, ['chiefRouteSetters']),
+      this.userService.getOrFail(userId),
+    ]);
+
+    if (competition.chiefRouteSetters.contains(user)) {
+      competition.chiefRouteSetters.remove(user);
+    } else {
+      throw new NotFoundException('Judge not found');
+    }
+
+    await this.competitionRepository.persistAndFlush(competition);
+  }
+
   async addRouteSetter(
     competitionId: typeof Competition.prototype.id,
     dto: AddRouteSetterDto,
@@ -174,6 +249,24 @@ export class CompetitionService extends BaseService<
   ): Promise<User[]> {
     const competition = await this.getOrFail(competitionId, ['routeSetters']);
     return competition.routeSetters.getItems();
+  }
+
+  async removeRouteSetter(
+    competitionId: typeof Competition.prototype.id,
+    userId: typeof User.prototype.id,
+  ): Promise<void> {
+    const [competition, user] = await Promise.all([
+      this.getOrFail(competitionId, ['routeSetters']),
+      this.userService.getOrFail(userId),
+    ]);
+
+    if (competition.routeSetters.contains(user)) {
+      competition.routeSetters.remove(user);
+    } else {
+      throw new NotFoundException('Judge not found');
+    }
+
+    await this.competitionRepository.persistAndFlush(competition);
   }
 
   async addTechnicalDelegate(
@@ -197,5 +290,23 @@ export class CompetitionService extends BaseService<
     ]);
 
     return competition.technicalDelegates.getItems();
+  }
+
+  async removeTechnicalDelegate(
+    competitionId: typeof Competition.prototype.id,
+    userId: typeof User.prototype.id,
+  ): Promise<void> {
+    const [competition, user] = await Promise.all([
+      this.getOrFail(competitionId, ['technicalDelegates']),
+      this.userService.getOrFail(userId),
+    ]);
+
+    if (competition.technicalDelegates.contains(user)) {
+      competition.technicalDelegates.remove(user);
+    } else {
+      throw new NotFoundException('Judge not found');
+    }
+
+    await this.competitionRepository.persistAndFlush(competition);
   }
 }
