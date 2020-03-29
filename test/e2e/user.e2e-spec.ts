@@ -3,8 +3,8 @@ import * as uuid from 'uuid';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { INestApplication } from '@nestjs/common';
-import { RegisterDto } from '../../src/user/dto/register.dto';
-import { UserDto } from '../../src/user/dto/user.dto';
+import { RegisterDto } from '../../src/user/dto/in/body/register.dto';
+import { UserDto } from '../../src/user/dto/out/user.dto';
 import { configure } from '../../src/app.configuration';
 import TestUtils from './utils';
 import { UserService } from '../../src/user/user.service';
@@ -174,5 +174,73 @@ describe('User (e2e)', () => {
     expect(registration).toBeTruthy();
     expect(registration).toHaveProperty('createdAt');
     expect(registration).toHaveProperty('updatedAt');
+  });
+
+  it('GET /users/{userId}/jury-presidencies', async function () {
+    const user = await utils.givenUser();
+    const token = await utils.login(user);
+    const competition = await utils.givenCompetition(token);
+    await utils.addJuryPresidentInCompetition(user, token, competition);
+
+    const res = await api
+      .get(`/api/users/${user.id}/jury-presidencies`)
+      .expect(200);
+
+    const juryPresidency = res.body.find((r) => r.id === competition.id);
+    expect(juryPresidency).toBeTruthy();
+  });
+
+  it('GET /users/{userId}/judgements', async function () {
+    const user = await utils.givenUser();
+    const token = await utils.login(user);
+    const competition = await utils.givenCompetition(token);
+    await utils.addJudgeInCompetition(user, token, competition);
+
+    const res = await api.get(`/api/users/${user.id}/judgements`).expect(200);
+
+    const judgement = res.body.find((r) => r.id === competition.id);
+    expect(judgement).toBeTruthy();
+  });
+
+  it('GET /users/{userId}/chief-route-settings', async function () {
+    const user = await utils.givenUser();
+    const token = await utils.login(user);
+    const competition = await utils.givenCompetition(token);
+    await utils.addChiefRouteSetterInCompetition(user, token, competition);
+
+    const res = await api
+      .get(`/api/users/${user.id}/chief-route-settings`)
+      .expect(200);
+
+    const chiefRouteSetting = res.body.find((r) => r.id === competition.id);
+    expect(chiefRouteSetting).toBeTruthy();
+  });
+
+  it('GET /users/{userId}/route-settings', async function () {
+    const user = await utils.givenUser();
+    const token = await utils.login(user);
+    const competition = await utils.givenCompetition(token);
+    await utils.addRouteSetterInCompetition(user, token, competition);
+
+    const res = await api
+      .get(`/api/users/${user.id}/route-settings`)
+      .expect(200);
+
+    const routeSetting = res.body.find((r) => r.id === competition.id);
+    expect(routeSetting).toBeTruthy();
+  });
+
+  it('GET /users/{userId}/technical-delegations', async function () {
+    const user = await utils.givenUser();
+    const token = await utils.login(user);
+    const competition = await utils.givenCompetition(token);
+    await utils.addTechnicalDelegateInCompetition(user, token, competition);
+
+    const res = await api
+      .get(`/api/users/${user.id}/technical-delegations`)
+      .expect(200);
+
+    const technicalDelegation = res.body.find((r) => r.id === competition.id);
+    expect(technicalDelegation).toBeTruthy();
   });
 });

@@ -1,16 +1,24 @@
-import { RegisterDto } from '../../src/user/dto/register.dto';
+import { RegisterDto } from '../../src/user/dto/in/body/register.dto';
 import * as uuid from 'uuid';
-import { TokenResponseDto } from '../../src/user/dto/token-response.dto';
-import { CredentialsDto } from '../../src/user/dto/credentials.dto';
-import { UserDto } from '../../src/user/dto/user.dto';
-import { CreateCompetitionDTO } from '../../src/competition/dto/create-competition.dto';
-import { CompetitionDto } from '../../src/competition/dto/competition.dto';
+import { TokenResponseDto } from '../../src/user/dto/out/token-response.dto';
+import { CredentialsDto } from '../../src/user/dto/in/body/credentials.dto';
+import { UserDto } from '../../src/user/dto/out/user.dto';
+import { CreateCompetitionDTO } from '../../src/competition/dto/in/body/create-competition.dto';
+import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
 import {
   CategoryName,
   CompetitionType,
   Sex,
 } from '../../src/competition/competition.entity';
-import { CreateCompetitionRegistrationDto } from '../../src/competition/dto/create-competition-registration.dto';
+import { CreateCompetitionRegistrationDto } from '../../src/competition/dto/in/body/create-competition-registration.dto';
+import { AddJuryPresidentDto } from '../../src/competition/dto/in/body/add-jury-president.dto';
+import { AddJudgeDto } from '../../src/competition/dto/in/body/add-judge.dto';
+import { AddChiefRouteSetterDto } from '../../src/competition/dto/in/body/add-chief-route-setter.dto';
+import { AddRouteSetterDto } from '../../src/competition/dto/in/body/add-route-setter.dto';
+import { AddTechnicalDelegateDto } from '../../src/competition/dto/in/body/add-technical-delegate.dto';
+import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
+
+// FIXME : use services or entity repository directly to increase speed test
 
 export default class TestUtils {
   constructor(private readonly api) {}
@@ -122,5 +130,135 @@ export default class TestUtils {
       .set('Authorization', `Bearer ${token.token}`)
       .send(dto)
       .expect(204);
+  }
+
+  async getRegistrations(
+    competition: CompetitionDto,
+  ): Promise<CompetitionRegistrationDto[]> {
+    const res = await this.api
+      .get(`/api/competitions/${competition.id}/registrations`)
+      .expect(200);
+
+    return res.body;
+  }
+
+  async addJuryPresidentInCompetition(
+    user: UserDto,
+    token: TokenResponseDto,
+    competition: CompetitionDto,
+  ): Promise<void> {
+    const dto: AddJuryPresidentDto = {
+      userId: user.id,
+    };
+
+    await this.api
+      .post(`/api/competitions/${competition.id}/jury-presidents`)
+      .set('Authorization', `Bearer ${token.token}`)
+      .send(dto)
+      .expect(204);
+  }
+
+  async getJuryPresidents(competition: CompetitionDto): Promise<UserDto[]> {
+    const res = await this.api
+      .get(`/api/competitions/${competition.id}/jury-presidents`)
+      .expect(200);
+
+    return res.body;
+  }
+
+  async addJudgeInCompetition(
+    user: UserDto,
+    token: TokenResponseDto,
+    competition: CompetitionDto,
+  ): Promise<void> {
+    const dto: AddJudgeDto = {
+      userId: user.id,
+    };
+
+    await this.api
+      .post(`/api/competitions/${competition.id}/judges`)
+      .set('Authorization', `Bearer ${token.token}`)
+      .send(dto)
+      .expect(204);
+  }
+
+  async getJudges(competition: CompetitionDto): Promise<UserDto[]> {
+    const res = await this.api
+      .get(`/api/competitions/${competition.id}/judges`)
+      .expect(200);
+
+    return res.body;
+  }
+
+  async addChiefRouteSetterInCompetition(
+    user: UserDto,
+    token: TokenResponseDto,
+    competition: CompetitionDto,
+  ): Promise<void> {
+    const dto: AddChiefRouteSetterDto = {
+      userId: user.id,
+    };
+
+    await this.api
+      .post(`/api/competitions/${competition.id}/chief-route-setters`)
+      .set('Authorization', `Bearer ${token.token}`)
+      .send(dto)
+      .expect(204);
+  }
+
+  async getChiefRouteSetters(competition: CompetitionDto): Promise<UserDto[]> {
+    const res = await this.api
+      .get(`/api/competitions/${competition.id}/chief-route-setters`)
+      .expect(200);
+
+    return res.body;
+  }
+
+  async addRouteSetterInCompetition(
+    user: UserDto,
+    token: TokenResponseDto,
+    competition: CompetitionDto,
+  ): Promise<void> {
+    const dto: AddRouteSetterDto = {
+      userId: user.id,
+    };
+
+    await this.api
+      .post(`/api/competitions/${competition.id}/route-setters`)
+      .set('Authorization', `Bearer ${token.token}`)
+      .send(dto)
+      .expect(204);
+  }
+
+  async getRouteSetters(competition: CompetitionDto): Promise<UserDto[]> {
+    const res = await this.api
+      .get(`/api/competitions/${competition.id}/route-setters`)
+      .expect(200);
+
+    return res.body;
+  }
+
+  async addTechnicalDelegateInCompetition(
+    user: UserDto,
+    token: TokenResponseDto,
+    competition: CompetitionDto,
+  ): Promise<void> {
+    const dto: AddTechnicalDelegateDto = {
+      userId: user.id,
+    };
+
+    await this.api
+      .post(`/api/competitions/${competition.id}/technical-delegates`)
+      .set('Authorization', `Bearer ${token.token}`)
+      .send(dto)
+      .expect(204);
+  }
+
+  async getTechnicalDelegates(competition: CompetitionDto): Promise<UserDto[]> {
+    const res = await this.api
+      .get(`/api/competitions/${competition.id}/technical-delegates`)
+      .expect(200);
+
+    return res.body;
   }
 }

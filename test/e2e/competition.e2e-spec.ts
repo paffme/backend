@@ -6,7 +6,12 @@ import { configure } from '../../src/app.configuration';
 import TestUtils from './utils';
 import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
 import { CompetitionService } from '../../src/competition/competition.service';
-import { CreateCompetitionRegistrationDto } from '../../src/competition/dto/create-competition-registration.dto';
+import { CreateCompetitionRegistrationDto } from '../../src/competition/dto/in/body/create-competition-registration.dto';
+import { AddJuryPresidentDto } from '../../src/competition/dto/in/body/add-jury-president.dto';
+import { AddJudgeDto } from '../../src/competition/dto/in/body/add-judge.dto';
+import { AddChiefRouteSetterDto } from '../../src/competition/dto/in/body/add-chief-route-setter.dto';
+import { AddRouteSetterDto } from '../../src/competition/dto/in/body/add-route-setter.dto';
+import { AddTechnicalDelegateDto } from '../../src/competition/dto/in/body/add-technical-delegate.dto';
 
 describe('Competition (e2e)', () => {
   let app: INestApplication;
@@ -70,38 +75,229 @@ describe('Competition (e2e)', () => {
       });
   });
 
-  it('POST /competitions/{competitionId}/registrations', async function () {
-    const user = await utils.givenUser();
-    const token = await utils.login(user);
-    const competition = await utils.givenCompetition(token);
+  describe('Registrations', function () {
+    it('POST /competitions/{competitionId}/registrations', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
 
-    const dto: CreateCompetitionRegistrationDto = {
-      userId: user.id,
-    };
+      const dto: CreateCompetitionRegistrationDto = {
+        userId: user.id,
+      };
 
-    return api
-      .post(`/api/competitions/${competition.id}/registrations`)
-      .set('Authorization', `Bearer ${token.token}`)
-      .send(dto)
-      .expect(204);
+      await api
+        .post(`/api/competitions/${competition.id}/registrations`)
+        .set('Authorization', `Bearer ${token.token}`)
+        .send(dto)
+        .expect(204);
+
+      const registrations = await utils.getRegistrations(competition);
+      const registration = registrations.find(
+        (r) => r.competitionId === competition.id && r.userId === user.id,
+      );
+
+      expect(registration).toBeTruthy();
+    });
+
+    it('GET /competitions/{competitionId}/registrations', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.registerUserInCompetition(user, token, competition);
+
+      const res = await api
+        .get(`/api/competitions/${competition.id}/registrations`)
+        .expect(200);
+
+      const registration = res.body.find(
+        (r) => r.userId === user.id && r.competitionId === competition.id,
+      );
+
+      expect(registration).toBeTruthy();
+      expect(registration).toHaveProperty('createdAt');
+      expect(registration).toHaveProperty('updatedAt');
+    });
   });
 
-  it('GET /competitions/{competitionId}/registrations', async function () {
-    const user = await utils.givenUser();
-    const token = await utils.login(user);
-    const competition = await utils.givenCompetition(token);
-    await utils.registerUserInCompetition(user, token, competition);
+  describe('Jury presidents', function () {
+    it('POST /competitions/{competitionId}/jury-presidents', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
 
-    const res = await api
-      .get(`/api/competitions/${competition.id}/registrations`)
-      .expect(200);
+      const dto: AddJuryPresidentDto = {
+        userId: user.id,
+      };
 
-    const registration = res.body.find(
-      (r) => r.userId === user.id && r.competitionId === competition.id,
-    );
+      await api
+        .post(`/api/competitions/${competition.id}/jury-presidents`)
+        .set('Authorization', `Bearer ${token.token}`)
+        .send(dto)
+        .expect(204);
 
-    expect(registration).toBeTruthy();
-    expect(registration).toHaveProperty('createdAt');
-    expect(registration).toHaveProperty('updatedAt');
+      const juryPresidents = await utils.getJuryPresidents(competition);
+      const juryPresident = juryPresidents.find((jp) => jp.id === user.id);
+      expect(juryPresident).toBeTruthy();
+    });
+
+    it('GET /competitions/{competitionId}/jury-presidents', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.addJuryPresidentInCompetition(user, token, competition);
+
+      const res = await api
+        .get(`/api/competitions/${competition.id}/jury-presidents`)
+        .expect(200);
+
+      const juryPresident = res.body.find((r) => r.id === user.id);
+      expect(juryPresident).toBeTruthy();
+    });
+  });
+
+  describe('Judges', function () {
+    it('POST /competitions/{competitionId}/judges', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+
+      const dto: AddJudgeDto = {
+        userId: user.id,
+      };
+
+      await api
+        .post(`/api/competitions/${competition.id}/judges`)
+        .set('Authorization', `Bearer ${token.token}`)
+        .send(dto)
+        .expect(204);
+
+      const judges = await utils.getJudges(competition);
+      const judge = judges.find((j) => j.id === user.id);
+      expect(judge).toBeTruthy();
+    });
+
+    it('GET /competitions/{competitionId}/judges', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.addJudgeInCompetition(user, token, competition);
+
+      const res = await api
+        .get(`/api/competitions/${competition.id}/judges`)
+        .expect(200);
+
+      const judge = res.body.find((r) => r.id === user.id);
+      expect(judge).toBeTruthy();
+    });
+  });
+
+  describe('Chief route setters', function () {
+    it('POST /competitions/{competitionId}/chief-route-setters', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+
+      const dto: AddChiefRouteSetterDto = {
+        userId: user.id,
+      };
+
+      await api
+        .post(`/api/competitions/${competition.id}/chief-route-setters`)
+        .set('Authorization', `Bearer ${token.token}`)
+        .send(dto)
+        .expect(204);
+
+      const chiefRouteSetters = await utils.getChiefRouteSetters(competition);
+      const chiefRouteSetter = chiefRouteSetters.find((j) => j.id === user.id);
+      expect(chiefRouteSetter).toBeTruthy();
+    });
+
+    it('GET /competitions/{competitionId}/chief-route-setters', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.addChiefRouteSetterInCompetition(user, token, competition);
+
+      const res = await api
+        .get(`/api/competitions/${competition.id}/chief-route-setters`)
+        .expect(200);
+
+      const chiefRouteSetter = res.body.find((r) => r.id === user.id);
+      expect(chiefRouteSetter).toBeTruthy();
+    });
+  });
+
+  describe('Route setters', function () {
+    it('POST /competitions/{competitionId}/route-setters', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+
+      const dto: AddRouteSetterDto = {
+        userId: user.id,
+      };
+
+      await api
+        .post(`/api/competitions/${competition.id}/route-setters`)
+        .set('Authorization', `Bearer ${token.token}`)
+        .send(dto)
+        .expect(204);
+
+      const routeSetters = await utils.getRouteSetters(competition);
+      const routeSetter = routeSetters.find((j) => j.id === user.id);
+      expect(routeSetter).toBeTruthy();
+    });
+
+    it('GET /competitions/{competitionId}/route-setters', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.addRouteSetterInCompetition(user, token, competition);
+
+      const res = await api
+        .get(`/api/competitions/${competition.id}/route-setters`)
+        .expect(200);
+
+      const routeSetter = res.body.find((r) => r.id === user.id);
+      expect(routeSetter).toBeTruthy();
+    });
+  });
+
+  describe('Technical delegates', function () {
+    it('POST /competitions/{competitionId}/technical-delegates', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+
+      const dto: AddTechnicalDelegateDto = {
+        userId: user.id,
+      };
+
+      await api
+        .post(`/api/competitions/${competition.id}/technical-delegates`)
+        .set('Authorization', `Bearer ${token.token}`)
+        .send(dto)
+        .expect(204);
+
+      const technicalDelegates = await utils.getTechnicalDelegates(competition);
+      const technicalDelegate = technicalDelegates.find(
+        (j) => j.id === user.id,
+      );
+      expect(technicalDelegate).toBeTruthy();
+    });
+
+    it('GET /competitions/{competitionId}/technical-delegates', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = await utils.givenCompetition(token);
+      await utils.addTechnicalDelegateInCompetition(user, token, competition);
+
+      const res = await api
+        .get(`/api/competitions/${competition.id}/technical-delegates`)
+        .expect(200);
+
+      const technicalDelegate = res.body.find((r) => r.id === user.id);
+      expect(technicalDelegate).toBeTruthy();
+    });
   });
 });

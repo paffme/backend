@@ -26,22 +26,28 @@ import {
 import { ApiException } from '../shared/api-exception.model';
 import { GetOperationId } from '../shared/utils/get-operation-id.helper';
 import { User } from './user.entity';
-import { TokenResponseDto } from './dto/token-response.dto';
-import { CredentialsDto } from './dto/credentials.dto';
-import { RegisterDto } from './dto/register.dto';
-import { UserDto } from './dto/user.dto';
+import { TokenResponseDto } from './dto/out/token-response.dto';
+import { CredentialsDto } from './dto/in/body/credentials.dto';
+import { RegisterDto } from './dto/in/body/register.dto';
+import { UserDto } from './dto/out/user.dto';
 import { UserService } from './user.service';
-import { UpdateParamsDto } from './dto/update-params.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateParamsDto } from './dto/in/params/update-params.dto';
+import { UpdateUserDto } from './dto/in/body/update-user.dto';
 import { AllowedSystemRoles } from '../shared/decorators/roles.decorator';
 import { SystemRole } from './user-role.enum';
 import { AuthGuard } from '@nestjs/passport';
 import { SystemRoleGuard } from '../shared/guards/system-role.guard';
-import { FindByIdParamsDto } from './dto/find-by-id-params.dto';
+import { FindByIdParamsDto } from './dto/in/params/find-by-id-params.dto';
 import { User as GetUser } from '../shared/decorators/user.decorator';
 import { CompetitionRegistrationDto } from '../competition/dto/out/competition-registration.dto';
-import { GetUserCompetitionRegistrationsParamsDto } from './dto/in/get-user-competition-registrations-params.dto';
+import { GetUserCompetitionRegistrationsParamsDto } from './dto/in/params/get-user-competition-registrations-params.dto';
 import { CompetitionRegistrationMapper } from '../shared/mappers/competition-registration.mapper';
+import { CompetitionDto } from '../competition/dto/out/competition.dto';
+import { CompetitionMapper } from '../shared/mappers/competition.mapper';
+import { GetJuryPresidenciesParamsDto } from './dto/in/params/get-jury-presidencies-params.dto';
+import { GetJudgementsParamsDto } from './dto/in/params/get-judgements-params.dto';
+import { GetChiefRouteSettingsParamsDto } from './dto/in/params/get-chief-route-settings-params.dto';
+import { GetRouteSettingsParamsDto } from './dto/in/params/get-route-settings-params.dto';
 
 @Controller('users')
 @ApiTags(User.constructor.name)
@@ -50,6 +56,7 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly competitionRegistrationMapper: CompetitionRegistrationMapper,
+    private readonly competitionMapper: CompetitionMapper,
   ) {}
 
   @Post()
@@ -80,7 +87,7 @@ export class UserController {
   @ApiOperation(GetOperationId(User.constructor.name, 'FindById'))
   @ApiParam({ name: 'userId', required: true })
   async findById(@Param() params: FindByIdParamsDto): Promise<UserDto> {
-    const user = await this.userService.getUserOrFail(params.userId);
+    const user = await this.userService.getOrFail(params.userId);
     return this.userService.mapper.map(user);
   }
 
@@ -138,5 +145,69 @@ export class UserController {
     return this.competitionRegistrationMapper.mapArray(
       competitionRegistrations,
     );
+  }
+
+  @Get('/:userId/jury-presidencies')
+  @ApiOkResponse({ isArray: true, type: CompetitionDto })
+  @ApiOperation(GetOperationId(User.constructor.name, 'GetJuryPresidencies'))
+  async getJuryPresidencies(
+    @Param() params: GetJuryPresidenciesParamsDto,
+  ): Promise<CompetitionDto[]> {
+    const juryPresidencies = await this.userService.getJuryPresidencies(
+      params.userId,
+    );
+
+    return this.competitionMapper.mapArray(juryPresidencies);
+  }
+
+  @Get('/:userId/judgements')
+  @ApiOkResponse({ isArray: true, type: CompetitionDto })
+  @ApiOperation(GetOperationId(User.constructor.name, 'GetJudgements'))
+  async getJudgements(
+    @Param() params: GetJudgementsParamsDto,
+  ): Promise<CompetitionDto[]> {
+    const judgements = await this.userService.getJudgements(params.userId);
+    return this.competitionMapper.mapArray(judgements);
+  }
+
+  @Get('/:userId/chief-route-settings')
+  @ApiOkResponse({ isArray: true, type: CompetitionDto })
+  @ApiOperation(GetOperationId(User.constructor.name, 'GetChiefRouteSettings'))
+  async getChiefRouteSettings(
+    @Param() params: GetChiefRouteSettingsParamsDto,
+  ): Promise<CompetitionDto[]> {
+    const chiefRouteSettings = await this.userService.getChiefRouteSettings(
+      params.userId,
+    );
+
+    return this.competitionMapper.mapArray(chiefRouteSettings);
+  }
+
+  @Get('/:userId/route-settings')
+  @ApiOkResponse({ isArray: true, type: CompetitionDto })
+  @ApiOperation(GetOperationId(User.constructor.name, 'GetRouteSettings'))
+  async getRouteSettings(
+    @Param() params: GetRouteSettingsParamsDto,
+  ): Promise<CompetitionDto[]> {
+    const routeSettings = await this.userService.getRouteSettings(
+      params.userId,
+    );
+
+    return this.competitionMapper.mapArray(routeSettings);
+  }
+
+  @Get('/:userId/technical-delegations')
+  @ApiOkResponse({ isArray: true, type: CompetitionDto })
+  @ApiOperation(
+    GetOperationId(User.constructor.name, 'GetTechnicalDelegations'),
+  )
+  async getTechnicalDelegations(
+    @Param() params: GetRouteSettingsParamsDto,
+  ): Promise<CompetitionDto[]> {
+    const technicalDelegates = await this.userService.getTechnicalDelegations(
+      params.userId,
+    );
+
+    return this.competitionMapper.mapArray(technicalDelegates);
   }
 }

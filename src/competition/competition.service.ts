@@ -10,12 +10,18 @@ import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { Competition } from './competition.entity';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
-import { CompetitionDto } from './dto/competition.dto';
+import { CompetitionDto } from './dto/out/competition.dto';
 import { validate } from 'class-validator';
-import { CreateCompetitionDTO } from './dto/create-competition.dto';
-import { CreateCompetitionRegistrationDto } from './dto/create-competition-registration.dto';
+import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
+import { CreateCompetitionRegistrationDto } from './dto/in/body/create-competition-registration.dto';
 import { UserService } from '../user/user.service';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
+import { User } from '../user/user.entity';
+import { AddJuryPresidentDto } from './dto/in/body/add-jury-president.dto';
+import { AddJudgeDto } from './dto/in/body/add-judge.dto';
+import { AddRouteSetterDto } from './dto/in/body/add-route-setter.dto';
+import { AddTechnicalDelegateDto } from './dto/in/body/add-technical-delegate.dto';
+import { AddChiefRouteSetterDto } from './dto/in/body/add-chief-route-setter.dto';
 
 @Injectable()
 export class CompetitionService extends BaseService<
@@ -37,7 +43,7 @@ export class CompetitionService extends BaseService<
     super(Competition.prototype, mapper);
   }
 
-  async getCompetitionOrFail(
+  async getOrFail(
     competitionId: typeof Competition.prototype.id,
     populate?: string[],
   ): Promise<Competition> {
@@ -53,11 +59,11 @@ export class CompetitionService extends BaseService<
     return competition;
   }
 
-  getCompetitions(): Promise<Competition[]> {
+  getAll(): Promise<Competition[]> {
     return this.competitionRepository.findAll();
   }
 
-  async createCompetition(dto: CreateCompetitionDTO): Promise<Competition> {
+  async create(dto: CreateCompetitionDTO): Promise<Competition> {
     const newCompetition = new Competition();
     Object.assign(newCompetition, dto);
 
@@ -81,21 +87,115 @@ export class CompetitionService extends BaseService<
     competitionId: typeof Competition.prototype.id,
     dto: CreateCompetitionRegistrationDto,
   ): Promise<void> {
-    const competition = await this.getCompetitionOrFail(competitionId);
-    const user = await this.userService.getUserOrFail(dto.userId);
+    const competition = await this.getOrFail(competitionId);
+    const user = await this.userService.getOrFail(dto.userId);
 
     await this.competitionRegistrationRepository.persistAndFlush(
       new CompetitionRegistration(competition, user),
     );
   }
 
-  async getCompetitionRegistrations(
+  async getRegistrations(
     competitionId: typeof Competition.prototype.id,
   ): Promise<CompetitionRegistration[]> {
-    const competition = await this.getCompetitionOrFail(competitionId, [
-      'registrations',
+    const competition = await this.getOrFail(competitionId, ['registrations']);
+    return competition.registrations.getItems();
+  }
+
+  async addJuryPresident(
+    competitionId: typeof Competition.prototype.id,
+    dto: AddJuryPresidentDto,
+  ): Promise<void> {
+    const competition = await this.getOrFail(competitionId, ['juryPresidents']);
+    const user = await this.userService.getOrFail(dto.userId);
+    competition.juryPresidents.add(user);
+    await this.competitionRepository.persistAndFlush(competition);
+  }
+
+  async getJuryPresidents(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<User[]> {
+    const competition = await this.getOrFail(competitionId, ['juryPresidents']);
+    return competition.juryPresidents.getItems();
+  }
+
+  async addJudge(
+    competitionId: typeof Competition.prototype.id,
+    dto: AddJudgeDto,
+  ): Promise<void> {
+    const competition = await this.getOrFail(competitionId, ['judges']);
+    const user = await this.userService.getOrFail(dto.userId);
+    competition.judges.add(user);
+    await this.competitionRepository.persistAndFlush(competition);
+  }
+
+  async getJudges(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<User[]> {
+    const competition = await this.getOrFail(competitionId, ['judges']);
+    return competition.judges.getItems();
+  }
+
+  async addChiefRouteSetter(
+    competitionId: typeof Competition.prototype.id,
+    dto: AddChiefRouteSetterDto,
+  ): Promise<void> {
+    const competition = await this.getOrFail(competitionId, [
+      'chiefRouteSetters',
     ]);
 
-    return competition.registrations.getItems();
+    const user = await this.userService.getOrFail(dto.userId);
+    competition.chiefRouteSetters.add(user);
+    await this.competitionRepository.persistAndFlush(competition);
+  }
+
+  async getChiefRouteSetters(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<User[]> {
+    const competition = await this.getOrFail(competitionId, [
+      'chiefRouteSetters',
+    ]);
+
+    return competition.chiefRouteSetters.getItems();
+  }
+
+  async addRouteSetter(
+    competitionId: typeof Competition.prototype.id,
+    dto: AddRouteSetterDto,
+  ): Promise<void> {
+    const competition = await this.getOrFail(competitionId, ['routeSetters']);
+    const user = await this.userService.getOrFail(dto.userId);
+    competition.routeSetters.add(user);
+    await this.competitionRepository.persistAndFlush(competition);
+  }
+
+  async getRouteSetters(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<User[]> {
+    const competition = await this.getOrFail(competitionId, ['routeSetters']);
+    return competition.routeSetters.getItems();
+  }
+
+  async addTechnicalDelegate(
+    competitionId: typeof Competition.prototype.id,
+    dto: AddTechnicalDelegateDto,
+  ): Promise<void> {
+    const competition = await this.getOrFail(competitionId, [
+      'technicalDelegates',
+    ]);
+
+    const user = await this.userService.getOrFail(dto.userId);
+    competition.technicalDelegates.add(user);
+    await this.competitionRepository.persistAndFlush(competition);
+  }
+
+  async getTechnicalDelegates(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<User[]> {
+    const competition = await this.getOrFail(competitionId, [
+      'technicalDelegates',
+    ]);
+
+    return competition.technicalDelegates.getItems();
   }
 }

@@ -10,18 +10,19 @@ import {
 import { randomBytes, scrypt } from 'crypto';
 import { EntityRepository, wrap } from 'mikro-orm';
 import { InjectRepository } from 'nestjs-mikro-orm';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UpdateUserDto } from './dto/in/body/update-user.dto';
 import { User } from './user.entity';
-import { RegisterDto } from './dto/register.dto';
-import { CredentialsDto } from './dto/credentials.dto';
-import { TokenResponseDto } from './dto/token-response.dto';
+import { RegisterDto } from './dto/in/body/register.dto';
+import { CredentialsDto } from './dto/in/body/credentials.dto';
+import { TokenResponseDto } from './dto/out/token-response.dto';
 import { JwtPayload } from '../shared/auth/jwt-payload.interface';
 import { AuthService } from '../shared/auth/auth.service';
 import { validate } from 'class-validator';
 import { UserMapper } from '../shared/mappers/user.mapper';
 import { BaseService } from '../shared/base.service';
-import { UserDto } from './dto/user.dto';
+import { UserDto } from './dto/out/user.dto';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
+import { Competition } from '../competition/competition.entity';
 
 @Injectable()
 export class UserService extends BaseService<User, UserDto> {
@@ -158,7 +159,7 @@ export class UserService extends BaseService<User, UserDto> {
     dto: UpdateUserDto,
     authenticatedUser: User,
   ): Promise<User> {
-    const user = await this.getUserOrFail(userId);
+    const user = await this.getOrFail(userId);
 
     if (user.id !== authenticatedUser.id) {
       throw new ForbiddenException('You do not own this user');
@@ -173,7 +174,7 @@ export class UserService extends BaseService<User, UserDto> {
     return user;
   }
 
-  async getUserOrFail(
+  async getOrFail(
     userId: typeof User.prototype.id,
     populate?: string[],
   ): Promise<User> {
@@ -187,14 +188,49 @@ export class UserService extends BaseService<User, UserDto> {
   }
 
   async deleteById(userId: typeof User.prototype.id): Promise<void> {
-    const entity = await this.getUserOrFail(userId);
+    const entity = await this.getOrFail(userId);
     await this.userRepository.removeAndFlush(entity);
   }
 
   async getUserRegistrations(
     userId: typeof User.prototype.id,
   ): Promise<CompetitionRegistration[]> {
-    const user = await this.getUserOrFail(userId, ['registrations']);
+    const user = await this.getOrFail(userId, ['registrations']);
     return user.registrations.getItems();
+  }
+
+  async getJuryPresidencies(
+    userId: typeof User.prototype.id,
+  ): Promise<Competition[]> {
+    const user = await this.getOrFail(userId, ['juryPresidencies']);
+    return user.juryPresidencies.getItems();
+  }
+
+  async getJudgements(
+    userId: typeof User.prototype.id,
+  ): Promise<Competition[]> {
+    const user = await this.getOrFail(userId, ['judgements']);
+    return user.judgements.getItems();
+  }
+
+  async getChiefRouteSettings(
+    userId: typeof User.prototype.id,
+  ): Promise<Competition[]> {
+    const user = await this.getOrFail(userId, ['chiefRouteSettings']);
+    return user.chiefRouteSettings.getItems();
+  }
+
+  async getRouteSettings(
+    userId: typeof User.prototype.id,
+  ): Promise<Competition[]> {
+    const user = await this.getOrFail(userId, ['routeSettings']);
+    return user.routeSettings.getItems();
+  }
+
+  async getTechnicalDelegations(
+    userId: typeof User.prototype.id,
+  ): Promise<Competition[]> {
+    const user = await this.getOrFail(userId, ['technicalDelegations']);
+    return user.technicalDelegations.getItems();
   }
 }

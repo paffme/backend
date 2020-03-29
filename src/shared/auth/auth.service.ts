@@ -40,6 +40,6 @@ export class AuthService {
   }
 
   async validateUser(validatePayload: JwtPayload): Promise<User> {
-    return this.userService.getUserOrFail(validatePayload.id);
+    return this.userService.getOrFail(validatePayload.id);
   }
 }
