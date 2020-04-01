@@ -3,7 +3,7 @@ import { BaseDtoWithID } from '../../../shared/base.dto';
 
 export class UserDto extends BaseDtoWithID {
   @ApiProperty()
-  readonly email: string;
+  readonly email!: string;
 
   @ApiPropertyOptional()
   readonly firstName?: string;

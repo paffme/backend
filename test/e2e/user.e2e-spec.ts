@@ -2,20 +2,22 @@ import supertest from 'supertest';
 import * as uuid from 'uuid';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { INestApplication } from '@nestjs/common';
 import { RegisterDto } from '../../src/user/dto/in/body/register.dto';
 import { UserDto } from '../../src/user/dto/out/user.dto';
 import { configure } from '../../src/app.configuration';
 import TestUtils from './utils';
 import { UserService } from '../../src/user/user.service';
 import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
+import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
+import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 describe('User (e2e)', () => {
-  let app: INestApplication;
+  let app: NestExpressApplication;
   let userService: UserService;
   let configService: ConfigurationService;
   let utils: TestUtils;
-  let api;
+  let api: supertest.SuperTest<supertest.Test>;
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
@@ -38,7 +40,7 @@ describe('User (e2e)', () => {
     await app.close();
   });
 
-  function checkUser(expectedUser, user: UserDto): void {
+  function checkUser(expectedUser: any, user: UserDto): void {
     expect(user.email).toEqual(expectedUser.email);
     expect((user as any).password).toBeUndefined();
     expect(user).toHaveProperty('id');
@@ -168,7 +170,8 @@ describe('User (e2e)', () => {
       .expect(200);
 
     const registration = res.body.find(
-      (r) => r.userId === user.id && r.competitionId === competition.id,
+      (r: CompetitionRegistrationDto): boolean =>
+        r.userId === user.id && r.competitionId === competition.id,
     );
 
     expect(registration).toBeTruthy();
@@ -186,7 +189,9 @@ describe('User (e2e)', () => {
       .get(`/api/users/${user.id}/jury-presidencies`)
       .expect(200);
 
-    const juryPresidency = res.body.find((r) => r.id === competition.id);
+    const juryPresidency = res.body.find(
+      (r: CompetitionDto): boolean => r.id === competition.id,
+    );
     expect(juryPresidency).toBeTruthy();
   });
 
@@ -198,7 +203,9 @@ describe('User (e2e)', () => {
 
     const res = await api.get(`/api/users/${user.id}/judgements`).expect(200);
 
-    const judgement = res.body.find((r) => r.id === competition.id);
+    const judgement = res.body.find(
+      (r: CompetitionDto): boolean => r.id === competition.id,
+    );
     expect(judgement).toBeTruthy();
   });
 
@@ -212,7 +219,9 @@ describe('User (e2e)', () => {
       .get(`/api/users/${user.id}/chief-route-settings`)
       .expect(200);
 
-    const chiefRouteSetting = res.body.find((r) => r.id === competition.id);
+    const chiefRouteSetting = res.body.find(
+      (r: CompetitionDto): boolean => r.id === competition.id,
+    );
     expect(chiefRouteSetting).toBeTruthy();
   });
 
@@ -226,7 +235,9 @@ describe('User (e2e)', () => {
       .get(`/api/users/${user.id}/route-settings`)
       .expect(200);
 
-    const routeSetting = res.body.find((r) => r.id === competition.id);
+    const routeSetting = res.body.find(
+      (r: CompetitionDto): boolean => r.id === competition.id,
+    );
     expect(routeSetting).toBeTruthy();
   });
 
@@ -240,7 +251,9 @@ describe('User (e2e)', () => {
       .get(`/api/users/${user.id}/technical-delegations`)
       .expect(200);
 
-    const technicalDelegation = res.body.find((r) => r.id === competition.id);
+    const technicalDelegation = res.body.find(
+      (r: CompetitionDto): boolean => r.id === competition.id,
+    );
     expect(technicalDelegation).toBeTruthy();
   });
 });

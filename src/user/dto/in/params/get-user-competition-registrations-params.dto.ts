@@ -5,5 +5,5 @@ import { Type } from 'class-transformer';
 export class GetUserCompetitionRegistrationsParamsDto {
   @Type(() => Number)
   @IsInt()
-  readonly userId: typeof User.prototype.id;
+  readonly userId!: typeof User.prototype.id;
 }

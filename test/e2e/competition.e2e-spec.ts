@@ -1,7 +1,6 @@
 import supertest from 'supertest';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { INestApplication } from '@nestjs/common';
 import { configure } from '../../src/app.configuration';
 import TestUtils from './utils';
 import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
@@ -12,13 +11,16 @@ import { AddJudgeDto } from '../../src/competition/dto/in/body/add-judge.dto';
 import { AddChiefRouteSetterDto } from '../../src/competition/dto/in/body/add-chief-route-setter.dto';
 import { AddRouteSetterDto } from '../../src/competition/dto/in/body/add-route-setter.dto';
 import { AddTechnicalDelegateDto } from '../../src/competition/dto/in/body/add-technical-delegate.dto';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
+import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
 
 describe('Competition (e2e)', () => {
-  let app: INestApplication;
+  let app: NestExpressApplication;
   let competitionService: CompetitionService;
   let configService: ConfigurationService;
   let utils: TestUtils;
-  let api;
+  let api: supertest.SuperTest<supertest.Test>;
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
@@ -53,7 +55,9 @@ describe('Competition (e2e)', () => {
       .send(competition)
       .expect(200)
       .then((res) => {
-        expect(res.body.map((c) => c.id)).toContain(competition.id);
+        expect(res.body.map((c: CompetitionDto) => c.id)).toContain(
+          competition.id,
+        );
       });
   });
 
@@ -110,7 +114,8 @@ describe('Competition (e2e)', () => {
         .expect(200);
 
       const registration = res.body.find(
-        (r) => r.userId === user.id && r.competitionId === competition.id,
+        (r: CompetitionRegistrationDto) =>
+          r.userId === user.id && r.competitionId === competition.id,
       );
 
       expect(registration).toBeTruthy();
@@ -170,7 +175,9 @@ describe('Competition (e2e)', () => {
         .get(`/api/competitions/${competition.id}/jury-presidents`)
         .expect(200);
 
-      const juryPresident = res.body.find((r) => r.id === user.id);
+      const juryPresident = res.body.find(
+        (r: CompetitionDto) => r.id === user.id,
+      );
       expect(juryPresident).toBeTruthy();
     });
 
@@ -224,7 +231,7 @@ describe('Competition (e2e)', () => {
         .get(`/api/competitions/${competition.id}/judges`)
         .expect(200);
 
-      const judge = res.body.find((r) => r.id === user.id);
+      const judge = res.body.find((r: CompetitionDto) => r.id === user.id);
       expect(judge).toBeTruthy();
     });
 
@@ -276,7 +283,9 @@ describe('Competition (e2e)', () => {
         .get(`/api/competitions/${competition.id}/chief-route-setters`)
         .expect(200);
 
-      const chiefRouteSetter = res.body.find((r) => r.id === user.id);
+      const chiefRouteSetter = res.body.find(
+        (r: CompetitionDto) => r.id === user.id,
+      );
       expect(chiefRouteSetter).toBeTruthy();
     });
 
@@ -330,7 +339,9 @@ describe('Competition (e2e)', () => {
         .get(`/api/competitions/${competition.id}/route-setters`)
         .expect(200);
 
-      const routeSetter = res.body.find((r) => r.id === user.id);
+      const routeSetter = res.body.find(
+        (r: CompetitionDto) => r.id === user.id,
+      );
       expect(routeSetter).toBeTruthy();
     });
 
@@ -384,7 +395,9 @@ describe('Competition (e2e)', () => {
         .get(`/api/competitions/${competition.id}/technical-delegates`)
         .expect(200);
 
-      const technicalDelegate = res.body.find((r) => r.id === user.id);
+      const technicalDelegate = res.body.find(
+        (r: CompetitionDto) => r.id === user.id,
+      );
       expect(technicalDelegate).toBeTruthy();
     });
 

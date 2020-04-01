@@ -17,11 +17,12 @@ import { AddChiefRouteSetterDto } from '../../src/competition/dto/in/body/add-ch
 import { AddRouteSetterDto } from '../../src/competition/dto/in/body/add-route-setter.dto';
 import { AddTechnicalDelegateDto } from '../../src/competition/dto/in/body/add-technical-delegate.dto';
 import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
+import supertest from 'supertest';
 
 // FIXME : use services or entity repository directly to increase speed test
 
 export default class TestUtils {
-  constructor(private readonly api) {}
+  constructor(private readonly api: supertest.SuperTest<supertest.Test>) {}
 
   givenUser(): Promise<CredentialsDto & UserDto> {
     return new Promise((resolve, reject) => {

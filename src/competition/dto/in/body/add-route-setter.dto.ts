@@ -3,5 +3,5 @@ import { User } from '../../../../user/user.entity';
 
 export class AddRouteSetterDto {
   @ApiProperty()
-  readonly userId: typeof User.prototype.id;
+  readonly userId!: typeof User.prototype.id;
 }

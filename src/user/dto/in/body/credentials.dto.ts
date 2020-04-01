@@ -6,7 +6,7 @@ export class CredentialsDto {
     required: true,
   })
   @IsEmail()
-  readonly email: string;
+  readonly email!: string;
 
   @ApiProperty({
     required: true,
@@ -17,5 +17,5 @@ export class CredentialsDto {
   })
   @IsString()
   @Length(6, 32)
-  readonly password: string;
+  readonly password!: string;
 }

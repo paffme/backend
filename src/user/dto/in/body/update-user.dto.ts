@@ -5,13 +5,13 @@ import { RegisterDto } from './register.dto';
 export class UpdateUserDto extends RegisterDto {
   @ApiPropertyOptional()
   @IsOptional()
-  readonly username: string;
+  readonly username!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  readonly email: string;
+  readonly email!: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  password: string;
+  password!: string;
 }

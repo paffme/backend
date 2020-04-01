@@ -5,8 +5,8 @@ import { BaseDto } from '../../../shared/base.dto';
 
 export class CompetitionRegistrationDto extends BaseDto {
   @ApiProperty()
-  userId: typeof User.prototype.id;
+  userId!: typeof User.prototype.id;
 
   @ApiProperty()
-  competitionId: typeof Competition.prototype.id;
+  competitionId!: typeof Competition.prototype.id;
 }

@@ -6,9 +6,9 @@ import { User } from '../../../../user/user.entity';
 export class RemoveRegistrationParamsDto {
   @Type(() => Number)
   @IsInt()
-  readonly competitionId: typeof Competition.prototype.id;
+  readonly competitionId!: typeof Competition.prototype.id;
 
   @Type(() => Number)
   @IsInt()
-  readonly userId: typeof User.prototype.id;
+  readonly userId!: typeof User.prototype.id;
 }

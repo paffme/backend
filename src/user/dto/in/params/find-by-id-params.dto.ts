@@ -5,5 +5,5 @@ import { Type } from 'class-transformer';
 export class FindByIdParamsDto {
   @Type(() => Number)
   @IsInt()
-  readonly userId: typeof User.prototype.id;
+  readonly userId!: typeof User.prototype.id;
 }

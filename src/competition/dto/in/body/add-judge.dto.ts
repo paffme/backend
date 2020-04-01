@@ -3,5 +3,5 @@ import { User } from '../../../../user/user.entity';
 
 export class AddJudgeDto {
   @ApiProperty()
-  readonly userId: typeof User.prototype.id;
+  readonly userId!: typeof User.prototype.id;
 }

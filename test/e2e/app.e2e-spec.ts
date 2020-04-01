@@ -1,12 +1,12 @@
 import supertest from 'supertest';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { INestApplication } from '@nestjs/common';
 import { configure } from '../../src/app.configuration';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 describe('AppController (e2e)', () => {
-  let app: INestApplication;
-  let api;
+  let app: NestExpressApplication;
+  let api: supertest.SuperTest<supertest.Test>;
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({

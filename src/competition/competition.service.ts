@@ -309,4 +309,8 @@ export class CompetitionService extends BaseService<
 
     await this.competitionRepository.persistAndFlush(competition);
   }
+
+  getOwner(entityId: unknown): Promise<User | null> {
+    throw new Error('Method not implemented.');
+  }
 }

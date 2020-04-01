@@ -33,10 +33,10 @@ import { UserDto } from './dto/out/user.dto';
 import { UserService } from './user.service';
 import { UpdateParamsDto } from './dto/in/params/update-params.dto';
 import { UpdateUserDto } from './dto/in/body/update-user.dto';
-import { AllowedSystemRoles } from '../shared/decorators/roles.decorator';
+import { AllowedSystemRoles } from '../shared/decorators/allowed-system-roles.decorator';
 import { SystemRole } from './user-role.enum';
 import { AuthGuard } from '@nestjs/passport';
-import { SystemRoleGuard } from '../shared/guards/system-role.guard';
+import { AuthenticationGuard } from '../shared/guards/authentication.guard';
 import { FindByIdParamsDto } from './dto/in/params/find-by-id-params.dto';
 import { User as GetUser } from '../shared/decorators/user.decorator';
 import { CompetitionRegistrationDto } from '../competition/dto/out/competition-registration.dto';
@@ -48,9 +48,12 @@ import { GetJuryPresidenciesParamsDto } from './dto/in/params/get-jury-presidenc
 import { GetJudgementsParamsDto } from './dto/in/params/get-judgements-params.dto';
 import { GetChiefRouteSettingsParamsDto } from './dto/in/params/get-chief-route-settings-params.dto';
 import { GetRouteSettingsParamsDto } from './dto/in/params/get-route-settings-params.dto';
+import { AppRoles } from '../app.roles';
+import { AuthorizationGuard } from '../shared/guards/authorization.guard';
+import { AllowedAppRoles } from '../shared/decorators/allowed-app-roles.decorator';
 
 @Controller('users')
-@ApiTags(User.constructor.name)
+@ApiTags(User.name)
 @ApiBearerAuth()
 export class UserController {
   constructor(
@@ -64,6 +67,7 @@ export class UserController {
   @ApiConflictResponse({ type: ApiException })
   @ApiUnprocessableEntityResponse({ type: ApiException })
   @ApiOperation(GetOperationId(User.constructor.name, 'Register'))
+  // TODO : only unauthenticated
   async register(@Body() dto: RegisterDto): Promise<UserDto> {
     const newUser = await this.userService.register(dto);
     return this.userService.mapper.map(newUser);
@@ -80,7 +84,8 @@ export class UserController {
 
   @Get(':userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, AuthorizationGuard)
   @ApiOkResponse({ type: UserDto })
   @ApiUnprocessableEntityResponse({ type: ApiException })
   @ApiNotFoundResponse({ type: ApiException })
@@ -94,7 +99,7 @@ export class UserController {
   @Delete(':userId')
   @HttpCode(204)
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard)
   @ApiNoContentResponse({})
   @ApiNotFoundResponse({ type: ApiException })
   @ApiOperation(GetOperationId(User.constructor.name, 'DeleteById'))
@@ -112,7 +117,7 @@ export class UserController {
 
   @Patch(':userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard)
   @ApiOkResponse({ type: UserDto })
   @ApiUnprocessableEntityResponse({ type: ApiException })
   @ApiNotFoundResponse({ type: ApiException })

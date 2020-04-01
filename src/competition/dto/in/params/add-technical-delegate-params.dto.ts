@@ -5,5 +5,5 @@ import { Competition } from '../../../competition.entity';
 export class AddTechnicalDelegateParamsDto {
   @Type(() => Number)
   @IsInt()
-  readonly competitionId: typeof Competition.prototype.id;
+  readonly competitionId!: typeof Competition.prototype.id;
 }

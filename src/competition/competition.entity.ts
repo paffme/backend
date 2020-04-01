@@ -34,30 +34,30 @@ export interface Category {
 @Entity()
 export class Competition extends BaseEntity {
   @Property()
-  name: string;
+  name!: string;
 
   @Property({
     type: String,
   })
-  type: CompetitionType;
+  type!: CompetitionType;
 
   @Property()
-  startDate: Date;
+  startDate!: Date;
 
   @Property()
-  endDate: Date;
+  endDate!: Date;
 
   @Property()
-  address: string;
+  address!: string;
 
   @Property()
-  city: string;
+  city!: string;
 
   @Property()
-  postalCode: string;
+  postalCode!: string;
 
   @Property()
-  categories: Category[];
+  categories!: Category[];
 
   @OneToMany(
     () => CompetitionRegistration,

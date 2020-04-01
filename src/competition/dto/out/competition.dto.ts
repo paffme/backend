@@ -4,26 +4,26 @@ import { Category, CompetitionType } from '../../competition.entity';
 
 export class CompetitionDto extends BaseDtoWithID {
   @ApiProperty()
-  name: string;
+  name!: string;
 
   @ApiProperty()
-  type: CompetitionType;
+  type!: CompetitionType;
 
   @ApiProperty()
-  startDate: Date;
+  startDate!: Date;
 
   @ApiProperty()
-  endDate: Date;
+  endDate!: Date;
 
   @ApiProperty()
-  address: string;
+  address!: string;
 
   @ApiProperty()
-  city: string;
+  city!: string;
 
   @ApiProperty()
-  postalCode: string;
+  postalCode!: string;
 
   @ApiProperty()
-  categories: Category[];
+  categories!: Category[];
 }

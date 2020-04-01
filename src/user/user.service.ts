@@ -16,7 +16,7 @@ import { RegisterDto } from './dto/in/body/register.dto';
 import { CredentialsDto } from './dto/in/body/credentials.dto';
 import { TokenResponseDto } from './dto/out/token-response.dto';
 import { JwtPayload } from '../shared/auth/jwt-payload.interface';
-import { AuthService } from '../shared/auth/auth.service';
+import { AuthenticationService } from '../shared/auth/authentication.service';
 import { validate } from 'class-validator';
 import { UserMapper } from '../shared/mappers/user.mapper';
 import { BaseService } from '../shared/base.service';
@@ -32,7 +32,7 @@ export class UserService extends BaseService<User, UserDto> {
     @InjectRepository(User)
     private readonly userRepository: EntityRepository<User>,
     mapper: UserMapper,
-    private readonly authService: AuthService,
+    private readonly authService: AuthenticationService,
   ) {
     super(User.prototype, mapper);
   }
@@ -62,8 +62,8 @@ export class UserService extends BaseService<User, UserDto> {
   }
 
   private checkPassword(
-    saltedPasswordHash,
-    candidatePassword,
+    saltedPasswordHash: string,
+    candidatePassword: string,
   ): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const [scryptLen, salt, expectedDerivedKey] = saltedPasswordHash.split(
@@ -116,6 +116,9 @@ export class UserService extends BaseService<User, UserDto> {
     }
 
     await this.userRepository.persistAndFlush(newUser);
+    newUser.ownedResources.users.push(newUser.id);
+    await this.userRepository.persistAndFlush(newUser);
+
     return newUser;
   }
 
@@ -232,5 +235,9 @@ export class UserService extends BaseService<User, UserDto> {
   ): Promise<Competition[]> {
     const user = await this.getOrFail(userId, ['technicalDelegations']);
     return user.technicalDelegations.getItems();
+  }
+
+  getOwner(userId: typeof User.prototype.id): Promise<User | null> {
+    return this.userRepository.findOne(userId);
   }
 }

@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { UserModule } from '../user/user.module';
-import { AuthService } from './auth/auth.service';
+import { AuthenticationService } from './auth/authentication.service';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
 import { ConfigurationService } from './configuration/configuration.service';
 import { UserMapper } from './mappers/user.mapper';
@@ -13,7 +13,7 @@ import { CompetitionRegistrationMapper } from './mappers/competition-registratio
 @Module({
   providers: [
     ConfigurationService,
-    AuthService,
+    AuthenticationService,
     JwtStrategy,
     UserMapper,
     CompetitionMapper,
@@ -21,7 +21,7 @@ import { CompetitionRegistrationMapper } from './mappers/competition-registratio
   ],
   exports: [
     ConfigurationService,
-    AuthService,
+    AuthenticationService,
     UserMapper,
     CompetitionMapper,
     CompetitionRegistrationMapper,

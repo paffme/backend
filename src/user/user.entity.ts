@@ -5,11 +5,17 @@ import { BaseEntity } from '../shared/base.entity';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { Competition } from '../competition/competition.entity';
 
+export interface Permissions {
+  // eslint-disable-next-line @typescript-eslint/no-use-before-define
+  users: typeof User.prototype.id[];
+  competitions: typeof Competition.prototype.id[];
+}
+
 @Entity()
 export class User extends BaseEntity {
   @Property({ hidden: true })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @Property()
   firstName?: string;
@@ -23,8 +29,16 @@ export class User extends BaseEntity {
   })
   systemRole: SystemRole = SystemRole.User;
 
+  @Property({
+    hidden: true,
+  })
+  ownedResources: Permissions = {
+    users: [],
+    competitions: [],
+  };
+
   @Property({ hidden: true, length: 512 })
-  password: string;
+  password!: string;
 
   @OneToMany(() => CompetitionRegistration, (item) => item.climber)
   registrations = new Collection<CompetitionRegistration>(this);
