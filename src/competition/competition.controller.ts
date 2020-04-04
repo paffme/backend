@@ -1,7 +1,7 @@
 import {
   Body,
   Controller,
-  Delete,
+  Delete, ForbiddenException,
   Get,
   HttpCode,
   Param,
@@ -49,6 +49,11 @@ import { RemoveRouteSetterParamsDto } from './dto/in/params/remove-route-setter-
 import { RemoveJudgeParamsDto } from './dto/in/params/remove-judge-params.dto';
 import { RemoveTechnicalDelegateParamsDto } from './dto/in/params/remove-technical-delegate-params.dto';
 import { RemoveJuryPresidentParamsDto } from './dto/in/params/remove-jury-president-params.dto';
+import { AllowedAppRoles } from '../shared/decorators/allowed-app-roles.decorator';
+import { AppRoles } from '../app.roles';
+import { AuthorizationGuard } from '../shared/guards/authorization.guard';
+import { GetUser } from '../shared/decorators/user.decorator';
+import { User } from '../user/user.entity';
 
 @Controller('competitions')
 export class CompetitionController {
@@ -70,7 +75,8 @@ export class CompetitionController {
 
   @Post()
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @UseGuards(AuthGuard('jwt'), AuthenticationGuard)
+  @AllowedAppRoles(AppRoles.AUTHENTICATED)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, AuthorizationGuard)
   @ApiOkResponse({ type: CompetitionDto })
   @ApiOperation(GetOperationId(Competition.name, 'CreateCompetition'))
   async create(@Body() dto: CreateCompetitionDTO): Promise<CompetitionDto> {
@@ -80,14 +86,20 @@ export class CompetitionController {
 
   @Post('/:competitionId/registrations')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @UseGuards(AuthGuard('jwt'), AuthenticationGuard)
+  @AllowedAppRoles(AppRoles.AUTHENTICATED)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, AuthorizationGuard)
   @ApiNoContentResponse()
   @ApiOperation(GetOperationId(Competition.name, 'Register'))
   @HttpCode(204)
   async register(
     @Param() params: RegisterParamsDto,
     @Body() dto: CreateCompetitionRegistrationDto,
+    @GetUser() user: User,
   ): Promise<void> {
+    if (dto.userId !== user.id) {
+      throw new ForbiddenException();
+    }
+
     await this.competitionService.register(params.competitionId, dto);
   }
 

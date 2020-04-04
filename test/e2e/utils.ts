@@ -5,11 +5,6 @@ import { CredentialsDto } from '../../src/user/dto/in/body/credentials.dto';
 import { UserDto } from '../../src/user/dto/out/user.dto';
 import { CreateCompetitionDTO } from '../../src/competition/dto/in/body/create-competition.dto';
 import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
-import {
-  CategoryName,
-  CompetitionType,
-  Sex,
-} from '../../src/competition/competition.entity';
 import { CreateCompetitionRegistrationDto } from '../../src/competition/dto/in/body/create-competition-registration.dto';
 import { AddJuryPresidentDto } from '../../src/competition/dto/in/body/add-jury-president.dto';
 import { AddJudgeDto } from '../../src/competition/dto/in/body/add-judge.dto';
@@ -18,31 +13,77 @@ import { AddRouteSetterDto } from '../../src/competition/dto/in/body/add-route-s
 import { AddTechnicalDelegateDto } from '../../src/competition/dto/in/body/add-technical-delegate.dto';
 import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
 import supertest from 'supertest';
+import { MikroORM } from 'mikro-orm';
+import MikroORMConfig from '../../src/mikro-orm.config';
+import { User } from '../../src/user/user.entity';
+import { SystemRole } from '../../src/user/user-role.enum';
+
+import {
+  CategoryName,
+  CompetitionType,
+  Sex,
+} from '../../src/competition/competition.entity';
 
 // FIXME : use services or entity repository directly to increase speed test
 
 export default class TestUtils {
+  private orm?: MikroORM;
+
   constructor(private readonly api: supertest.SuperTest<supertest.Test>) {}
+
+  async getORM(): Promise<MikroORM> {
+    if (this.orm) {
+      return this.orm;
+    }
+
+    this.orm = await MikroORM.init(MikroORMConfig);
+    await this.orm.connect();
+    return this.orm;
+  }
 
   givenUser(): Promise<CredentialsDto & UserDto> {
     return new Promise((resolve, reject) => {
-      const user: RegisterDto = {
+      const registerDto: RegisterDto = {
         email: `${uuid.v4()}@${uuid.v4()}.fr`,
         password: uuid.v4().substr(0, 10),
       };
 
       return this.api
         .post('/api/users')
-        .send(user)
+        .send(registerDto)
         .expect(201)
         .then((res) => {
           resolve({
             ...res.body,
-            ...user,
+            ...registerDto,
           });
         })
         .catch(reject);
     });
+  }
+
+  async givenAdminUser(): Promise<CredentialsDto & UserDto> {
+    const registerDto: RegisterDto = {
+      email: `${uuid.v4()}@${uuid.v4()}.fr`,
+      password: uuid.v4().substr(0, 10),
+    };
+
+    const { body } = await this.api
+      .post('/api/users')
+      .send(registerDto)
+      .expect(201);
+
+    const user: CredentialsDto & UserDto = {
+      ...body,
+      ...registerDto,
+    };
+
+    const orm = await this.getORM();
+    const userEntity = await orm.em.findOneOrFail(User, body.id);
+    userEntity.systemRole = SystemRole.Admin;
+    await orm.em.persistAndFlush(userEntity);
+
+    return user;
   }
 
   givenCompetitionData(): CreateCompetitionDTO {

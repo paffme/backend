@@ -1,21 +1,17 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  Inject,
-  Injectable,
-} from '@nestjs/common';
 import { AppRoles } from '../../app.roles';
 import { IQueryInfo } from 'accesscontrol/lib/core';
 import { SystemRole } from '../../user/user-role.enum';
 import { AccessControl } from 'accesscontrol';
 import { Permissions, User } from '../../user/user.entity';
 import { Reflector } from '@nestjs/core';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+
 import {
   AUTHORIZATION_METADATA_KEY,
   AuthorizationMetadata,
 } from '../decorators/allowed-app-roles.decorator';
 
-export type Grants = {
+type Grants = {
   [role in AppRoles]?: {
     [resource: string]: {
       [actionPossession: string]: string[];
@@ -23,13 +19,14 @@ export type Grants = {
   };
 };
 
-export type ResourcePossession = 'own' | 'any';
+type ResourcePossession = 'own' | 'any';
+type Action = 'create' | 'read' | 'update' | 'delete';
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
   constructor(private reflector: Reflector) {}
 
-  private getActionFromHTTPMethod(method: string): string {
+  private getActionFromHTTPMethod(method: string): Action {
     switch (method) {
       case 'POST':
         return 'create';
@@ -67,17 +64,10 @@ export class AuthorizationGuard implements CanActivate {
     const action = this.getActionFromHTTPMethod(request.method);
     const permissionKey = this.getPermissionKeyFromContext(context);
     const resourceName = permissionKey.slice(0, -1); // remove plurals
-    const resourceIdParamKey = `${resourceName}Id`;
-    const resourceId = Number(request.params[resourceIdParamKey]);
 
-    // Param not defined
-    if (isNaN(resourceId)) {
-      return false;
-    }
-
-    // Set user roles
+    // Set user roles and resource possession
     const user: User = request.user;
-    let userRoles: AppRoles[] = [AppRoles.ANYONE];
+    let userRoles: AppRoles[] = [];
 
     if (user) {
       if (user.systemRole === SystemRole.Admin) {
@@ -91,9 +81,19 @@ export class AuthorizationGuard implements CanActivate {
 
     let possession: ResourcePossession = 'any';
 
-    if (user.ownedResources[permissionKey].includes(resourceId)) {
-      userRoles.push(AppRoles.OWNER);
-      possession = 'own';
+    if (action !== 'create') {
+      const resourceIdParamKey = `${resourceName}Id`;
+      const resourceId = Number(request.params[resourceIdParamKey]);
+
+      // Param not defined
+      if (isNaN(resourceId)) {
+        return false;
+      }
+
+      if (user.ownedResources[permissionKey].includes(resourceId)) {
+        userRoles.push(AppRoles.OWNER);
+        possession = 'own';
+      }
     }
 
     // Generate grants object for accesscontrol library

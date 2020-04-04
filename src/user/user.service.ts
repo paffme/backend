@@ -164,10 +164,6 @@ export class UserService extends BaseService<User, UserDto> {
   ): Promise<User> {
     const user = await this.getOrFail(userId);
 
-    if (user.id !== authenticatedUser.id) {
-      throw new ForbiddenException('You do not own this user');
-    }
-
     if (dto.password) {
       dto.password = await this.hashPassword(dto.password);
     }

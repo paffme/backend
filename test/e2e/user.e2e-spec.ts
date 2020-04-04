@@ -48,212 +48,661 @@ describe('User (e2e)', () => {
     expect(user).toHaveProperty('updatedAt');
   }
 
-  it('/users (POST)', () => {
-    const user: RegisterDto = {
-      email: `${uuid.v4()}@${uuid.v4()}.fr`,
-      password: uuid.v4().substr(0, 10),
-    };
+  describe('POST /users', () => {
+    it('creates a user', () => {
+      const user: RegisterDto = {
+        email: `${uuid.v4()}@${uuid.v4()}.fr`,
+        password: uuid.v4().substr(0, 10),
+      };
 
-    return api
-      .post('/api/users')
-      .send(user)
-      .expect(201)
-      .then((res) => {
-        checkUser(user, res.body);
-      });
+      return api
+        .post('/api/users')
+        .send(user)
+        .expect(201)
+        .then((res) => {
+          checkUser(user, res.body);
+        });
+    });
+
+    it('validates user creation', () => {
+      const user = {
+        email: uuid.v4(),
+        password: 444,
+      };
+
+      return api
+        .post('/api/users')
+        .send(user)
+        .expect(422)
+        .then((res) => {
+          expect(res.body.statusCode).toEqual(422);
+          expect(res.body.error).toEqual('Validation Error');
+          expect(res.body.message).toEqual('Validation Error');
+          expect(Array.isArray(res.body.errors)).toBeTruthy();
+          expect(res.body.errors[0].property).toEqual('email');
+          expect(res.body.errors[0].constraints.isEmail).toBeTruthy();
+          expect(res.body.errors[1].property).toEqual('password');
+          expect(res.body.errors[1].constraints.length).toBeTruthy();
+        });
+    });
+
+    it('does not allow authenticated user to create a user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      const secondUser: RegisterDto = {
+        email: `${uuid.v4()}@${uuid.v4()}.fr`,
+        password: uuid.v4().substr(0, 10),
+      };
+
+      await api
+        .post('/api/users')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .send(secondUser)
+        .expect(403);
+    });
   });
 
-  it('/users (POST) with validation', () => {
-    const user = {
-      email: uuid.v4(),
-      password: 444,
-    };
+  describe('POST /users/token', () => {
+    it('creates a JWT', async () => {
+      const user = await utils.givenUser();
 
-    return api
-      .post('/api/users')
-      .send(user)
-      .expect(422)
-      .then((res) => {
-        expect(res.body.statusCode).toEqual(422);
-        expect(res.body.error).toEqual('Validation Error');
-        expect(res.body.message).toEqual('Validation Error');
-        expect(Array.isArray(res.body.errors)).toBeTruthy();
-        expect(res.body.errors[0].property).toEqual('email');
-        expect(res.body.errors[0].constraints.isEmail).toBeTruthy();
-        expect(res.body.errors[1].property).toEqual('password');
-        expect(res.body.errors[1].constraints.length).toBeTruthy();
-      });
+      await api
+        .post('/api/users/token')
+        .send({
+          email: user.email,
+          password: user.password,
+        })
+        .expect(201)
+        .then((res) => {
+          expect(res.body).toHaveProperty('token');
+          expect(res.body).toHaveProperty('userId');
+          expect(res.body.userId).toEqual(user.id);
+          expect(res.body).toHaveProperty('expiresIn');
+          expect(res.body).toHaveProperty('createdAt');
+        });
+    });
+
+    it('creates a JWT for an already authenticated user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      await api
+        .post('/api/users/token')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .send({
+          email: user.email,
+          password: user.password,
+        })
+        .expect(201)
+        .then((res) => {
+          expect(res.body.userId).toEqual(user.id);
+        });
+    });
   });
 
-  it('/users/{userId} (DELETE)', async () => {
-    const user = await utils.givenUser();
-    const auth = await utils.login(user);
+  describe('GET /users/{userId}', () => {
+    it('gets a user by ID', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
 
-    await api
-      .delete('/api/users/' + user.id)
-      .set('Authorization', 'Bearer ' + auth.token)
-      .expect(204);
+      await api
+        .get('/api/users/' + auth.userId)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(200)
+        .then((res) => {
+          checkUser(user, res.body);
+        });
+    });
+
+    it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      await api.get('/api/users/999999').expect(401);
+    });
+
+    it('returns 403 when authenticated user do not own the accessed user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999999')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(403);
+    });
+
+    it('returns 404 when getting an unknown user', async () => {
+      const user = await utils.givenAdminUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999999')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(404);
+    });
+
+    it('allows admin to access any user', async () => {
+      const user = await utils.givenUser();
+      const admin = await utils.givenAdminUser();
+      const auth = await utils.login(admin);
+
+      await api
+        .get('/api/users/' + user.id)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(200)
+        .then((res) => {
+          checkUser(user, res.body);
+        });
+    });
   });
 
-  it('/users/{userId} (GET)', async () => {
-    const user = await utils.givenUser();
-    const auth = await utils.login(user);
+  describe('DELETE /users/{userId}', () => {
+    it('deletes a user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
 
-    await api
-      .get('/api/users/' + auth.userId)
-      .set('Authorization', 'Bearer ' + auth.token)
-      .expect(200)
-      .then((res) => {
-        checkUser(user, res.body);
-      });
+      await api
+        .delete('/api/users/' + user.id)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(204);
+    });
+
+    it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      await api.delete('/api/users/999999').expect(401);
+    });
+
+    it('returns 403 when authenticated user do not own the accessed user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      await api
+        .delete('/api/users/999999999')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(403);
+    });
+
+    it('returns 404 when deleting an unknown user', async () => {
+      const user = await utils.givenAdminUser();
+      const auth = await utils.login(user);
+
+      await api
+        .delete('/api/users/999999999')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(404);
+    });
+
+    it('allows admin to delete any user', async () => {
+      const user = await utils.givenUser();
+      const admin = await utils.givenAdminUser();
+      const auth = await utils.login(admin);
+
+      await api
+        .delete('/api/users/' + user.id)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(204);
+    });
   });
 
-  it('/users/{userId} (GET) returns 404 when not found', async () => {
-    const user = await utils.givenUser();
-    const auth = await utils.login(user);
+  describe('PATCH /users/{userId}', () => {
+    it('updates a user by ID', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
 
-    await api
-      .get('/api/users/999999999')
-      .set('Authorization', 'Bearer ' + auth.token)
-      .expect(404);
+      await api
+        .patch('/api/users/' + auth.userId)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .send({
+          email: 'new@email.fr',
+        })
+        .expect(200)
+        .then((res) => {
+          checkUser(
+            {
+              ...user,
+              email: 'new@email.fr',
+            },
+            res.body,
+          );
+        });
+    });
+
+    it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      await api.patch('/api/users/999999').expect(401);
+    });
+
+    it('returns 403 when authenticated user do not own the accessed user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      await api
+        .patch('/api/users/999999999')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(403);
+    });
+
+    it('returns 404 when updating an unknown user', async () => {
+      const user = await utils.givenAdminUser();
+      const auth = await utils.login(user);
+
+      await api
+        .patch('/api/users/999999999')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(404);
+    });
+
+    it('allows admin to update any user', async () => {
+      const user = await utils.givenUser();
+      const admin = await utils.givenAdminUser();
+      const auth = await utils.login(admin);
+
+      await api
+        .patch('/api/users/' + user.id)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .send({
+          email: 'new@email.fr',
+        })
+        .expect(200)
+        .then((res) => {
+          checkUser(
+            {
+              ...user,
+              email: 'new@email.fr',
+            },
+            res.body,
+          );
+        });
+    });
   });
 
-  it('/users/{userId} (PATCH)', async () => {
-    const user = await utils.givenUser();
-    const auth = await utils.login(user);
+  describe('GET /users/{userId}/registrations', () => {
+    it('gets user registrations', async function () {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+      const competition = await utils.givenCompetition(auth);
+      await utils.registerUserInCompetition(user, auth, competition);
 
-    await api
-      .patch('/api/users/' + auth.userId)
-      .set('Authorization', 'Bearer ' + auth.token)
-      .send({
-        email: 'new@email.fr',
-      })
-      .expect(200)
-      .then((res) => {
-        checkUser(
-          {
-            ...user,
-            email: 'new@email.fr',
-          },
-          res.body,
-        );
-      });
+      const res = await api
+        .get(`/api/users/${user.id}/registrations`)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(200);
+
+      const registration = res.body.find(
+        (r: CompetitionRegistrationDto): boolean =>
+          r.userId === user.id && r.competitionId === competition.id,
+      );
+
+      expect(registration).toBeTruthy();
+      expect(registration).toHaveProperty('createdAt');
+      expect(registration).toHaveProperty('updatedAt');
+    });
+
+    it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      await api.get('/api/users/999999/registrations').expect(401);
+    });
+
+    it('returns 403 when authenticated user do not own the accessed user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/registrations')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(403);
+    });
+
+    it('returns 404 when getting an unknown user', async () => {
+      const user = await utils.givenAdminUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/registrations')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(404);
+    });
+
+    it('allows admin to access any user registrations', async () => {
+      const user = await utils.givenUser();
+      const userAuth = await utils.login(user);
+      const competition = await utils.givenCompetition(userAuth);
+      await utils.registerUserInCompetition(user, userAuth, competition);
+
+      const admin = await utils.givenAdminUser();
+      const adminAuth = await utils.login(admin);
+
+      const res = await api
+        .get(`/api/users/${user.id}/registrations`)
+        .set('Authorization', 'Bearer ' + adminAuth.token)
+        .expect(200);
+
+      const registration = res.body.find(
+        (r: CompetitionRegistrationDto): boolean =>
+          r.userId === user.id && r.competitionId === competition.id,
+      );
+
+      expect(registration).toBeTruthy();
+    });
   });
 
-  it('/users/token (POST)', async () => {
-    const user = await utils.givenUser();
+  describe('GET /users/{userId}/jury-presidencies', () => {
+    it('gets user jury presidencies', async function () {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+      const competition = await utils.givenCompetition(auth);
+      await utils.addJuryPresidentInCompetition(user, auth, competition);
 
-    await api
-      .post('/api/users/token')
-      .send({
-        email: user.email,
-        password: user.password,
-      })
-      .expect(201)
-      .then((res) => {
-        expect(res.body).toHaveProperty('token');
-        expect(res.body).toHaveProperty('userId');
-        expect(res.body.userId).toEqual(user.id);
-        expect(res.body).toHaveProperty('expiresIn');
-        expect(res.body).toHaveProperty('createdAt');
-      });
+      const res = await api
+        .get(`/api/users/${user.id}/jury-presidencies`)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(200);
+
+      const juryPresidency = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
+
+      expect(juryPresidency).toBeTruthy();
+    });
+
+    it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      await api.get('/api/users/999999/jury-presidencies').expect(401);
+    });
+
+    it('returns 403 when authenticated user do not own the accessed user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/jury-presidencies')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(403);
+    });
+
+    it('returns 404 when getting an unknown user', async () => {
+      const user = await utils.givenAdminUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/jury-presidencies')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(404);
+    });
+
+    it('allows admin to access any user jury presidencies', async () => {
+      const user = await utils.givenUser();
+      const userAuth = await utils.login(user);
+      const competition = await utils.givenCompetition(userAuth);
+      await utils.addJuryPresidentInCompetition(user, userAuth, competition);
+
+      const admin = await utils.givenAdminUser();
+      const adminAuth = await utils.login(admin);
+
+      const res = await api
+        .get(`/api/users/${user.id}/jury-presidencies`)
+        .set('Authorization', 'Bearer ' + adminAuth.token)
+        .expect(200);
+
+      const juryPresidency = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
+
+      expect(juryPresidency).toBeTruthy();
+    });
   });
 
-  it('GET /users/{userId}/registrations', async function () {
-    const user = await utils.givenUser();
-    const token = await utils.login(user);
-    const competition = await utils.givenCompetition(token);
-    await utils.registerUserInCompetition(user, token, competition);
+  describe('GET /users/{userId}/judgements', () => {
+    it('gets user judgements', async function () {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+      const competition = await utils.givenCompetition(auth);
+      await utils.addJudgeInCompetition(user, auth, competition);
 
-    const res = await api
-      .get(`/api/users/${user.id}/registrations`)
-      .expect(200);
+      const res = await api
+        .get(`/api/users/${user.id}/judgements`)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(200);
 
-    const registration = res.body.find(
-      (r: CompetitionRegistrationDto): boolean =>
-        r.userId === user.id && r.competitionId === competition.id,
-    );
+      const judgement = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
 
-    expect(registration).toBeTruthy();
-    expect(registration).toHaveProperty('createdAt');
-    expect(registration).toHaveProperty('updatedAt');
+      expect(judgement).toBeTruthy();
+    });
+
+    it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      await api.get('/api/users/999999/judgements').expect(401);
+    });
+
+    it('returns 403 when authenticated user do not own the accessed user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/judgements')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(403);
+    });
+
+    it('returns 404 when getting an unknown user', async () => {
+      const user = await utils.givenAdminUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/judgements')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(404);
+    });
+
+    it('allows admin to access any user judgements', async () => {
+      const user = await utils.givenUser();
+      const userAuth = await utils.login(user);
+      const competition = await utils.givenCompetition(userAuth);
+      await utils.addJudgeInCompetition(user, userAuth, competition);
+
+      const admin = await utils.givenAdminUser();
+      const adminAuth = await utils.login(admin);
+
+      const res = await api
+        .get(`/api/users/${user.id}/judgements`)
+        .set('Authorization', 'Bearer ' + adminAuth.token)
+        .expect(200);
+
+      const judgement = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
+
+      expect(judgement).toBeTruthy();
+    });
   });
 
-  it('GET /users/{userId}/jury-presidencies', async function () {
-    const user = await utils.givenUser();
-    const token = await utils.login(user);
-    const competition = await utils.givenCompetition(token);
-    await utils.addJuryPresidentInCompetition(user, token, competition);
+  describe('GET /users/{userId}/chief-route-settings', () => {
+    it('gets user chief route settings', async function () {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+      const competition = await utils.givenCompetition(auth);
+      await utils.addChiefRouteSetterInCompetition(user, auth, competition);
 
-    const res = await api
-      .get(`/api/users/${user.id}/jury-presidencies`)
-      .expect(200);
+      const res = await api
+        .get(`/api/users/${user.id}/chief-route-settings`)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(200);
 
-    const juryPresidency = res.body.find(
-      (r: CompetitionDto): boolean => r.id === competition.id,
-    );
-    expect(juryPresidency).toBeTruthy();
+      const chiefRouteSetting = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
+
+      expect(chiefRouteSetting).toBeTruthy();
+    });
+
+    it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      await api.get('/api/users/999999/chief-route-settings').expect(401);
+    });
+
+    it('returns 403 when authenticated user do not own the accessed user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/chief-route-settings')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(403);
+    });
+
+    it('returns 404 when getting an unknown user', async () => {
+      const user = await utils.givenAdminUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/chief-route-settings')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(404);
+    });
+
+    it('allows admin to access any user chief route settings', async () => {
+      const user = await utils.givenUser();
+      const userAuth = await utils.login(user);
+      const competition = await utils.givenCompetition(userAuth);
+      await utils.addChiefRouteSetterInCompetition(user, userAuth, competition);
+
+      const admin = await utils.givenAdminUser();
+      const adminAuth = await utils.login(admin);
+
+      const res = await api
+        .get(`/api/users/${user.id}/chief-route-settings`)
+        .set('Authorization', 'Bearer ' + adminAuth.token)
+        .expect(200);
+
+      const chiefRouteSetting = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
+
+      expect(chiefRouteSetting).toBeTruthy();
+    });
   });
 
-  it('GET /users/{userId}/judgements', async function () {
-    const user = await utils.givenUser();
-    const token = await utils.login(user);
-    const competition = await utils.givenCompetition(token);
-    await utils.addJudgeInCompetition(user, token, competition);
+  describe('GET /users/{userId}/route-settings', () => {
+    it('gets user route settings', async function () {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+      const competition = await utils.givenCompetition(auth);
+      await utils.addRouteSetterInCompetition(user, auth, competition);
 
-    const res = await api.get(`/api/users/${user.id}/judgements`).expect(200);
+      const res = await api
+        .get(`/api/users/${user.id}/route-settings`)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(200);
 
-    const judgement = res.body.find(
-      (r: CompetitionDto): boolean => r.id === competition.id,
-    );
-    expect(judgement).toBeTruthy();
+      const routeSetting = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
+
+      expect(routeSetting).toBeTruthy();
+    });
+
+    it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      await api.get('/api/users/999999/route-settings').expect(401);
+    });
+
+    it('returns 403 when authenticated user do not own the accessed user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/route-settings')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(403);
+    });
+
+    it('returns 404 when getting an unknown user', async () => {
+      const user = await utils.givenAdminUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/route-settings')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(404);
+    });
+
+    it('allows admin to access any user route settings', async () => {
+      const user = await utils.givenUser();
+      const userAuth = await utils.login(user);
+      const competition = await utils.givenCompetition(userAuth);
+      await utils.addRouteSetterInCompetition(user, userAuth, competition);
+
+      const admin = await utils.givenAdminUser();
+      const adminAuth = await utils.login(admin);
+
+      const res = await api
+        .get(`/api/users/${user.id}/route-settings`)
+        .set('Authorization', 'Bearer ' + adminAuth.token)
+        .expect(200);
+
+      const routeSetting = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
+
+      expect(routeSetting).toBeTruthy();
+    });
   });
 
-  it('GET /users/{userId}/chief-route-settings', async function () {
-    const user = await utils.givenUser();
-    const token = await utils.login(user);
-    const competition = await utils.givenCompetition(token);
-    await utils.addChiefRouteSetterInCompetition(user, token, competition);
+  describe('GET /users/{userId}/technical-delegations', () => {
+    it('gets user technical delegations', async function () {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+      const competition = await utils.givenCompetition(auth);
+      await utils.addTechnicalDelegateInCompetition(user, auth, competition);
 
-    const res = await api
-      .get(`/api/users/${user.id}/chief-route-settings`)
-      .expect(200);
+      const res = await api
+        .get(`/api/users/${user.id}/technical-delegations`)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(200);
 
-    const chiefRouteSetting = res.body.find(
-      (r: CompetitionDto): boolean => r.id === competition.id,
-    );
-    expect(chiefRouteSetting).toBeTruthy();
-  });
+      const technicalDelegation = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
 
-  it('GET /users/{userId}/route-settings', async function () {
-    const user = await utils.givenUser();
-    const token = await utils.login(user);
-    const competition = await utils.givenCompetition(token);
-    await utils.addRouteSetterInCompetition(user, token, competition);
+      expect(technicalDelegation).toBeTruthy();
+    });
 
-    const res = await api
-      .get(`/api/users/${user.id}/route-settings`)
-      .expect(200);
+    it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      await api.get('/api/users/999999/technical-delegations').expect(401);
+    });
 
-    const routeSetting = res.body.find(
-      (r: CompetitionDto): boolean => r.id === competition.id,
-    );
-    expect(routeSetting).toBeTruthy();
-  });
+    it('returns 403 when authenticated user do not own the accessed user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
 
-  it('GET /users/{userId}/technical-delegations', async function () {
-    const user = await utils.givenUser();
-    const token = await utils.login(user);
-    const competition = await utils.givenCompetition(token);
-    await utils.addTechnicalDelegateInCompetition(user, token, competition);
+      await api
+        .get('/api/users/999999/technical-delegations')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(403);
+    });
 
-    const res = await api
-      .get(`/api/users/${user.id}/technical-delegations`)
-      .expect(200);
+    it('returns 404 when getting an unknown user', async () => {
+      const user = await utils.givenAdminUser();
+      const auth = await utils.login(user);
 
-    const technicalDelegation = res.body.find(
-      (r: CompetitionDto): boolean => r.id === competition.id,
-    );
-    expect(technicalDelegation).toBeTruthy();
+      await api
+        .get('/api/users/999999/technical-delegations')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(404);
+    });
+
+    it('allows admin to access any user technical delegations', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+      const competition = await utils.givenCompetition(auth);
+      await utils.addTechnicalDelegateInCompetition(user, auth, competition);
+
+      const admin = await utils.givenAdminUser();
+      const adminAuth = await utils.login(admin);
+
+      const res = await api
+        .get(`/api/users/${user.id}/technical-delegations`)
+        .set('Authorization', 'Bearer ' + adminAuth.token)
+        .expect(200);
+
+      const technicalDelegation = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
+
+      expect(technicalDelegation).toBeTruthy();
+    });
   });
 });
