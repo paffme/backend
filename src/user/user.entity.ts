@@ -5,12 +5,6 @@ import { BaseEntity } from '../shared/base.entity';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { Competition } from '../competition/competition.entity';
 
-export interface Permissions {
-  // eslint-disable-next-line @typescript-eslint/no-use-before-define
-  users: typeof User.prototype.id[];
-  competitions: typeof Competition.prototype.id[];
-}
-
 @Entity()
 export class User extends BaseEntity {
   @Property({ hidden: true })
@@ -28,14 +22,6 @@ export class User extends BaseEntity {
     hidden: true,
   })
   systemRole: SystemRole = SystemRole.User;
-
-  @Property({
-    hidden: true,
-  })
-  ownedResources: Permissions = {
-    users: [],
-    competitions: [],
-  };
 
   @Property({ hidden: true, length: 512 })
   password!: string;

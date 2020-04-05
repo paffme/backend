@@ -2,14 +2,15 @@ import { AppRoles } from '../../app.roles';
 import { IQueryInfo } from 'accesscontrol/lib/core';
 import { SystemRole } from '../../user/user-role.enum';
 import { AccessControl } from 'accesscontrol';
-import { Permissions, User } from '../../user/user.entity';
+import { User } from '../../user/user.entity';
 import { Reflector } from '@nestjs/core';
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext } from '@nestjs/common';
 
 import {
   AUTHORIZATION_METADATA_KEY,
   AuthorizationMetadata,
 } from '../decorators/allowed-app-roles.decorator';
+import { BaseAuthorizationService } from '../authorization/base.authorization.service';
 
 type Grants = {
   [role in AppRoles]?: {
@@ -20,11 +21,15 @@ type Grants = {
 };
 
 type ResourcePossession = 'own' | 'any';
-type Action = 'create' | 'read' | 'update' | 'delete';
+export type Action = 'create' | 'read' | 'update' | 'delete';
 
-@Injectable()
-export class AuthorizationGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+export abstract class BaseAuthorizationGuard implements CanActivate {
+  protected constructor(
+    private readonly reflector: Reflector,
+    private readonly resourceName: string,
+  ) {
+    this.resourceName = this.resourceName.toLowerCase();
+  }
 
   private getActionFromHTTPMethod(method: string): Action {
     switch (method) {
@@ -42,28 +47,14 @@ export class AuthorizationGuard implements CanActivate {
     }
   }
 
-  private getPermissionKeyFromContext(
+  async authorize(
     context: ExecutionContext,
-  ): keyof Permissions {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    if (!context.constructorRef.name.endsWith('Controller')) {
-      throw new Error('Unhandled constructor name');
-    }
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    return `${context.constructorRef.name
-      .slice(0, -10) // remove "Controller"
-      .toLowerCase()}s` as keyof Permissions;
-  }
-
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+    authorizationService: BaseAuthorizationService,
+    resourceId?: unknown,
+  ): Promise<boolean> {
     // Init constants
     const request = context.switchToHttp().getRequest();
     const action = this.getActionFromHTTPMethod(request.method);
-    const permissionKey = this.getPermissionKeyFromContext(context);
-    const resourceName = permissionKey.slice(0, -1); // remove plurals
 
     // Set user roles and resource possession
     const user: User = request.user;
@@ -81,16 +72,8 @@ export class AuthorizationGuard implements CanActivate {
 
     let possession: ResourcePossession = 'any';
 
-    if (action !== 'create') {
-      const resourceIdParamKey = `${resourceName}Id`;
-      const resourceId = Number(request.params[resourceIdParamKey]);
-
-      // Param not defined
-      if (isNaN(resourceId)) {
-        return false;
-      }
-
-      if (user.ownedResources[permissionKey].includes(resourceId)) {
+    if (typeof resourceId !== 'undefined') {
+      if (await authorizationService.authorize(user.id, resourceId)) {
         userRoles.push(AppRoles.OWNER);
         possession = 'own';
       }
@@ -104,8 +87,8 @@ export class AuthorizationGuard implements CanActivate {
 
     const grants = appRoles.reduce<Grants>((g, role) => {
       const currentRole = (g[role] = g[role] ?? {});
-      const currentResource = (currentRole[resourceName] =
-        currentRole[resourceName] ?? {});
+      const currentResource = (currentRole[this.resourceName] =
+        currentRole[this.resourceName] ?? {});
 
       currentResource[`${action}:${possession}`] = ['*'];
       return g;
@@ -124,7 +107,7 @@ export class AuthorizationGuard implements CanActivate {
           action,
           possession,
           role: userRoles,
-          resource: resourceName,
+          resource: this.resourceName,
         };
 
         return ac.permission(query).granted;
@@ -133,4 +116,6 @@ export class AuthorizationGuard implements CanActivate {
 
     return false;
   }
+
+  abstract canActivate(context: ExecutionContext): boolean | Promise<boolean>;
 }

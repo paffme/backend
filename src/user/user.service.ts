@@ -15,8 +15,8 @@ import { User } from './user.entity';
 import { RegisterDto } from './dto/in/body/register.dto';
 import { CredentialsDto } from './dto/in/body/credentials.dto';
 import { TokenResponseDto } from './dto/out/token-response.dto';
-import { JwtPayload } from '../shared/auth/jwt-payload.interface';
-import { AuthenticationService } from '../shared/auth/authentication.service';
+import { JwtPayload } from '../shared/authentication/jwt-payload.interface';
+import { AuthenticationService } from '../shared/authentication/authentication.service';
 import { validate } from 'class-validator';
 import { UserMapper } from '../shared/mappers/user.mapper';
 import { BaseService } from '../shared/base.service';
@@ -116,9 +116,6 @@ export class UserService extends BaseService<User, UserDto> {
     }
 
     await this.userRepository.persistAndFlush(newUser);
-    newUser.ownedResources.users.push(newUser.id);
-    await this.userRepository.persistAndFlush(newUser);
-
     return newUser;
   }
 
