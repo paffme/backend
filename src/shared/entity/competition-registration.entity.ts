@@ -1,10 +1,4 @@
-import {
-  Entity,
-  IdentifiedReference,
-  ManyToOne,
-  PrimaryKeyType,
-  Reference,
-} from 'mikro-orm';
+import { Entity, ManyToOne, PrimaryKeyType } from 'mikro-orm';
 import { Competition } from '../../competition/competition.entity';
 import { User } from '../../user/user.entity';
 import { Timestamp } from './timestamp.entity';
@@ -12,16 +6,16 @@ import { Timestamp } from './timestamp.entity';
 @Entity()
 export class CompetitionRegistration extends Timestamp {
   @ManyToOne({ primary: true })
-  competition: IdentifiedReference<Competition>;
+  competition: Competition;
 
   @ManyToOne({ primary: true })
-  climber: IdentifiedReference<User>;
+  climber: User;
 
-  [PrimaryKeyType]: [number, number];
+  [PrimaryKeyType]: [typeof Competition.prototype.id, typeof User.prototype.id];
 
   constructor(competition: Competition, climber: User) {
     super();
-    this.competition = Reference.create(competition);
-    this.climber = Reference.create(climber);
+    this.competition = competition;
+    this.climber = climber;
   }
 }

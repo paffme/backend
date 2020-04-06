@@ -182,15 +182,86 @@ describe('Competition (e2e)', () => {
     describe('DELETE /competitions/{competitionId}/registrations/{userId}', () => {
       it('deletes a registration', async function () {
         const user = await utils.givenUser();
-        const token = await utils.login(user);
-        const competition = await utils.givenCompetition(token);
-        await utils.registerUserInCompetition(user, token, competition);
+        const auth = await utils.login(user);
+        const competition = await utils.givenCompetition(auth);
+        await utils.registerUserInCompetition(user, auth, competition);
 
         await api
           .delete(
             `/api/competitions/${competition.id}/registrations/${user.id}`,
           )
-          .set('Authorization', `Bearer ${token.token}`)
+          .set('Authorization', `Bearer ${auth.token}`)
+          .expect(204);
+
+        const registrations = await utils.getRegistrations(competition);
+
+        const registration = registrations.find(
+          (r) => r.userId === user.id && r.competitionId === competition.id,
+        );
+
+        expect(registration).toBeUndefined();
+      });
+
+      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+        await api
+          .delete('/api/competitions/999999/registrations/888888')
+          .expect(401);
+      });
+
+      it('returns 403 when authenticated user do not own the accessed user', async () => {
+        const user = await utils.givenUser();
+        const auth = await utils.login(user);
+
+        await api
+          .delete('/api/competitions/999999999/registrations/8888888')
+          .set('Authorization', 'Bearer ' + auth.token)
+          .expect(403);
+      });
+
+      it('returns 404 when deleting a registration on an unknown competition', async () => {
+        const user = await utils.givenAdminUser();
+        const auth = await utils.login(user);
+
+        await api
+          .post(`/api/competitions/999999999/registrations/${user.id}`)
+          .set('Authorization', 'Bearer ' + auth.token)
+          .expect(404);
+      });
+
+      it('returns 404 when deleting a registration on un unknown user', async () => {
+        const user = await utils.givenAdminUser();
+        const auth = await utils.login(user);
+        const competition = await utils.givenCompetition(auth);
+
+        await api
+          .post(`/api/competitions/${competition.id}/registrations/999999`)
+          .set('Authorization', 'Bearer ' + auth.token)
+          .expect(404);
+      });
+
+      it('returns 404 when deleting an unknown registration', async () => {
+        const user = await utils.givenAdminUser();
+        const auth = await utils.login(user);
+        const competition = await utils.givenCompetition(auth);
+
+        await api
+          .post(`/api/competitions/${competition.id}/registrations/${user.id}`)
+          .set('Authorization', 'Bearer ' + auth.token)
+          .expect(404);
+      });
+
+      it('allows admin to delete a registration for a user', async () => {
+        const user = await utils.givenUser();
+        const admin = await utils.givenAdminUser();
+        const auth = await utils.login(admin);
+        const competition = await utils.givenCompetition(auth);
+        await utils.registerUserInCompetition(user, auth, competition);
+
+        await api
+          .delete(
+            '/api/competitions/' + competition.id + '/registrations/' + user.id,
+          )
+          .set('Authorization', 'Bearer ' + auth.token)
           .expect(204);
 
         const registrations = await utils.getRegistrations(competition);
