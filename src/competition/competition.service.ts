@@ -1,4 +1,5 @@
 import {
+  BadRequestException, ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -8,7 +9,7 @@ import {
 import { BaseService } from '../shared/base.service';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
-import { Competition } from './competition.entity';
+import { Competition, CompetitionRelation } from './competition.entity';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
 import { CompetitionDto } from './dto/out/competition.dto';
 import { validate } from 'class-validator';
@@ -22,6 +23,7 @@ import { AddJudgeDto } from './dto/in/body/add-judge.dto';
 import { AddRouteSetterDto } from './dto/in/body/add-route-setter.dto';
 import { AddTechnicalDelegateDto } from './dto/in/body/add-technical-delegate.dto';
 import { AddChiefRouteSetterDto } from './dto/in/body/add-chief-route-setter.dto';
+import { AddOrganizerDto } from './dto/in/body/add-organizer.dto';
 
 @Injectable()
 export class CompetitionService extends BaseService<
@@ -63,9 +65,19 @@ export class CompetitionService extends BaseService<
     return this.competitionRepository.findAll();
   }
 
-  async create(dto: CreateCompetitionDTO): Promise<Competition> {
-    const newCompetition = new Competition();
-    Object.assign(newCompetition, dto);
+  async create(dto: CreateCompetitionDTO, owner: User): Promise<Competition> {
+    const newCompetition = new Competition(
+      dto.name,
+      dto.type,
+      dto.startDate,
+      dto.endDate,
+      dto.address,
+      dto.city,
+      dto.postalCode,
+      dto.categories,
+    );
+
+    newCompetition.organizers.add(owner);
 
     const errors = await validate(newCompetition);
 
@@ -123,194 +135,182 @@ export class CompetitionService extends BaseService<
     await this.competitionRegistrationRepository.removeAndFlush(registration);
   }
 
+  private async addUserRelation(
+    competitionId: typeof Competition.prototype.id,
+    dto: { userId: typeof User.prototype.id },
+    relation: CompetitionRelation,
+  ): Promise<void> {
+    const competition = await this.getOrFail(competitionId, [relation]);
+    const user = await this.userService.getOrFail(dto.userId);
+
+    if (competition[relation].contains(user)) {
+      throw new ConflictException('User is already in this relation');
+    } else {
+      competition[relation].add(user);
+      await this.competitionRepository.persistAndFlush(competition);
+    }
+  }
+
+  private async getUserRelation(
+    competitionId: typeof Competition.prototype.id,
+    relation: CompetitionRelation,
+  ): Promise<User[]> {
+    const competition = await this.getOrFail(competitionId, [relation]);
+    return competition[relation].getItems();
+  }
+
+  private async removeUserInRelation(
+    competitionId: typeof Competition.prototype.id,
+    userId: typeof User.prototype.id,
+    relation: CompetitionRelation,
+  ): Promise<void> {
+    const [competition, user] = await Promise.all([
+      this.getOrFail(competitionId, [relation]),
+      this.userService.getOrFail(userId),
+    ]);
+
+    if (competition[relation].contains(user)) {
+      competition[relation].remove(user);
+      await this.competitionRepository.persistAndFlush(competition);
+    } else {
+      throw new NotFoundException('User not found in relation');
+    }
+  }
+
   async addJuryPresident(
     competitionId: typeof Competition.prototype.id,
     dto: AddJuryPresidentDto,
   ): Promise<void> {
-    const competition = await this.getOrFail(competitionId, ['juryPresidents']);
-    const user = await this.userService.getOrFail(dto.userId);
-    competition.juryPresidents.add(user);
-    await this.competitionRepository.persistAndFlush(competition);
+    await this.addUserRelation(competitionId, dto, 'juryPresidents');
   }
 
-  async getJuryPresidents(
+  getJuryPresidents(
     competitionId: typeof Competition.prototype.id,
   ): Promise<User[]> {
-    const competition = await this.getOrFail(competitionId, ['juryPresidents']);
-    return competition.juryPresidents.getItems();
+    return this.getUserRelation(competitionId, 'juryPresidents');
   }
 
   async removeJuryPresident(
     competitionId: typeof Competition.prototype.id,
     userId: typeof User.prototype.id,
   ): Promise<void> {
-    const [competition, user] = await Promise.all([
-      this.getOrFail(competitionId, ['juryPresidents']),
-      this.userService.getOrFail(userId),
-    ]);
-
-    if (competition.juryPresidents.contains(user)) {
-      competition.juryPresidents.remove(user);
-    } else {
-      throw new NotFoundException('Jury president not found');
-    }
-
-    await this.competitionRepository.persistAndFlush(competition);
+    await this.removeUserInRelation(competitionId, userId, 'juryPresidents');
   }
 
   async addJudge(
     competitionId: typeof Competition.prototype.id,
     dto: AddJudgeDto,
   ): Promise<void> {
-    const competition = await this.getOrFail(competitionId, ['judges']);
-    const user = await this.userService.getOrFail(dto.userId);
-    competition.judges.add(user);
-    await this.competitionRepository.persistAndFlush(competition);
+    await this.addUserRelation(competitionId, dto, 'judges');
   }
 
-  async getJudges(
-    competitionId: typeof Competition.prototype.id,
-  ): Promise<User[]> {
-    const competition = await this.getOrFail(competitionId, ['judges']);
-    return competition.judges.getItems();
+  getJudges(competitionId: typeof Competition.prototype.id): Promise<User[]> {
+    return this.getUserRelation(competitionId, 'judges');
   }
 
   async removeJudge(
     competitionId: typeof Competition.prototype.id,
     userId: typeof User.prototype.id,
   ): Promise<void> {
-    const [competition, user] = await Promise.all([
-      this.getOrFail(competitionId, ['judges']),
-      this.userService.getOrFail(userId),
-    ]);
-
-    if (competition.judges.contains(user)) {
-      competition.judges.remove(user);
-    } else {
-      throw new NotFoundException('Judge not found');
-    }
-
-    await this.competitionRepository.persistAndFlush(competition);
+    await this.removeUserInRelation(competitionId, userId, 'judges');
   }
 
   async addChiefRouteSetter(
     competitionId: typeof Competition.prototype.id,
     dto: AddChiefRouteSetterDto,
   ): Promise<void> {
-    const competition = await this.getOrFail(competitionId, [
-      'chiefRouteSetters',
-    ]);
-
-    const user = await this.userService.getOrFail(dto.userId);
-    competition.chiefRouteSetters.add(user);
-    await this.competitionRepository.persistAndFlush(competition);
+    await this.addUserRelation(competitionId, dto, 'chiefRouteSetters');
   }
 
-  async getChiefRouteSetters(
+  getChiefRouteSetters(
     competitionId: typeof Competition.prototype.id,
   ): Promise<User[]> {
-    const competition = await this.getOrFail(competitionId, [
-      'chiefRouteSetters',
-    ]);
-
-    return competition.chiefRouteSetters.getItems();
+    return this.getUserRelation(competitionId, 'chiefRouteSetters');
   }
 
   async removeChiefRouteSetter(
     competitionId: typeof Competition.prototype.id,
     userId: typeof User.prototype.id,
   ): Promise<void> {
-    const [competition, user] = await Promise.all([
-      this.getOrFail(competitionId, ['chiefRouteSetters']),
-      this.userService.getOrFail(userId),
-    ]);
-
-    if (competition.chiefRouteSetters.contains(user)) {
-      competition.chiefRouteSetters.remove(user);
-    } else {
-      throw new NotFoundException('Judge not found');
-    }
-
-    await this.competitionRepository.persistAndFlush(competition);
+    await this.removeUserInRelation(competitionId, userId, 'chiefRouteSetters');
   }
 
   async addRouteSetter(
     competitionId: typeof Competition.prototype.id,
     dto: AddRouteSetterDto,
   ): Promise<void> {
-    const competition = await this.getOrFail(competitionId, ['routeSetters']);
-    const user = await this.userService.getOrFail(dto.userId);
-    competition.routeSetters.add(user);
-    await this.competitionRepository.persistAndFlush(competition);
+    await this.addUserRelation(competitionId, dto, 'routeSetters');
   }
 
-  async getRouteSetters(
+  getRouteSetters(
     competitionId: typeof Competition.prototype.id,
   ): Promise<User[]> {
-    const competition = await this.getOrFail(competitionId, ['routeSetters']);
-    return competition.routeSetters.getItems();
+    return this.getUserRelation(competitionId, 'routeSetters');
   }
 
   async removeRouteSetter(
     competitionId: typeof Competition.prototype.id,
     userId: typeof User.prototype.id,
   ): Promise<void> {
-    const [competition, user] = await Promise.all([
-      this.getOrFail(competitionId, ['routeSetters']),
-      this.userService.getOrFail(userId),
-    ]);
-
-    if (competition.routeSetters.contains(user)) {
-      competition.routeSetters.remove(user);
-    } else {
-      throw new NotFoundException('Judge not found');
-    }
-
-    await this.competitionRepository.persistAndFlush(competition);
+    await this.removeUserInRelation(competitionId, userId, 'routeSetters');
   }
 
   async addTechnicalDelegate(
     competitionId: typeof Competition.prototype.id,
     dto: AddTechnicalDelegateDto,
   ): Promise<void> {
-    const competition = await this.getOrFail(competitionId, [
-      'technicalDelegates',
-    ]);
-
-    const user = await this.userService.getOrFail(dto.userId);
-    competition.technicalDelegates.add(user);
-    await this.competitionRepository.persistAndFlush(competition);
+    await this.addUserRelation(competitionId, dto, 'technicalDelegates');
   }
 
-  async getTechnicalDelegates(
+  getTechnicalDelegates(
     competitionId: typeof Competition.prototype.id,
   ): Promise<User[]> {
-    const competition = await this.getOrFail(competitionId, [
-      'technicalDelegates',
-    ]);
-
-    return competition.technicalDelegates.getItems();
+    return this.getUserRelation(competitionId, 'technicalDelegates');
   }
 
   async removeTechnicalDelegate(
     competitionId: typeof Competition.prototype.id,
     userId: typeof User.prototype.id,
   ): Promise<void> {
+    await this.removeUserInRelation(
+      competitionId,
+      userId,
+      'technicalDelegates',
+    );
+  }
+
+  async addOrganizer(
+    competitionId: typeof Competition.prototype.id,
+    dto: AddOrganizerDto,
+  ): Promise<void> {
+    await this.addUserRelation(competitionId, dto, 'organizers');
+  }
+
+  async getOrganizers(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<User[]> {
+    return this.getUserRelation(competitionId, 'organizers');
+  }
+
+  async removeOrganizer(
+    competitionId: typeof Competition.prototype.id,
+    userId: typeof User.prototype.id,
+  ): Promise<void> {
     const [competition, user] = await Promise.all([
-      this.getOrFail(competitionId, ['technicalDelegates']),
+      this.getOrFail(competitionId, ['organizers']),
       this.userService.getOrFail(userId),
     ]);
 
-    if (competition.technicalDelegates.contains(user)) {
-      competition.technicalDelegates.remove(user);
+    if (competition.organizers.contains(user)) {
+      if (competition.organizers.length === 1) {
+        throw new BadRequestException('The last organizer cannot be removed');
+      } else {
+        competition.organizers.remove(user);
+      }
     } else {
-      throw new NotFoundException('Judge not found');
+      throw new NotFoundException('Organizer not found');
     }
 
     await this.competitionRepository.persistAndFlush(competition);
-  }
-
-  getOwner(entityId: unknown): Promise<User | null> {
-    throw new Error('Method not implemented.');
   }
 }

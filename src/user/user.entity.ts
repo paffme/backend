@@ -46,4 +46,19 @@ export class User extends BaseEntity {
     (competition) => competition.technicalDelegates,
   )
   technicalDelegations = new Collection<Competition>(this);
+
+  @ManyToMany(() => Competition, (competition) => competition.organizers)
+  organizations = new Collection<Competition>(this);
 }
+
+export type UserRelation =
+  | 'registrations'
+  | 'juryPresidencies'
+  | 'judgements'
+  | 'chiefRouteSettings'
+  | 'routeSettings'
+  | 'technicalDelegations'
+  | 'organizations';
+
+// This is just for static validation
+type CompetitionRelationValidation = Pick<User, UserRelation>;

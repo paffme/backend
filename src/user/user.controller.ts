@@ -122,14 +122,8 @@ export class UserController {
   async update(
     @Param() params: UpdateParamsDto,
     @Body() dto: UpdateUserDto,
-    @GetUser() user: User,
   ): Promise<UserDto> {
-    const updatedUser = await this.userService.updateUser(
-      params.userId,
-      dto,
-      user,
-    );
-
+    const updatedUser = await this.userService.updateUser(params.userId, dto);
     return this.userService.mapper.map(updatedUser);
   }
 
@@ -228,5 +222,21 @@ export class UserController {
     );
 
     return this.competitionMapper.mapArray(technicalDelegates);
+  }
+
+  @Get('/:userId/organizations')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
+  @ApiOkResponse({ isArray: true, type: CompetitionDto })
+  @ApiOperation(GetOperationId(User.constructor.name, 'GetOrganizations'))
+  async getOrganizations(
+    @Param() params: GetRouteSettingsParamsDto,
+  ): Promise<CompetitionDto[]> {
+    const organizations = await this.userService.getOrganizations(
+      params.userId,
+    );
+
+    return this.competitionMapper.mapArray(organizations);
   }
 }

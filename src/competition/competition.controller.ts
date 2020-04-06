@@ -1,10 +1,24 @@
-import { Body, Controller, Delete, ForbiddenException, Get, HttpCode, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  ForbiddenException,
+  Get,
+  HttpCode,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { CompetitionDto } from './dto/out/competition.dto';
 import { AllowedSystemRoles } from '../shared/decorators/allowed-system-roles.decorator';
 import { SystemRole } from '../user/user-role.enum';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthenticationGuard } from '../shared/guards/authentication.guard';
-import { ApiNoContentResponse, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiNoContentResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { GetOperationId } from '../shared/utils/get-operation-id.helper';
 import { CompetitionService } from './competition.service';
 import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
@@ -42,6 +56,9 @@ import { AllowedAppRoles } from '../shared/decorators/allowed-app-roles.decorato
 import { AppRoles } from '../app.roles';
 import { UserAuthorizationGuard } from '../shared/authorization/user.authorization.guard';
 import { UserBodyAuthorizationGuard } from '../shared/authorization/user-body.authorization.guard';
+import { AddOrganizerDto } from './dto/in/body/add-organizer.dto';
+import { AddOrganizerParamsDto } from './dto/in/params/add-organizer-params.dto';
+import { RemoveOrganizerParamsDto } from './dto/in/params/remove-organizer-params.dto';
 
 @Controller('competitions')
 export class CompetitionController {
@@ -66,8 +83,11 @@ export class CompetitionController {
   @UseGuards(AuthGuard('jwt'), AuthenticationGuard)
   @ApiOkResponse({ type: CompetitionDto })
   @ApiOperation(GetOperationId(Competition.name, 'CreateCompetition'))
-  async create(@Body() dto: CreateCompetitionDTO): Promise<CompetitionDto> {
-    const competition = await this.competitionService.create(dto);
+  async create(
+    @Body() dto: CreateCompetitionDTO,
+    @GetUser() owner: User,
+  ): Promise<CompetitionDto> {
+    const competition = await this.competitionService.create(dto, owner);
     return this.competitionService.mapper.map(competition);
   }
 
@@ -321,6 +341,47 @@ export class CompetitionController {
     @Param() params: RemoveTechnicalDelegateParamsDto,
   ): Promise<void> {
     await this.competitionService.removeTechnicalDelegate(
+      params.competitionId,
+      params.userId,
+    );
+  }
+
+  @Get('/:competitionId/organizers')
+  @ApiOkResponse({ isArray: true, type: UserDto })
+  @ApiOperation(GetOperationId(Competition.name, 'GetOrganizers'))
+  async getOrganizers(
+    @Param() params: GetCompetitionTechnicalDelegatesParamsDto,
+  ): Promise<UserDto[]> {
+    const organizers = await this.competitionService.getOrganizers(
+      params.competitionId,
+    );
+
+    return this.userMapper.mapArray(organizers);
+  }
+
+  @Post('/:competitionId/organizers')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard)
+  @ApiNoContentResponse()
+  @ApiOperation(GetOperationId(Competition.name, 'AddOrganizer'))
+  @HttpCode(204)
+  async addOrganizer(
+    @Param() params: AddOrganizerParamsDto,
+    @Body() dto: AddOrganizerDto,
+  ): Promise<void> {
+    await this.competitionService.addOrganizer(params.competitionId, dto);
+  }
+
+  @Delete('/:competitionId/organizers/:userId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard)
+  @ApiNoContentResponse()
+  @HttpCode(204)
+  @ApiOperation(GetOperationId(Competition.name, 'RemoveOrganizer'))
+  async removeOrganizer(
+    @Param() params: RemoveOrganizerParamsDto,
+  ): Promise<void> {
+    await this.competitionService.removeOrganizer(
       params.competitionId,
       params.userId,
     );

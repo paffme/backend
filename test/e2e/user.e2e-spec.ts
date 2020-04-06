@@ -705,4 +705,67 @@ describe('User (e2e)', () => {
       expect(technicalDelegation).toBeTruthy();
     });
   });
+
+  describe('GET /users/{userId}/organizations', () => {
+    it('gets user organizations', async function () {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+      const competition = await utils.givenCompetition(auth);
+
+      const res = await api
+        .get(`/api/users/${user.id}/organizations`)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(200);
+
+      const organization = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
+
+      expect(organization).toBeTruthy();
+    });
+
+    it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      await api.get('/api/users/999999/organizations').expect(401);
+    });
+
+    it('returns 403 when authenticated user do not own the accessed user', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/organizations')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(403);
+    });
+
+    it('returns 404 when getting an unknown user', async () => {
+      const user = await utils.givenAdminUser();
+      const auth = await utils.login(user);
+
+      await api
+        .get('/api/users/999999/organizations')
+        .set('Authorization', 'Bearer ' + auth.token)
+        .expect(404);
+    });
+
+    it('allows admin to access any user organizations', async () => {
+      const user = await utils.givenUser();
+      const auth = await utils.login(user);
+      const competition = await utils.givenCompetition(auth);
+
+      const admin = await utils.givenAdminUser();
+      const adminAuth = await utils.login(admin);
+
+      const res = await api
+        .get(`/api/users/${user.id}/organizations`)
+        .set('Authorization', 'Bearer ' + adminAuth.token)
+        .expect(200);
+
+      const organization = res.body.find(
+        (r: CompetitionDto): boolean => r.id === competition.id,
+      );
+
+      expect(organization).toBeTruthy();
+    });
+  });
 });

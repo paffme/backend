@@ -1,6 +1,5 @@
 import {
   ConflictException,
-  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -11,7 +10,7 @@ import { randomBytes, scrypt } from 'crypto';
 import { EntityRepository, wrap } from 'mikro-orm';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { UpdateUserDto } from './dto/in/body/update-user.dto';
-import { User } from './user.entity';
+import { User, UserRelation } from './user.entity';
 import { RegisterDto } from './dto/in/body/register.dto';
 import { CredentialsDto } from './dto/in/body/credentials.dto';
 import { TokenResponseDto } from './dto/out/token-response.dto';
@@ -22,7 +21,7 @@ import { UserMapper } from '../shared/mappers/user.mapper';
 import { BaseService } from '../shared/base.service';
 import { UserDto } from './dto/out/user.dto';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
-import { Competition } from '../competition/competition.entity';
+import { Competition, CompetitionRelation } from '../competition/competition.entity';
 
 @Injectable()
 export class UserService extends BaseService<User, UserDto> {
@@ -157,7 +156,6 @@ export class UserService extends BaseService<User, UserDto> {
   async updateUser(
     userId: typeof User.prototype.id,
     dto: UpdateUserDto,
-    authenticatedUser: User,
   ): Promise<User> {
     const user = await this.getOrFail(userId);
 
@@ -230,7 +228,10 @@ export class UserService extends BaseService<User, UserDto> {
     return user.technicalDelegations.getItems();
   }
 
-  getOwner(userId: typeof User.prototype.id): Promise<User | null> {
-    return this.userRepository.findOne(userId);
+  async getOrganizations(
+    userId: typeof User.prototype.id,
+  ): Promise<Competition[]> {
+    const user = await this.getOrFail(userId, ['organizations']);
+    return user.organizations.getItems();
   }
 }

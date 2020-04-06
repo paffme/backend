@@ -14,6 +14,7 @@ import { AddTechnicalDelegateDto } from '../../src/competition/dto/in/body/add-t
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
 import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
+import { AddOrganizerDto } from '../../src/competition/dto/in/body/add-organizer.dto';
 
 describe('Competition (e2e)', () => {
   let app: NestExpressApplication;
@@ -80,6 +81,24 @@ describe('Competition (e2e)', () => {
           expect(res.body).toHaveProperty('createdAt');
           expect(res.body).toHaveProperty('updatedAt');
         });
+    });
+
+    it('adds the organizer on creation', async function () {
+      const user = await utils.givenUser();
+      const token = await utils.login(user);
+      const competition = utils.givenCompetitionData();
+
+      const creationRes = await api
+        .post('/api/competitions')
+        .set('Authorization', `Bearer ${token.token}`)
+        .send(competition)
+        .expect(201);
+
+      const res = await api
+        .get(`/api/competitions/${creationRes.body.id}/organizers`)
+        .expect(200);
+
+      expect(res.body[0].id).toEqual(user.id);
     });
   });
 
@@ -179,6 +198,7 @@ describe('Competition (e2e)', () => {
       });
     });
 
+    // TODO
     describe('DELETE /competitions/{competitionId}/registrations/{userId}', () => {
       it('deletes a registration', async function () {
         const user = await utils.givenUser();
@@ -275,7 +295,27 @@ describe('Competition (e2e)', () => {
     });
   });
 
+  // TODO
   describe('Jury presidents', function () {
+    describe('GET /competitions/{competitionId}/jury-presidents', () => {
+      it('retrieves jury presidents', async function () {
+        const user = await utils.givenUser();
+        const token = await utils.login(user);
+        const competition = await utils.givenCompetition(token);
+        await utils.addJuryPresidentInCompetition(user, token, competition);
+
+        const res = await api
+          .get(`/api/competitions/${competition.id}/jury-presidents`)
+          .expect(200);
+
+        const juryPresident = res.body.find(
+          (r: CompetitionDto) => r.id === user.id,
+        );
+
+        expect(juryPresident).toBeTruthy();
+      });
+    });
+
     describe('POST /competitions/{competitionId}/jury-presidents', () => {
       it('adds a jury president', async function () {
         const user = await utils.givenUser();
@@ -294,25 +334,6 @@ describe('Competition (e2e)', () => {
 
         const juryPresidents = await utils.getJuryPresidents(competition);
         const juryPresident = juryPresidents.find((jp) => jp.id === user.id);
-        expect(juryPresident).toBeTruthy();
-      });
-    });
-
-    describe('GET /competitions/{competitionId}/jury-presidents', () => {
-      it('retrieves jury presidents', async function () {
-        const user = await utils.givenUser();
-        const token = await utils.login(user);
-        const competition = await utils.givenCompetition(token);
-        await utils.addJuryPresidentInCompetition(user, token, competition);
-
-        const res = await api
-          .get(`/api/competitions/${competition.id}/jury-presidents`)
-          .expect(200);
-
-        const juryPresident = res.body.find(
-          (r: CompetitionDto) => r.id === user.id,
-        );
-
         expect(juryPresident).toBeTruthy();
       });
     });
@@ -396,6 +417,7 @@ describe('Competition (e2e)', () => {
     });
   });
 
+  // TODO
   describe('Chief route setters', function () {
     describe('POST /competitions/{competitionId}/chief-route-setters', () => {
       it('adds a chief route setter', async function () {
@@ -465,6 +487,7 @@ describe('Competition (e2e)', () => {
     });
   });
 
+  // TODO
   describe('Route setters', function () {
     describe('POST /competitions/{competitionId}/route-setters', () => {
       it('adds route setter', async function () {
@@ -528,6 +551,7 @@ describe('Competition (e2e)', () => {
     });
   });
 
+  // TODO
   describe('Technical delegates', function () {
     describe('POST /competitions/{competitionId}/technical-delegates', () => {
       it('adds a technical delegate', async function () {
@@ -599,6 +623,137 @@ describe('Competition (e2e)', () => {
         );
 
         expect(technicalDelegate).toBeUndefined();
+      });
+    });
+  });
+
+  // TODO
+  describe('Organizers', function () {
+    describe('POST /competitions/{competitionId}/organizers', () => {
+      it('add an organizer', async function () {
+        const [user, secondUser] = await Promise.all([
+          utils.givenUser(),
+          utils.givenUser(),
+        ]);
+
+        const token = await utils.login(user);
+        const competition = await utils.givenCompetition(token);
+
+        const dto: AddOrganizerDto = {
+          userId: secondUser.id,
+        };
+
+        await api
+          .post(`/api/competitions/${competition.id}/organizers`)
+          .set('Authorization', `Bearer ${token.token}`)
+          .send(dto)
+          .expect(204);
+
+        const organizers = await utils.getOrganizers(competition);
+        const organizer = organizers.find((o) => o.id === user.id);
+        expect(organizer).toBeTruthy();
+      });
+
+      it('do not add twice an organizer', async function () {
+        const user = await utils.givenUser();
+        const token = await utils.login(user);
+        const competition = await utils.givenCompetition(token);
+
+        const dto: AddOrganizerDto = {
+          userId: user.id,
+        };
+
+        const res = await api
+          .post(`/api/competitions/${competition.id}/organizers`)
+          .set('Authorization', `Bearer ${token.token}`)
+          .send(dto)
+          .expect(409);
+
+        expect(res.body.message).toEqual('User is already in this relation');
+
+        const organizers = await utils.getOrganizers(competition);
+        let counter = 0;
+
+        for (const organizer of organizers) {
+          if (organizer.id === user.id) {
+            counter++;
+          }
+        }
+
+        expect(counter).toEqual(1);
+      });
+    });
+
+    describe('GET /competitions/{competitionId}/organizers', () => {
+      it('retrieves organizers', async function () {
+        const user = await utils.givenUser();
+        const token = await utils.login(user);
+        const competition = await utils.givenCompetition(token);
+
+        const res = await api
+          .get(`/api/competitions/${competition.id}/organizers`)
+          .expect(200);
+
+        const organizer = res.body.find(
+          (r: CompetitionDto) => r.id === user.id,
+        );
+
+        expect(organizer).toBeTruthy();
+      });
+    });
+
+    describe('DELETE /competitions/{competitionId}/organizers/{userId}', () => {
+      it('removes an organizer', async function () {
+        const [user, secondUser] = await Promise.all([
+          utils.givenUser(),
+          utils.givenUser(),
+        ]);
+
+        const [userAuth, secondUserAuth] = await Promise.all([
+          utils.login(user),
+          utils.login(secondUser),
+        ]);
+
+        const competition = await utils.givenCompetition(userAuth);
+
+        await utils.addOrganizerInCompetition(
+          secondUser,
+          secondUserAuth,
+          competition,
+        );
+
+        await api
+          .delete(
+            `/api/competitions/${competition.id}/organizers/${secondUser.id}`,
+          )
+          .set('Authorization', `Bearer ${userAuth.token}`)
+          .expect(204);
+
+        const organizers = await utils.getOrganizers(competition);
+        const firstOrganizer = organizers.find((r) => r.id === user.id);
+        const secondOrganizer = organizers.find((r) => r.id === secondUser.id);
+
+        expect(firstOrganizer).toBeTruthy();
+        expect(secondOrganizer).toBeUndefined();
+      });
+
+      it('do not removes the last organizer', async function () {
+        const user = await utils.givenUser();
+        const token = await utils.login(user);
+        const competition = await utils.givenCompetition(token);
+
+        const res = await api
+          .delete(`/api/competitions/${competition.id}/organizers/${user.id}`)
+          .set('Authorization', `Bearer ${token.token}`)
+          .expect(400);
+
+        expect(res.body.message).toEqual(
+          'The last organizer cannot be removed',
+        );
+
+        const organizers = await utils.getOrganizers(competition);
+        const organizer = organizers.find((r) => r.id === user.id);
+        expect(organizer).toBeTruthy();
       });
     });
   });

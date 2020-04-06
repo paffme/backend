@@ -23,6 +23,7 @@ import {
   CompetitionType,
   Sex,
 } from '../../src/competition/competition.entity';
+import { AddOrganizerDto } from '../../src/competition/dto/in/body/add-organizer.dto';
 
 // FIXME : use services or entity repository directly to increase speed test
 
@@ -299,6 +300,30 @@ export default class TestUtils {
   async getTechnicalDelegates(competition: CompetitionDto): Promise<UserDto[]> {
     const res = await this.api
       .get(`/api/competitions/${competition.id}/technical-delegates`)
+      .expect(200);
+
+    return res.body;
+  }
+
+  async addOrganizerInCompetition(
+    user: UserDto,
+    token: TokenResponseDto,
+    competition: CompetitionDto,
+  ): Promise<void> {
+    const dto: AddOrganizerDto = {
+      userId: user.id,
+    };
+
+    await this.api
+      .post(`/api/competitions/${competition.id}/organizers`)
+      .set('Authorization', `Bearer ${token.token}`)
+      .send(dto)
+      .expect(204);
+  }
+
+  async getOrganizers(competition: CompetitionDto): Promise<UserDto[]> {
+    const res = await this.api
+      .get(`/api/competitions/${competition.id}/organizers`)
       .expect(200);
 
     return res.body;
