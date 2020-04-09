@@ -1,16 +1,16 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { randomBytes, scrypt } from 'crypto';
 import { EntityRepository, wrap } from 'mikro-orm';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { UpdateUserDto } from './dto/in/body/update-user.dto';
-import { User, UserRelation } from './user.entity';
+import { User } from './user.entity';
 import { RegisterDto } from './dto/in/body/register.dto';
 import { CredentialsDto } from './dto/in/body/credentials.dto';
 import { TokenResponseDto } from './dto/out/token-response.dto';
@@ -21,12 +21,10 @@ import { UserMapper } from '../shared/mappers/user.mapper';
 import { BaseService } from '../shared/base.service';
 import { UserDto } from './dto/out/user.dto';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
-import { Competition, CompetitionRelation } from '../competition/competition.entity';
+import { Competition } from '../competition/competition.entity';
 
 @Injectable()
 export class UserService extends BaseService<User, UserDto> {
-  private readonly logger = new Logger(UserService.name);
-
   constructor(
     @InjectRepository(User)
     private readonly userRepository: EntityRepository<User>,
@@ -102,18 +100,6 @@ export class UserService extends BaseService<User, UserDto> {
     newUser.password = await this.hashPassword(password);
     newUser.email = email.trim();
 
-    const errors = await validate(newUser);
-
-    if (errors.length > 0) {
-      throw new HttpException(
-        {
-          message: 'Input data validation failed',
-          errors,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
     await this.userRepository.persistAndFlush(newUser);
     return newUser;
   }
@@ -126,13 +112,13 @@ export class UserService extends BaseService<User, UserDto> {
     });
 
     if (!user) {
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('Invalid credentials');
     }
 
     const isMatch = await this.checkPassword(user.password, password);
 
     if (!isMatch) {
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('Invalid credentials');
     }
 
     const payload: JwtPayload = {

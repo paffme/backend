@@ -1,14 +1,14 @@
 import { BaseAuthorizationGuard } from '../../shared/guards/base.authorization.guard';
 import { ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { CompetitionAuthorizationService } from './competition.authorization.service';
+import { CompetitionOrganizerAuthorizationService } from './competition-organizer.authorization.service';
 import { Competition } from '../competition.entity';
 
 @Injectable()
-export class CompetitionAuthorizationGuard extends BaseAuthorizationGuard {
+export class CompetitionOrganizerAuthorizationGuard extends BaseAuthorizationGuard {
   constructor(
     reflector: Reflector,
-    private competitionAuthorizationService: CompetitionAuthorizationService,
+    private competitionOrganizerAuthorizationService: CompetitionOrganizerAuthorizationService,
   ) {
     super(reflector, Competition.name);
   }
@@ -18,7 +18,7 @@ export class CompetitionAuthorizationGuard extends BaseAuthorizationGuard {
 
     return super.authorize(
       context,
-      this.competitionAuthorizationService,
+      this.competitionOrganizerAuthorizationService,
       Number(request.params.competitionId),
     );
   }

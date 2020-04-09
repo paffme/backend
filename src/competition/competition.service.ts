@@ -1,9 +1,9 @@
 import {
-  BadRequestException, ConflictException,
+  BadRequestException,
+  ConflictException,
   HttpException,
   HttpStatus,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { BaseService } from '../shared/base.service';
@@ -14,24 +14,15 @@ import { CompetitionMapper } from '../shared/mappers/competition.mapper';
 import { CompetitionDto } from './dto/out/competition.dto';
 import { validate } from 'class-validator';
 import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
-import { CreateCompetitionRegistrationDto } from './dto/in/body/create-competition-registration.dto';
 import { UserService } from '../user/user.service';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
-import { AddJuryPresidentDto } from './dto/in/body/add-jury-president.dto';
-import { AddJudgeDto } from './dto/in/body/add-judge.dto';
-import { AddRouteSetterDto } from './dto/in/body/add-route-setter.dto';
-import { AddTechnicalDelegateDto } from './dto/in/body/add-technical-delegate.dto';
-import { AddChiefRouteSetterDto } from './dto/in/body/add-chief-route-setter.dto';
-import { AddOrganizerDto } from './dto/in/body/add-organizer.dto';
 
 @Injectable()
 export class CompetitionService extends BaseService<
   Competition,
   CompetitionDto
 > {
-  private readonly logger = new Logger(CompetitionService.name);
-
   constructor(
     @InjectRepository(Competition)
     private readonly competitionRepository: EntityRepository<Competition>,
@@ -79,28 +70,16 @@ export class CompetitionService extends BaseService<
 
     newCompetition.organizers.add(owner);
 
-    const errors = await validate(newCompetition);
-
-    if (errors.length > 0) {
-      throw new HttpException(
-        {
-          message: 'Input data validation failed',
-          errors,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
     await this.competitionRepository.persistAndFlush(newCompetition);
     return newCompetition;
   }
 
   async register(
     competitionId: typeof Competition.prototype.id,
-    dto: CreateCompetitionRegistrationDto,
+    userId: typeof User.prototype.id,
   ): Promise<void> {
     const competition = await this.getOrFail(competitionId);
-    const user = await this.userService.getOrFail(dto.userId);
+    const user = await this.userService.getOrFail(userId);
 
     await this.competitionRegistrationRepository.persistAndFlush(
       new CompetitionRegistration(competition, user),
@@ -137,11 +116,11 @@ export class CompetitionService extends BaseService<
 
   private async addUserRelation(
     competitionId: typeof Competition.prototype.id,
-    dto: { userId: typeof User.prototype.id },
+    userId: typeof User.prototype.id,
     relation: CompetitionRelation,
   ): Promise<void> {
     const competition = await this.getOrFail(competitionId, [relation]);
-    const user = await this.userService.getOrFail(dto.userId);
+    const user = await this.userService.getOrFail(userId);
 
     if (competition[relation].contains(user)) {
       throw new ConflictException('User is already in this relation');
@@ -179,9 +158,9 @@ export class CompetitionService extends BaseService<
 
   async addJuryPresident(
     competitionId: typeof Competition.prototype.id,
-    dto: AddJuryPresidentDto,
+    userId: typeof User.prototype.id,
   ): Promise<void> {
-    await this.addUserRelation(competitionId, dto, 'juryPresidents');
+    await this.addUserRelation(competitionId, userId, 'juryPresidents');
   }
 
   getJuryPresidents(
@@ -199,9 +178,9 @@ export class CompetitionService extends BaseService<
 
   async addJudge(
     competitionId: typeof Competition.prototype.id,
-    dto: AddJudgeDto,
+    userId: typeof User.prototype.id,
   ): Promise<void> {
-    await this.addUserRelation(competitionId, dto, 'judges');
+    await this.addUserRelation(competitionId, userId, 'judges');
   }
 
   getJudges(competitionId: typeof Competition.prototype.id): Promise<User[]> {
@@ -217,9 +196,9 @@ export class CompetitionService extends BaseService<
 
   async addChiefRouteSetter(
     competitionId: typeof Competition.prototype.id,
-    dto: AddChiefRouteSetterDto,
+    userId: typeof User.prototype.id,
   ): Promise<void> {
-    await this.addUserRelation(competitionId, dto, 'chiefRouteSetters');
+    await this.addUserRelation(competitionId, userId, 'chiefRouteSetters');
   }
 
   getChiefRouteSetters(
@@ -237,9 +216,9 @@ export class CompetitionService extends BaseService<
 
   async addRouteSetter(
     competitionId: typeof Competition.prototype.id,
-    dto: AddRouteSetterDto,
+    userId: typeof User.prototype.id,
   ): Promise<void> {
-    await this.addUserRelation(competitionId, dto, 'routeSetters');
+    await this.addUserRelation(competitionId, userId, 'routeSetters');
   }
 
   getRouteSetters(
@@ -257,9 +236,9 @@ export class CompetitionService extends BaseService<
 
   async addTechnicalDelegate(
     competitionId: typeof Competition.prototype.id,
-    dto: AddTechnicalDelegateDto,
+    userId: typeof User.prototype.id,
   ): Promise<void> {
-    await this.addUserRelation(competitionId, dto, 'technicalDelegates');
+    await this.addUserRelation(competitionId, userId, 'technicalDelegates');
   }
 
   getTechnicalDelegates(
@@ -281,9 +260,9 @@ export class CompetitionService extends BaseService<
 
   async addOrganizer(
     competitionId: typeof Competition.prototype.id,
-    dto: AddOrganizerDto,
+    userId: typeof User.prototype.id,
   ): Promise<void> {
-    await this.addUserRelation(competitionId, dto, 'organizers');
+    await this.addUserRelation(competitionId, userId, 'organizers');
   }
 
   async getOrganizers(
