@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { configure } from '../../src/app.configuration';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import SwaggerParser from "@apidevtools/swagger-parser";
+import SwaggerParser from '@apidevtools/swagger-parser';
 
 describe('AppController (e2e)', () => {
   let app: NestExpressApplication;
