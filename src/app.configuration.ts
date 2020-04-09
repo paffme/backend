@@ -11,6 +11,7 @@ import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import { Observable } from 'rxjs';
 import { join } from 'path';
 import * as packageJson from '../package.json';
+import { NestExpressApplication } from '@nestjs/platform-express';
 
 class ExposeHeadersInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
@@ -20,7 +21,7 @@ class ExposeHeadersInterceptor implements NestInterceptor {
   }
 }
 
-export function configure(app): void {
+export function configure(app: NestExpressApplication): void {
   const hostDomain = AppModule.isDev
     ? `https://${AppModule.host}:${AppModule.port}`
     : AppModule.host;
@@ -62,7 +63,7 @@ export function configure(app): void {
 
   app.enableCors({
     credentials: true,
-    origin(requestOrigin, cb) {
+    origin(requestOrigin: string, cb: (arg1: null, arg2: boolean) => void) {
       cb(null, true);
     },
   });

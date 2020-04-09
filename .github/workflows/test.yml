@@ -46,6 +46,7 @@ jobs:
         POSTGRESQL_USER: paffme
         POSTGRESQL_PASSWORD: paffme
         POSTGRESQL_DATABASE: paffme
+        JWT_SECRET: super_paffme_secret_123456789
         NODE_ENV: production
         CI: true
     - name: Upload to coveralls

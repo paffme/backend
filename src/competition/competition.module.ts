@@ -5,6 +5,7 @@ import { CompetitionController } from './competition.controller';
 import { CompetitionService } from './competition.service';
 import { UserModule } from '../user/user.module';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
+import { CompetitionOrganizerAuthorizationService } from './authorization/competition-organizer.authorization.service';
 
 @Module({
   imports: [
@@ -14,6 +15,6 @@ import { CompetitionRegistration } from '../shared/entity/competition-registrati
     UserModule,
   ],
   controllers: [CompetitionController],
-  providers: [CompetitionService],
+  providers: [CompetitionService, CompetitionOrganizerAuthorizationService],
 })
 export class CompetitionModule {}

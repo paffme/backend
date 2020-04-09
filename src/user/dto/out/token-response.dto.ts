@@ -3,17 +3,17 @@ import { User } from '../../user.entity';
 
 export class TokenResponseDto {
   @ApiProperty()
-  readonly token: string;
+  readonly token!: string;
 
   @ApiProperty()
-  readonly userId: typeof User.prototype.id;
+  readonly userId!: typeof User.prototype.id;
 
   @ApiProperty()
-  readonly expiresIn: number;
+  readonly expiresIn!: number;
 
   @ApiProperty({
     type: 'string',
     format: 'date-time',
   })
-  readonly createdAt: Date;
+  readonly createdAt!: Date;
 }

@@ -9,7 +9,7 @@ import { Competition } from '../competition/competition.entity';
 export class User extends BaseEntity {
   @Property({ hidden: true })
   @IsEmail()
-  email: string;
+  email!: string;
 
   @Property()
   firstName?: string;
@@ -24,7 +24,7 @@ export class User extends BaseEntity {
   systemRole: SystemRole = SystemRole.User;
 
   @Property({ hidden: true, length: 512 })
-  password: string;
+  password!: string;
 
   @OneToMany(() => CompetitionRegistration, (item) => item.climber)
   registrations = new Collection<CompetitionRegistration>(this);
@@ -46,4 +46,19 @@ export class User extends BaseEntity {
     (competition) => competition.technicalDelegates,
   )
   technicalDelegations = new Collection<Competition>(this);
+
+  @ManyToMany(() => Competition, (competition) => competition.organizers)
+  organizations = new Collection<Competition>(this);
 }
+
+export type UserRelation =
+  | 'registrations'
+  | 'juryPresidencies'
+  | 'judgements'
+  | 'chiefRouteSettings'
+  | 'routeSettings'
+  | 'technicalDelegations'
+  | 'organizations';
+
+// This is just for static validation
+type CompetitionRelationValidation = Pick<User, UserRelation>;

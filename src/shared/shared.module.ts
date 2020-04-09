@@ -1,30 +1,33 @@
 import { Global, Module } from '@nestjs/common';
 import { UserModule } from '../user/user.module';
-import { AuthService } from './auth/auth.service';
-import { JwtStrategy } from './auth/strategies/jwt.strategy';
+import { AuthenticationService } from './authentication/authentication.service';
+import { JwtStrategy } from './authentication/strategies/jwt.strategy';
 import { ConfigurationService } from './configuration/configuration.service';
 import { UserMapper } from './mappers/user.mapper';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { CompetitionMapper } from './mappers/competition.mapper';
 import { CompetitionRegistrationMapper } from './mappers/competition-registration.mapper';
+import { UserAuthorizationService } from './authorization/user.authorization.service';
 
 @Global()
 @Module({
   providers: [
     ConfigurationService,
-    AuthService,
+    AuthenticationService,
     JwtStrategy,
     UserMapper,
     CompetitionMapper,
     CompetitionRegistrationMapper,
+    UserAuthorizationService,
   ],
   exports: [
     ConfigurationService,
-    AuthService,
+    AuthenticationService,
     UserMapper,
     CompetitionMapper,
     CompetitionRegistrationMapper,
+    UserAuthorizationService,
   ],
   imports: [
     UserModule,

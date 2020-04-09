@@ -10,10 +10,10 @@ import { SystemRole } from '../../user/user-role.enum';
 import { User } from '../../user/user.entity';
 
 @Injectable()
-export class SystemRoleGuard implements CanActivate {
+export class AuthenticationGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
-  canActivate(context: ExecutionContext) {
+  canActivate(context: ExecutionContext): boolean {
     const roles = this.reflector.get<SystemRole[]>(
       'systemRoles',
       context.getHandler(),

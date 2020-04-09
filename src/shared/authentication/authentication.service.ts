@@ -10,7 +10,7 @@ import { JwtDto } from './jwt.dto';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
-export class AuthService {
+export class AuthenticationService {
   private readonly jwtOptions: SignOptions;
 
   constructor(

@@ -1,10 +1,9 @@
 import {
+  BadRequestException,
   ConflictException,
-  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { randomBytes, scrypt } from 'crypto';
@@ -15,8 +14,8 @@ import { User } from './user.entity';
 import { RegisterDto } from './dto/in/body/register.dto';
 import { CredentialsDto } from './dto/in/body/credentials.dto';
 import { TokenResponseDto } from './dto/out/token-response.dto';
-import { JwtPayload } from '../shared/auth/jwt-payload.interface';
-import { AuthService } from '../shared/auth/auth.service';
+import { JwtPayload } from '../shared/authentication/jwt-payload.interface';
+import { AuthenticationService } from '../shared/authentication/authentication.service';
 import { validate } from 'class-validator';
 import { UserMapper } from '../shared/mappers/user.mapper';
 import { BaseService } from '../shared/base.service';
@@ -26,13 +25,11 @@ import { Competition } from '../competition/competition.entity';
 
 @Injectable()
 export class UserService extends BaseService<User, UserDto> {
-  private readonly logger = new Logger(UserService.name);
-
   constructor(
     @InjectRepository(User)
     private readonly userRepository: EntityRepository<User>,
     mapper: UserMapper,
-    private readonly authService: AuthService,
+    private readonly authService: AuthenticationService,
   ) {
     super(User.prototype, mapper);
   }
@@ -62,8 +59,8 @@ export class UserService extends BaseService<User, UserDto> {
   }
 
   private checkPassword(
-    saltedPasswordHash,
-    candidatePassword,
+    saltedPasswordHash: string,
+    candidatePassword: string,
   ): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const [scryptLen, salt, expectedDerivedKey] = saltedPasswordHash.split(
@@ -103,18 +100,6 @@ export class UserService extends BaseService<User, UserDto> {
     newUser.password = await this.hashPassword(password);
     newUser.email = email.trim();
 
-    const errors = await validate(newUser);
-
-    if (errors.length > 0) {
-      throw new HttpException(
-        {
-          message: 'Input data validation failed',
-          errors,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
     await this.userRepository.persistAndFlush(newUser);
     return newUser;
   }
@@ -127,13 +112,13 @@ export class UserService extends BaseService<User, UserDto> {
     });
 
     if (!user) {
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('Invalid credentials');
     }
 
     const isMatch = await this.checkPassword(user.password, password);
 
     if (!isMatch) {
-      throw new HttpException('Invalid credentials', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('Invalid credentials');
     }
 
     const payload: JwtPayload = {
@@ -157,13 +142,8 @@ export class UserService extends BaseService<User, UserDto> {
   async updateUser(
     userId: typeof User.prototype.id,
     dto: UpdateUserDto,
-    authenticatedUser: User,
   ): Promise<User> {
     const user = await this.getOrFail(userId);
-
-    if (user.id !== authenticatedUser.id) {
-      throw new ForbiddenException('You do not own this user');
-    }
 
     if (dto.password) {
       dto.password = await this.hashPassword(dto.password);
@@ -232,5 +212,12 @@ export class UserService extends BaseService<User, UserDto> {
   ): Promise<Competition[]> {
     const user = await this.getOrFail(userId, ['technicalDelegations']);
     return user.technicalDelegations.getItems();
+  }
+
+  async getOrganizations(
+    userId: typeof User.prototype.id,
+  ): Promise<Competition[]> {
+    const user = await this.getOrFail(userId, ['organizations']);
+    return user.organizations.getItems();
   }
 }

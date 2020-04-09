@@ -5,12 +5,13 @@
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "target": "esnext",
+    "target": "ES2019",
     "sourceMap": true,
     "outDir": "./dist",
     "baseUrl": "./",
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "strict": true
   },
   "exclude": ["node_modules"]
 }

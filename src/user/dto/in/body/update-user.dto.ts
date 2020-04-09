@@ -1,17 +1,16 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional } from 'class-validator';
-import { RegisterDto } from './register.dto';
 
-export class UpdateUserDto extends RegisterDto {
+export class UpdateUserDto {
   @ApiPropertyOptional()
   @IsOptional()
-  readonly username: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  readonly email: string;
+  readonly username?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  password: string;
+  readonly email?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  password?: string;
 }

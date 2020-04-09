@@ -1,0 +1,2 @@
+- Due to the use of MikroORM, if multiple identity maps are used (it's the case when preparing the DB with services and then testing with from a controller) then the entity manager should be cleared. See in utils.ts.
+- MikroORM do not support (planned for v4) parrallel insertion, so when preparing tests just do inserations serially. More info : https://github.com/mikro-orm/mikro-orm/issues/470

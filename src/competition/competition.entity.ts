@@ -96,4 +96,42 @@ export class Competition extends BaseEntity {
     { owner: true, pivotTable: 'competition_to_technical_delegates' },
   )
   technicalDelegates = new Collection<User>(this);
+
+  @ManyToMany(() => User, (owner) => owner.organizations, {
+    owner: true,
+    pivotTable: 'competition_to_organizers',
+  })
+  organizers = new Collection<User>(this);
+
+  constructor(
+    name: string,
+    type: CompetitionType,
+    startDate: Date,
+    endDate: Date,
+    address: string,
+    city: string,
+    postalCode: string,
+    categories: Category[],
+  ) {
+    super();
+    this.name = name;
+    this.type = type;
+    this.startDate = startDate;
+    this.endDate = endDate;
+    this.address = address;
+    this.city = city;
+    this.postalCode = postalCode;
+    this.categories = categories;
+  }
 }
+
+export type CompetitionRelation =
+  | 'juryPresidents'
+  | 'judges'
+  | 'chiefRouteSetters'
+  | 'routeSetters'
+  | 'technicalDelegates'
+  | 'organizers';
+
+// This is just for static validation
+type CompetitionRelationValidation = Pick<Competition, CompetitionRelation>;

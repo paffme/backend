@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpCode,
   Param,
@@ -33,12 +32,11 @@ import { UserDto } from './dto/out/user.dto';
 import { UserService } from './user.service';
 import { UpdateParamsDto } from './dto/in/params/update-params.dto';
 import { UpdateUserDto } from './dto/in/body/update-user.dto';
-import { AllowedSystemRoles } from '../shared/decorators/roles.decorator';
+import { AllowedSystemRoles } from '../shared/decorators/allowed-system-roles.decorator';
 import { SystemRole } from './user-role.enum';
 import { AuthGuard } from '@nestjs/passport';
-import { SystemRoleGuard } from '../shared/guards/system-role.guard';
+import { AuthenticationGuard } from '../shared/guards/authentication.guard';
 import { FindByIdParamsDto } from './dto/in/params/find-by-id-params.dto';
-import { User as GetUser } from '../shared/decorators/user.decorator';
 import { CompetitionRegistrationDto } from '../competition/dto/out/competition-registration.dto';
 import { GetUserCompetitionRegistrationsParamsDto } from './dto/in/params/get-user-competition-registrations-params.dto';
 import { CompetitionRegistrationMapper } from '../shared/mappers/competition-registration.mapper';
@@ -48,9 +46,13 @@ import { GetJuryPresidenciesParamsDto } from './dto/in/params/get-jury-presidenc
 import { GetJudgementsParamsDto } from './dto/in/params/get-judgements-params.dto';
 import { GetChiefRouteSettingsParamsDto } from './dto/in/params/get-chief-route-settings-params.dto';
 import { GetRouteSettingsParamsDto } from './dto/in/params/get-route-settings-params.dto';
+import { AppRoles } from '../app.roles';
+import { AllowedAppRoles } from '../shared/decorators/allowed-app-roles.decorator';
+import { OptionalJwtAuthenticationGuard } from '../shared/guards/optional-jwt-authentication.guard';
+import { UserAuthorizationGuard } from '../shared/authorization/user.authorization.guard';
 
 @Controller('users')
-@ApiTags(User.constructor.name)
+@ApiTags(User.name)
 @ApiBearerAuth()
 export class UserController {
   constructor(
@@ -60,10 +62,12 @@ export class UserController {
   ) {}
 
   @Post()
+  @AllowedAppRoles(AppRoles.UNAUTHENTICATED)
+  @UseGuards(OptionalJwtAuthenticationGuard, UserAuthorizationGuard)
   @ApiCreatedResponse({ type: UserDto })
   @ApiConflictResponse({ type: ApiException })
   @ApiUnprocessableEntityResponse({ type: ApiException })
-  @ApiOperation(GetOperationId(User.constructor.name, 'Register'))
+  @ApiOperation(GetOperationId(User.name, 'Register'))
   async register(@Body() dto: RegisterDto): Promise<UserDto> {
     const newUser = await this.userService.register(dto);
     return this.userService.mapper.map(newUser);
@@ -73,18 +77,19 @@ export class UserController {
   @ApiCreatedResponse({ type: TokenResponseDto })
   @ApiBadRequestResponse({ type: ApiException })
   @ApiUnprocessableEntityResponse({ type: ApiException })
-  @ApiOperation(GetOperationId(User.constructor.name, 'Login'))
+  @ApiOperation(GetOperationId(User.name, 'Login'))
   async login(@Body() dto: CredentialsDto): Promise<TokenResponseDto> {
     return this.userService.login(dto);
   }
 
   @Get(':userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
   @ApiOkResponse({ type: UserDto })
   @ApiUnprocessableEntityResponse({ type: ApiException })
   @ApiNotFoundResponse({ type: ApiException })
-  @ApiOperation(GetOperationId(User.constructor.name, 'FindById'))
+  @ApiOperation(GetOperationId(User.name, 'FindById'))
   @ApiParam({ name: 'userId', required: true })
   async findById(@Param() params: FindByIdParamsDto): Promise<UserDto> {
     const user = await this.userService.getOrFail(params.userId);
@@ -94,47 +99,39 @@ export class UserController {
   @Delete(':userId')
   @HttpCode(204)
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
   @ApiNoContentResponse({})
   @ApiNotFoundResponse({ type: ApiException })
-  @ApiOperation(GetOperationId(User.constructor.name, 'DeleteById'))
+  @ApiOperation(GetOperationId(User.name, 'DeleteById'))
   @ApiParam({ name: 'userId', required: true })
-  async deleteById(
-    @Param() params: FindByIdParamsDto,
-    @GetUser() user: User,
-  ): Promise<void> {
-    if (user.systemRole === SystemRole.User && user.id !== params.userId) {
-      throw new ForbiddenException('Not you');
-    }
-
+  async deleteById(@Param() params: FindByIdParamsDto): Promise<void> {
     await this.userService.deleteById(params.userId);
   }
 
   @Patch(':userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @UseGuards(AuthGuard('jwt'), SystemRoleGuard)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
   @ApiOkResponse({ type: UserDto })
   @ApiUnprocessableEntityResponse({ type: ApiException })
   @ApiNotFoundResponse({ type: ApiException })
-  @ApiOperation(GetOperationId(User.constructor.name, 'Update'))
+  @ApiOperation(GetOperationId(User.name, 'Update'))
   @ApiParam({ name: 'userId', required: true })
   async update(
     @Param() params: UpdateParamsDto,
     @Body() dto: UpdateUserDto,
-    @GetUser() user: User,
   ): Promise<UserDto> {
-    const updatedUser = await this.userService.updateUser(
-      params.userId,
-      dto,
-      user,
-    );
-
+    const updatedUser = await this.userService.updateUser(params.userId, dto);
     return this.userService.mapper.map(updatedUser);
   }
 
   @Get('/:userId/registrations')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
   @ApiOkResponse({ isArray: true, type: CompetitionRegistrationDto })
-  @ApiOperation(GetOperationId(User.constructor.name, 'GetRegistrations'))
+  @ApiOperation(GetOperationId(User.name, 'GetRegistrations'))
   async getCompetitionRegistrations(
     @Param() params: GetUserCompetitionRegistrationsParamsDto,
   ): Promise<CompetitionRegistrationDto[]> {
@@ -148,8 +145,11 @@ export class UserController {
   }
 
   @Get('/:userId/jury-presidencies')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
   @ApiOkResponse({ isArray: true, type: CompetitionDto })
-  @ApiOperation(GetOperationId(User.constructor.name, 'GetJuryPresidencies'))
+  @ApiOperation(GetOperationId(User.name, 'GetJuryPresidencies'))
   async getJuryPresidencies(
     @Param() params: GetJuryPresidenciesParamsDto,
   ): Promise<CompetitionDto[]> {
@@ -161,8 +161,11 @@ export class UserController {
   }
 
   @Get('/:userId/judgements')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
   @ApiOkResponse({ isArray: true, type: CompetitionDto })
-  @ApiOperation(GetOperationId(User.constructor.name, 'GetJudgements'))
+  @ApiOperation(GetOperationId(User.name, 'GetJudgements'))
   async getJudgements(
     @Param() params: GetJudgementsParamsDto,
   ): Promise<CompetitionDto[]> {
@@ -171,8 +174,11 @@ export class UserController {
   }
 
   @Get('/:userId/chief-route-settings')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
   @ApiOkResponse({ isArray: true, type: CompetitionDto })
-  @ApiOperation(GetOperationId(User.constructor.name, 'GetChiefRouteSettings'))
+  @ApiOperation(GetOperationId(User.name, 'GetChiefRouteSettings'))
   async getChiefRouteSettings(
     @Param() params: GetChiefRouteSettingsParamsDto,
   ): Promise<CompetitionDto[]> {
@@ -184,8 +190,11 @@ export class UserController {
   }
 
   @Get('/:userId/route-settings')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
   @ApiOkResponse({ isArray: true, type: CompetitionDto })
-  @ApiOperation(GetOperationId(User.constructor.name, 'GetRouteSettings'))
+  @ApiOperation(GetOperationId(User.name, 'GetRouteSettings'))
   async getRouteSettings(
     @Param() params: GetRouteSettingsParamsDto,
   ): Promise<CompetitionDto[]> {
@@ -197,10 +206,11 @@ export class UserController {
   }
 
   @Get('/:userId/technical-delegations')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
   @ApiOkResponse({ isArray: true, type: CompetitionDto })
-  @ApiOperation(
-    GetOperationId(User.constructor.name, 'GetTechnicalDelegations'),
-  )
+  @ApiOperation(GetOperationId(User.name, 'GetTechnicalDelegations'))
   async getTechnicalDelegations(
     @Param() params: GetRouteSettingsParamsDto,
   ): Promise<CompetitionDto[]> {
@@ -209,5 +219,21 @@ export class UserController {
     );
 
     return this.competitionMapper.mapArray(technicalDelegates);
+  }
+
+  @Get('/:userId/organizations')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
+  @ApiOkResponse({ isArray: true, type: CompetitionDto })
+  @ApiOperation(GetOperationId(User.name, 'GetOrganizations'))
+  async getOrganizations(
+    @Param() params: GetRouteSettingsParamsDto,
+  ): Promise<CompetitionDto[]> {
+    const organizations = await this.userService.getOrganizations(
+      params.userId,
+    );
+
+    return this.competitionMapper.mapArray(organizations);
   }
 }
