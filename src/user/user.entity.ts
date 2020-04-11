@@ -17,6 +17,9 @@ export class User extends BaseEntity {
   @Property()
   lastName?: string;
 
+  @Property()
+  club!: string;
+
   @Property({
     type: String,
     hidden: true,

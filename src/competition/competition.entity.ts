@@ -2,12 +2,12 @@ import { Collection, Entity, ManyToMany, OneToMany, Property } from 'mikro-orm';
 import { BaseEntity } from '../shared/base.entity';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
+import { BoulderingRound } from '../bouldering/bouldering-round.entity';
 
 export enum CompetitionType {
   Bouldering = 'bouldering',
   Lead = 'lead',
   Speed = 'speed',
-  Combined = 'combined',
 }
 
 export enum Sex {
@@ -31,7 +31,18 @@ export interface Category {
   name: CategoryName;
 }
 
+interface Ranking {
+  ranking: number;
+  climber: {
+    id: typeof User.prototype.id;
+    firstName: typeof User.prototype.firstName;
+    lastName: typeof User.prototype.lastName;
+    club: typeof User.prototype.club;
+  };
+}
+
 @Entity()
+// TODO : Refactor into multiple class when discriminator is available in MikroORM
 export class Competition extends BaseEntity {
   @Property()
   name: string;
@@ -58,6 +69,22 @@ export class Competition extends BaseEntity {
 
   @Property()
   categories: Category[];
+
+  @OneToMany(() => BoulderingRound, (round) => round.competition, {
+    orphanRemoval: true,
+  })
+  boulderingRounds = new Collection<BoulderingRound>(this);
+
+  /*
+    This will store the rankings based on the rounds results.
+
+    It's recomputed after each new result :
+    - It will allow better performances on read requests
+    - It will allow storing rankings in the long term and prevent them to change
+      if the ranking algorithm change
+  */
+  @Property()
+  rankings: Ranking[] = [];
 
   @OneToMany(
     () => CompetitionRegistration,
@@ -125,13 +152,18 @@ export class Competition extends BaseEntity {
   }
 }
 
-export type CompetitionRelation =
+export type UserCompetitionRelation =
   | 'juryPresidents'
   | 'judges'
   | 'chiefRouteSetters'
   | 'routeSetters'
   | 'technicalDelegates'
   | 'organizers';
+
+export type CompetitionRelation =
+  | UserCompetitionRelation
+  | 'registrations'
+  | 'boulderingRounds';
 
 // This is just for static validation
 type CompetitionRelationValidation = Pick<Competition, CompetitionRelation>;

@@ -15,6 +15,7 @@ import { SystemRole } from '../user/user-role.enum';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthenticationGuard } from '../shared/guards/authentication.guard';
 import {
+  ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -51,8 +52,12 @@ import { AppRoles } from '../app.roles';
 import { UserAuthorizationGuard } from '../shared/authorization/user.authorization.guard';
 import { AddOrganizerParamsDto } from './dto/in/params/add-organizer-params.dto';
 import { RemoveOrganizerParamsDto } from './dto/in/params/remove-organizer-params.dto';
-import { CompetitionOrganizerAuthorizationGuard } from './authorization/competition-organizer.authorization.guard';
+import { OrganizerAuthorizationGuard } from './authorization/organizer.authorization.guard';
 import { RemoveChiefRouteSetterParamsDto } from './dto/in/params/remove-chief-route-setter-params.dto';
+import { AddBoulderingRoundParamsDto } from './dto/in/params/add-bouldering-round-params.dto';
+import { JuryPresidentAuthorizationGuard } from './authorization/jury-president.authorization.guard';
+import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
+import { BoulderingRoundDto } from '../bouldering/dto/out/bouldering-round.dto';
 
 @Controller('competitions')
 export class CompetitionController {
@@ -114,11 +119,7 @@ export class CompetitionController {
   @Delete('/:competitionId/registrations/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @HttpCode(204)
   @ApiOperation(GetOperationId(Competition.name, 'RemoveRegistration'))
@@ -147,11 +148,7 @@ export class CompetitionController {
   @Put('/:competitionId/jury-presidents/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @ApiOperation(GetOperationId(Competition.name, 'AddJuryPresident'))
   @HttpCode(204)
@@ -167,11 +164,7 @@ export class CompetitionController {
   @Delete('/:competitionId/jury-presidents/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @HttpCode(204)
   @ApiOperation(GetOperationId(Competition.name, 'RemoveJuryPresident'))
@@ -200,11 +193,7 @@ export class CompetitionController {
   @Put('/:competitionId/judges/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @ApiOperation(GetOperationId(Competition.name, 'AddJudge'))
   @HttpCode(204)
@@ -215,11 +204,7 @@ export class CompetitionController {
   @Delete('/:competitionId/judges/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @HttpCode(204)
   @ApiOperation(GetOperationId(Competition.name, 'RemoveJudge'))
@@ -246,11 +231,7 @@ export class CompetitionController {
   @Put('/:competitionId/chief-route-setters/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @ApiOperation(GetOperationId(Competition.name, 'AddChiefRouteSetter'))
   @HttpCode(204)
@@ -266,11 +247,7 @@ export class CompetitionController {
   @Delete('/:competitionId/chief-route-setters/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @HttpCode(204)
   @ApiOperation(GetOperationId(Competition.name, 'RemoveChiefRouteSetter'))
@@ -299,11 +276,7 @@ export class CompetitionController {
   @Put('/:competitionId/route-setters/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @ApiOperation(GetOperationId(Competition.name, 'AddRouteSetter'))
   @HttpCode(204)
@@ -319,11 +292,7 @@ export class CompetitionController {
   @Delete('/:competitionId/route-setters/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @HttpCode(204)
   @ApiOperation(GetOperationId(Competition.name, 'RemoveRouteSetter'))
@@ -352,11 +321,7 @@ export class CompetitionController {
   @Put('/:competitionId/technical-delegates/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @ApiOperation(GetOperationId(Competition.name, 'AddTechnicalDelegate'))
   @HttpCode(204)
@@ -372,11 +337,7 @@ export class CompetitionController {
   @Delete('/:competitionId/technical-delegates/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @HttpCode(204)
   @ApiOperation(GetOperationId(Competition.name, 'RemoveTechnicalDelegate'))
@@ -405,11 +366,7 @@ export class CompetitionController {
   @Put('/:competitionId/organizers/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @ApiOperation(GetOperationId(Competition.name, 'AddOrganizer'))
   @HttpCode(204)
@@ -423,11 +380,7 @@ export class CompetitionController {
   @Delete('/:competitionId/organizers/:userId')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    CompetitionOrganizerAuthorizationGuard,
-  )
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
   @ApiNoContentResponse()
   @HttpCode(204)
   @ApiOperation(GetOperationId(Competition.name, 'RemoveOrganizer'))
@@ -437,6 +390,26 @@ export class CompetitionController {
     await this.competitionService.removeOrganizer(
       params.competitionId,
       params.userId,
+    );
+  }
+
+  @Post('/:competitionId/bouldering-rounds')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    JuryPresidentAuthorizationGuard,
+  )
+  @ApiCreatedResponse()
+  @ApiOperation(GetOperationId(Competition.name, 'AddBoulderingRound'))
+  addBoulderingRound(
+    @Param() params: AddBoulderingRoundParamsDto,
+    @Body() dto: CreateBoulderingRoundDto,
+  ): Promise<BoulderingRoundDto> {
+    return this.competitionService.addBoulderingRound(
+      params.competitionId,
+      dto,
     );
   }
 }

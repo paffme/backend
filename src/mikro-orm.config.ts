@@ -5,6 +5,8 @@ import { ConfigurationService } from './shared/configuration/configuration.servi
 import { Competition } from './competition/competition.entity';
 import { CompetitionRegistration } from './shared/entity/competition-registration.entity';
 import { Timestamp } from './shared/entity/timestamp.entity';
+import { BoulderingRound } from './bouldering/bouldering-round.entity';
+import { BoulderingResult } from './bouldering/bouldering-result.entity';
 const configService = new ConfigurationService();
 
 const config: Options = {
@@ -14,7 +16,15 @@ const config: Options = {
   user: configService.get('POSTGRESQL_USER'),
   password: configService.get('POSTGRESQL_PASSWORD'),
   dbName: configService.get('POSTGRESQL_DATABASE'),
-  entities: [Timestamp, BaseEntity, User, Competition, CompetitionRegistration],
+  entities: [
+    Timestamp,
+    BaseEntity,
+    User,
+    Competition,
+    CompetitionRegistration,
+    BoulderingRound,
+    BoulderingResult,
+  ],
   entitiesDirsTs: ['src'],
 };
 
