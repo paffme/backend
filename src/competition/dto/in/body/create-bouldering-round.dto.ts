@@ -1,6 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
-  IsBoolean,
   IsEnum,
   IsInt,
   IsOptional,
@@ -11,19 +10,10 @@ import { BoulderingRoundType } from '../../../../bouldering/bouldering-round.ent
 
 export class CreateBoulderingRoundDto {
   @ApiProperty()
+  @IsOptional()
   @IsInt()
   @Min(0)
-  index!: number;
-
-  @ApiPropertyOptional()
-  @IsBoolean()
-  @IsOptional()
-  insertBefore?: boolean;
-
-  @ApiPropertyOptional()
-  @IsBoolean()
-  @IsOptional()
-  insertAfter?: boolean;
+  index?: number;
 
   @ApiProperty()
   @IsString()

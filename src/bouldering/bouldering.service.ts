@@ -32,14 +32,27 @@ export class BoulderingService extends BaseService<
     competition: Competition,
     dto: CreateBoulderingRoundDto,
   ): Promise<BoulderingRound> {
+    const roundIndex = dto.index ?? competition.boulderingRounds.count();
+
     const round = new BoulderingRound(
       dto.name,
-      dto.index,
+      roundIndex,
       dto.quota,
       dto.boulders,
       dto.type,
       competition,
     );
+
+    const rounds = await this.boulderingRoundRepository.find({
+      competition,
+    });
+
+    for (const r of rounds) {
+      if (r.index >= roundIndex) {
+        r.index++;
+        this.boulderingRoundRepository.persistLater(r);
+      }
+    }
 
     await this.boulderingRoundRepository.persistAndFlush(round);
 

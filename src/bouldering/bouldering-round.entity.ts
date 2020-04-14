@@ -39,6 +39,9 @@ export class BoulderingRound extends BaseEntity
   index: number;
 
   @Property()
+  started = false;
+
+  @Property()
   quota: number;
 
   @Property()

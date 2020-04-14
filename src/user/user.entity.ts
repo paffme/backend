@@ -18,7 +18,7 @@ export class User extends BaseEntity {
   lastName?: string;
 
   @Property()
-  club!: string;
+  club?: string;
 
   @Property({
     type: String,
@@ -30,28 +30,34 @@ export class User extends BaseEntity {
   password!: string;
 
   @OneToMany(() => CompetitionRegistration, (item) => item.climber)
-  registrations = new Collection<CompetitionRegistration>(this);
+  registrations: Collection<CompetitionRegistration> = new Collection<
+    CompetitionRegistration
+  >(this);
 
   @ManyToMany(() => Competition, (competition) => competition.juryPresidents)
-  juryPresidencies = new Collection<Competition>(this);
+  juryPresidencies: Collection<Competition> = new Collection<Competition>(this);
 
   @ManyToMany(() => Competition, (competition) => competition.judges)
-  judgements = new Collection<Competition>(this);
+  judgements: Collection<Competition> = new Collection<Competition>(this);
 
   @ManyToMany(() => Competition, (competition) => competition.chiefRouteSetters)
-  chiefRouteSettings = new Collection<Competition>(this);
+  chiefRouteSettings: Collection<Competition> = new Collection<Competition>(
+    this,
+  );
 
   @ManyToMany(() => Competition, (competition) => competition.routeSetters)
-  routeSettings = new Collection<Competition>(this);
+  routeSettings: Collection<Competition> = new Collection<Competition>(this);
 
   @ManyToMany(
     () => Competition,
     (competition) => competition.technicalDelegates,
   )
-  technicalDelegations = new Collection<Competition>(this);
+  technicalDelegations: Collection<Competition> = new Collection<Competition>(
+    this,
+  );
 
   @ManyToMany(() => Competition, (competition) => competition.organizers)
-  organizations = new Collection<Competition>(this);
+  organizations: Collection<Competition> = new Collection<Competition>(this);
 }
 
 export type UserRelation =

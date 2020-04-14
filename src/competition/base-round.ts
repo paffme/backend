@@ -6,6 +6,7 @@ export interface BaseRound<ResultType> {
   name: string;
   quota: number;
   type: string;
+  started: boolean;
   competition: Competition;
   climbers: Collection<User>;
   results: Collection<ResultType>;

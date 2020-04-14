@@ -412,4 +412,6 @@ export class CompetitionController {
       dto,
     );
   }
+
+  // @Post('/:competitionId/bouldering-rounds/:roundIndex/results')
 }

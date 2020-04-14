@@ -9,7 +9,7 @@ import { SystemRole } from '../src/user/user-role.enum';
 
 import {
   CategoryName,
-  Competition,
+  Competition, CompetitionRelation,
   CompetitionType,
   Sex,
 } from '../src/competition/competition.entity';
@@ -118,14 +118,22 @@ export default class TestUtils {
     };
   }
 
+  getCompetition(
+    competitionId: typeof Competition.prototype.id,
+    populate?: CompetitionRelation[],
+  ): Promise<Competition> {
+    // @ts-ignore
+    return this.competitionService.getOrFail(competitionId, populate);
+  }
+
   async givenCompetition(user: User): Promise<Competition> {
     // @ts-ignore
     return this.competitionService.create(this.givenCompetitionData(), user);
   }
 
-  login(user: CredentialsDto): Promise<TokenResponseDto> {
+  login(credentials: CredentialsDto): Promise<TokenResponseDto> {
     // @ts-ignore
-    return this.userService.login(user);
+    return this.userService.login(credentials);
   }
 
   async registerUserInCompetition(
@@ -219,5 +227,9 @@ export default class TestUtils {
   getOrganizers(competition: Competition): Promise<User[]> {
     // @ts-ignore
     return this.competitionService.getOrganizers(competition.id);
+  }
+
+  getRandomId(): number {
+    return Math.floor(Math.random() * 100000);
   }
 }

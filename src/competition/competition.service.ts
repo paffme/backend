@@ -129,10 +129,10 @@ export class CompetitionService extends BaseService<
 
     if (competition[relation].contains(user)) {
       throw new ConflictException('User is already in this relation');
-    } else {
-      competition[relation].add(user);
-      await this.competitionRepository.persistAndFlush(competition);
     }
+
+    competition[relation].add(user);
+    await this.competitionRepository.persistAndFlush(competition);
   }
 
   private async getUserRelation(
@@ -306,12 +306,6 @@ export class CompetitionService extends BaseService<
       'boulderingRounds',
     ]);
 
-    const newRound = await this.boulderingService.createRound(competition, dto);
-
-    // FIXME necessary ?
-    competition.boulderingRounds.add(newRound);
-    await this.competitionRepository.persistAndFlush(competition);
-
-    return newRound;
+    return this.boulderingService.createRound(competition, dto);
   }
 }
