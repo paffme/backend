@@ -1,4 +1,12 @@
-import { Collection, Entity, ManyToMany, OneToMany, Property } from 'mikro-orm';
+import {
+  Collection,
+  Entity,
+  Enum,
+  ManyToMany,
+  OneToMany,
+  Property,
+} from 'mikro-orm';
+
 import { BaseEntity } from '../shared/base.entity';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
@@ -47,9 +55,7 @@ export class Competition extends BaseEntity {
   @Property()
   name: string;
 
-  @Property({
-    type: String,
-  })
+  @Enum()
   type: CompetitionType;
 
   @Property()

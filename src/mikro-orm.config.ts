@@ -7,6 +7,7 @@ import { CompetitionRegistration } from './shared/entity/competition-registratio
 import { Timestamp } from './shared/entity/timestamp.entity';
 import { BoulderingRound } from './bouldering/bouldering-round.entity';
 import { BoulderingResult } from './bouldering/bouldering-result.entity';
+import { Boulder } from './bouldering/boulder.entity';
 const configService = new ConfigurationService();
 
 const config: Options = {
@@ -24,6 +25,7 @@ const config: Options = {
     CompetitionRegistration,
     BoulderingRound,
     BoulderingResult,
+    Boulder,
   ],
   entitiesDirsTs: ['src'],
 };

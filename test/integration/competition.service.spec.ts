@@ -9,9 +9,12 @@ import { CompetitionRegistration } from '../../src/shared/entity/competition-reg
 import { User } from '../../src/user/user.entity';
 import config from '../../src/mikro-orm.config';
 import { SharedModule } from '../../src/shared/shared.module';
-import { BoulderingService } from '../../src/bouldering/bouldering.service';
+import { BoulderingRoundService } from '../../src/bouldering/bouldering-round.service';
 import { BoulderingRound } from '../../src/bouldering/bouldering-round.entity';
 import { BoulderingResult } from '../../src/bouldering/bouldering-result.entity';
+import { BoulderingResultService } from '../../src/bouldering/bouldering-result.service';
+import { BoulderService } from '../../src/bouldering/boulder.service';
+import { Boulder } from '../../src/bouldering/boulder.entity';
 
 describe('Competition service (integration)', () => {
   let competitionService: CompetitionService;
@@ -20,7 +23,13 @@ describe('Competition service (integration)', () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      providers: [CompetitionService, UserService, BoulderingService],
+      providers: [
+        CompetitionService,
+        UserService,
+        BoulderingRoundService,
+        BoulderingResultService,
+        BoulderService,
+      ],
       imports: [
         MikroOrmModule.forRoot(config),
         MikroOrmModule.forFeature({
@@ -30,6 +39,7 @@ describe('Competition service (integration)', () => {
             CompetitionRegistration,
             BoulderingRound,
             BoulderingResult,
+            Boulder,
           ],
         }),
         SharedModule,

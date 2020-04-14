@@ -3,15 +3,22 @@ import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';
 import { BoulderingRoundDto } from '../../bouldering/dto/out/bouldering-round.dto';
 import { BoulderingRound } from '../../bouldering/bouldering-round.entity';
+import { BoulderMapper } from './boulder.mapper';
 
 @Injectable()
 export class BoulderingRoundMapper extends BaseMapper<
   BoulderingRoundDto,
   BoulderingRound
 > {
-  constructor() {
+  constructor(boulderMapper: BoulderMapper) {
     super({
+      id: 'id',
       name: 'name',
+      index: 'index',
+      quota: 'quota',
+      type: 'type',
+      competitionId: 'competition.id',
+      boulders: (round) => boulderMapper.mapArray(round.boulders.getItems()),
     });
   }
 

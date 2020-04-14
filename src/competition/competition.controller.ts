@@ -54,10 +54,16 @@ import { AddOrganizerParamsDto } from './dto/in/params/add-organizer-params.dto'
 import { RemoveOrganizerParamsDto } from './dto/in/params/remove-organizer-params.dto';
 import { OrganizerAuthorizationGuard } from './authorization/organizer.authorization.guard';
 import { RemoveChiefRouteSetterParamsDto } from './dto/in/params/remove-chief-route-setter-params.dto';
-import { AddBoulderingRoundParamsDto } from './dto/in/params/add-bouldering-round-params.dto';
+import { AddRoundParamsDto } from './dto/in/params/add-round-params.dto';
 import { JuryPresidentAuthorizationGuard } from './authorization/jury-president.authorization.guard';
-import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
 import { BoulderingRoundDto } from '../bouldering/dto/out/bouldering-round.dto';
+import { AddBoulderingResultParamsDto } from './dto/in/params/add-bouldering-result-params.dto';
+import { BoulderingResultDto } from '../bouldering/dto/out/bouldering-result.dto';
+import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
+import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
+import { JudgeAuthorizationGuard } from './authorization/judge.authorization.guard';
+import { BoulderingRoundMapper } from '../shared/mappers/bouldering-round.mapper';
+import { CompetitionMapper } from '../shared/mappers/competition.mapper';
 
 @Controller('competitions')
 export class CompetitionController {
@@ -65,6 +71,8 @@ export class CompetitionController {
     private readonly competitionService: CompetitionService,
     private readonly competitionRegistrationMapper: CompetitionRegistrationMapper,
     private readonly userMapper: UserMapper,
+    private readonly boulderingRoundMapper: BoulderingRoundMapper,
+    private readonly mapper: CompetitionMapper,
   ) {}
 
   @Get()
@@ -74,7 +82,7 @@ export class CompetitionController {
   )
   async getAll(): Promise<CompetitionDto[]> {
     const competitions = await this.competitionService.getAll();
-    return this.competitionService.mapper.mapArray(competitions);
+    return this.mapper.mapArray(competitions);
   }
 
   @Post()
@@ -87,7 +95,7 @@ export class CompetitionController {
     @GetUser() owner: User,
   ): Promise<CompetitionDto> {
     const competition = await this.competitionService.create(dto, owner);
-    return this.competitionService.mapper.map(competition);
+    return this.mapper.map(competition);
   }
 
   @Put('/:competitionId/registrations/:userId')
@@ -402,16 +410,37 @@ export class CompetitionController {
     JuryPresidentAuthorizationGuard,
   )
   @ApiCreatedResponse()
-  @ApiOperation(GetOperationId(Competition.name, 'AddBoulderingRound'))
-  addBoulderingRound(
-    @Param() params: AddBoulderingRoundParamsDto,
+  @ApiOperation(GetOperationId(Competition.name, 'AddRound'))
+  async addBoulderingRound(
+    @Param() params: AddRoundParamsDto,
     @Body() dto: CreateBoulderingRoundDto,
   ): Promise<BoulderingRoundDto> {
-    return this.competitionService.addBoulderingRound(
+    const round = await this.competitionService.addBoulderingRound(
       params.competitionId,
       dto,
     );
+
+    return this.boulderingRoundMapper.map(round);
   }
 
-  // @Post('/:competitionId/bouldering-rounds/:roundIndex/results')
+  @Post(
+    '/:competitionId/bouldering-rounds/:roundId/boulders/:boulderId/results/:userId',
+  )
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, JudgeAuthorizationGuard)
+  @ApiCreatedResponse()
+  @ApiOperation(GetOperationId(Competition.name, 'AddBoulderingResult'))
+  addResult(
+    @Param() params: AddBoulderingResultParamsDto,
+    @Body() dto: CreateBoulderingResultDto,
+  ): Promise<BoulderingResultDto> {
+    return this.competitionService.addBoulderingResult(
+      params.competitionId,
+      params.roundId,
+      params.boulderId,
+      params.userId,
+      dto,
+    );
+  }
 }

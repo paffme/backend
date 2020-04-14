@@ -1,16 +1,18 @@
 import TestUtils from '../utils';
 import { Test } from '@nestjs/testing';
 import { Competition } from '../../src/competition/competition.entity';
-import { BoulderingService } from '../../src/bouldering/bouldering.service';
-import { BoulderingResult } from '../../src/bouldering/bouldering-result.entity';
+import { BoulderingRoundService } from '../../src/bouldering/bouldering-round.service';
 import {
   BoulderingRound,
   BoulderingRoundType,
 } from '../../src/bouldering/bouldering-round.entity';
-import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { BoulderingRoundMapper } from '../../src/shared/mappers/bouldering-round.mapper';
-import { RepositoryMock } from './mocks/types';
+import { RepositoryMock, ServiceMock } from './mocks/types';
+import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
+import { BoulderService } from '../../src/bouldering/boulder.service';
+import { BoulderingResultService } from '../../src/bouldering/bouldering-result.service';
+import { BoulderMapper } from '../../src/shared/mappers/boulder.mapper';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -18,35 +20,44 @@ const boulderingRoundRepositoryMock: RepositoryMock = {
   find: jest.fn(),
 };
 
-const boulderingResultRepositoryMock: RepositoryMock = {
-  persistAndFlush: jest.fn(),
-  find: jest.fn(),
+const boulderingResultServiceMock: ServiceMock = {};
+
+const boulderServiceMock: ServiceMock = {
+  createMany: jest.fn(),
 };
 
 describe('Bouldering service (unit)', () => {
-  let boulderingService: BoulderingService;
+  let boulderingService: BoulderingRoundService;
   let utils: TestUtils;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
-        BoulderingService,
+        BoulderingRoundService,
         {
           provide: getRepositoryToken(BoulderingRound),
           useFactory: () => boulderingRoundRepositoryMock,
         },
         {
-          provide: getRepositoryToken(BoulderingResult),
-          useFactory: () => boulderingResultRepositoryMock,
+          provide: BoulderingResultService,
+          useFactory: () => boulderingResultServiceMock,
+        },
+        {
+          provide: BoulderService,
+          useFactory: () => boulderServiceMock,
         },
         {
           provide: BoulderingRoundMapper,
           useClass: BoulderingRoundMapper,
         },
+        {
+          provide: BoulderMapper,
+          useClass: BoulderMapper,
+        },
       ],
     }).compile();
 
-    boulderingService = module.get(BoulderingService);
+    boulderingService = module.get(BoulderingRoundService);
     utils = new TestUtils();
   });
 
@@ -80,6 +91,12 @@ describe('Bouldering service (unit)', () => {
     expect(round.name).toEqual(dto.name);
     expect(round.id).toEqual(id);
 
+    expect(boulderServiceMock.createMany).toHaveBeenCalledTimes(1);
+    expect(boulderServiceMock.createMany).toHaveBeenCalledWith(
+      round,
+      dto.boulders,
+    );
+
     expect(boulderingRoundRepositoryMock.find).toHaveBeenCalledTimes(1);
     expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
       1,
@@ -110,6 +127,12 @@ describe('Bouldering service (unit)', () => {
 
     const round = await boulderingService.createRound(competition, dto);
     expect(round.index).toEqual(1);
+
+    expect(boulderServiceMock.createMany).toHaveBeenCalledTimes(1);
+    expect(boulderServiceMock.createMany).toHaveBeenCalledWith(
+      round,
+      dto.boulders,
+    );
 
     expect(boulderingRoundRepositoryMock.find).toHaveBeenCalledTimes(1);
     expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
@@ -144,6 +167,12 @@ describe('Bouldering service (unit)', () => {
 
     const round = await boulderingService.createRound(competition, dto);
     expect(round.index).toEqual(dto.index);
+
+    expect(boulderServiceMock.createMany).toHaveBeenCalledTimes(1);
+    expect(boulderServiceMock.createMany).toHaveBeenCalledWith(
+      round,
+      dto.boulders,
+    );
 
     expect(boulderingRoundRepositoryMock.find).toHaveBeenCalledTimes(1);
     expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(

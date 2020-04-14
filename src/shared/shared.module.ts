@@ -10,6 +10,8 @@ import { CompetitionMapper } from './mappers/competition.mapper';
 import { CompetitionRegistrationMapper } from './mappers/competition-registration.mapper';
 import { UserAuthorizationService } from './authorization/user.authorization.service';
 import { BoulderingRoundMapper } from './mappers/bouldering-round.mapper';
+import { BoulderingResultMapper } from './mappers/bouldering-result.mapper';
+import { BoulderMapper } from './mappers/boulder.mapper';
 
 @Global()
 @Module({
@@ -21,6 +23,8 @@ import { BoulderingRoundMapper } from './mappers/bouldering-round.mapper';
     CompetitionMapper,
     CompetitionRegistrationMapper,
     BoulderingRoundMapper,
+    BoulderingResultMapper,
+    BoulderMapper,
     UserAuthorizationService,
   ],
   exports: [
@@ -30,6 +34,8 @@ import { BoulderingRoundMapper } from './mappers/bouldering-round.mapper';
     CompetitionMapper,
     CompetitionRegistrationMapper,
     BoulderingRoundMapper,
+    BoulderingResultMapper,
+    BoulderMapper,
     UserAuthorizationService,
   ],
   imports: [

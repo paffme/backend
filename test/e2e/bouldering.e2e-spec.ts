@@ -6,8 +6,8 @@ import TestUtils from '../utils';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { UserService } from '../../src/user/user.service';
 import { CompetitionService } from '../../src/competition/competition.service';
-import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
 import { BoulderingRoundType } from '../../src/bouldering/bouldering-round.entity';
+import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -45,7 +45,7 @@ describe('Bouldering (e2e)', () => {
     it('adds a bouldering round', async function () {
       const { user, credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
-      let competition = await utils.givenCompetition(user);
+      const competition = await utils.givenCompetition(user);
       await utils.addJuryPresidentInCompetition(user, competition);
       utils.clearORM();
 
@@ -67,15 +67,14 @@ describe('Bouldering (e2e)', () => {
       expect(body.name).toEqual(dto.name);
       expect(body.type).toEqual(dto.type);
       expect(body.quota).toEqual(dto.quota);
-      expect(body.boulders).toEqual(dto.boulders);
+      expect(body.boulders).toHaveLength(dto.boulders);
       expect(body.index).toEqual(dto.index);
-      expect(body.competition).toEqual(competition.id);
+      expect(body.competitionId).toEqual(competition.id);
 
-      competition = await utils.getCompetition(competition.id, [
-        'boulderingRounds',
-      ]);
-
-      expect(competition.boulderingRounds.getItems()[0].id).toEqual(body.id);
+      for (let i = 0; i < dto.boulders; i++) {
+        expect(body.boulders[i].index).toEqual(i);
+        expect(body.boulders[i]).toHaveProperty('id');
+      }
     });
   });
 });

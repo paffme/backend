@@ -1,10 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
+  IsArray,
   IsEnum,
   IsInt,
   IsOptional,
   IsString,
-  Min,
+  Min, MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { BoulderingRoundType } from '../../../../bouldering/bouldering-round.entity';
 

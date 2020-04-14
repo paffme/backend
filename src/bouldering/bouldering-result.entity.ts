@@ -3,6 +3,7 @@ import { Entity, ManyToOne, Property } from 'mikro-orm';
 import { BoulderingRound } from './bouldering-round.entity';
 import { User } from '../user/user.entity';
 import { BaseEntity } from '../shared/base.entity';
+import { Boulder } from './boulder.entity';
 
 @Entity()
 // TODO : Refactor into multiple class to handle multiple bouldering result types when discriminator is available in MikroORM
@@ -14,25 +15,28 @@ export class BoulderingResult extends BaseEntity
   @ManyToOne()
   round: BoulderingRound;
 
-  @Property()
-  tops: boolean[];
+  @ManyToOne()
+  boulder: Boulder;
 
   @Property()
-  topInTries: number[];
+  top = false;
 
   @Property()
-  zones: boolean[];
+  topInTries = 0;
 
   @Property()
-  zoneInTries: number[];
+  zone = false;
 
-  constructor(climber: User, round: BoulderingRound, boulders: number) {
+  @Property()
+  zoneInTries = 0;
+
+  @Property()
+  tries = 0;
+
+  constructor(climber: User, round: BoulderingRound, boulder: Boulder) {
     super();
     this.climber = climber;
     this.round = round;
-    this.tops = new Array(boulders).fill(false);
-    this.topInTries = new Array(boulders).fill(0);
-    this.zones = new Array(boulders).fill(false);
-    this.zoneInTries = new Array(boulders).fill(0);
+    this.boulder = boulder;
   }
 }

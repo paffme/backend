@@ -13,6 +13,7 @@ import { BaseRound } from '../competition/base-round';
 import { User } from '../user/user.entity';
 import { BoulderingResult } from './bouldering-result.entity';
 import { BaseEntity } from '../shared/base.entity';
+import { Boulder } from './boulder.entity';
 
 export enum BoulderingRoundType {
   CIRCUIT = 'CIRCUIT',
@@ -44,8 +45,8 @@ export class BoulderingRound extends BaseEntity
   @Property()
   quota: number;
 
-  @Property()
-  boulders: number;
+  @OneToMany(() => Boulder, (boulder) => boulder.round)
+  boulders: Collection<Boulder> = new Collection<Boulder>(this);
 
   @ManyToOne()
   competition: Competition;
@@ -80,7 +81,6 @@ export class BoulderingRound extends BaseEntity
     name: string,
     index: number,
     quota: number,
-    boulders: number,
     type: BoulderingRoundType,
     competition: Competition,
   ) {
@@ -88,7 +88,6 @@ export class BoulderingRound extends BaseEntity
     this.name = name;
     this.index = index;
     this.quota = quota;
-    this.boulders = boulders;
     this.type = type;
     this.competition = competition;
   }

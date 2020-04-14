@@ -4,7 +4,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BaseService } from '../shared/base.service';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import {
@@ -13,20 +12,20 @@ import {
   UserCompetitionRelation,
 } from './competition.entity';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
-import { CompetitionDto } from './dto/out/competition.dto';
 import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
 import { UserService } from '../user/user.service';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
-import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
 import { BoulderingRoundDto } from '../bouldering/dto/out/bouldering-round.dto';
-import { BoulderingService } from '../bouldering/bouldering.service';
+import { BoulderingRoundService } from '../bouldering/bouldering-round.service';
+import { BoulderingRound } from '../bouldering/bouldering-round.entity';
+import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
+import { BoulderingResult } from '../bouldering/bouldering-result.entity';
+import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
+import { Boulder } from '../bouldering/boulder.entity';
 
 @Injectable()
-export class CompetitionService extends BaseService<
-  Competition,
-  CompetitionDto
-> {
+export class CompetitionService {
   constructor(
     @InjectRepository(Competition)
     private readonly competitionRepository: EntityRepository<Competition>,
@@ -36,10 +35,8 @@ export class CompetitionService extends BaseService<
     >,
     mapper: CompetitionMapper,
     private readonly userService: UserService,
-    private readonly boulderingService: BoulderingService,
-  ) {
-    super(Competition.prototype, mapper);
-  }
+    private readonly boulderingService: BoulderingRoundService,
+  ) {}
 
   async getOrFail(
     competitionId: typeof Competition.prototype.id,
@@ -301,11 +298,26 @@ export class CompetitionService extends BaseService<
   async addBoulderingRound(
     competitionId: typeof Competition.prototype.id,
     dto: CreateBoulderingRoundDto,
-  ): Promise<BoulderingRoundDto> {
+  ): Promise<BoulderingRound> {
     const competition = await this.getOrFail(competitionId, [
       'boulderingRounds',
     ]);
 
     return this.boulderingService.createRound(competition, dto);
+  }
+
+  async addBoulderingResult(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    userId: typeof User.prototype.id,
+    dto: CreateBoulderingResultDto,
+  ): Promise<BoulderingResult> {
+    const [, user] = await Promise.all([
+      this.getOrFail(competitionId), // for validation only
+      this.userService.getOrFail(userId),
+    ]);
+
+    return this.boulderingService.addResult(roundId, boulderId, user, dto);
   }
 }

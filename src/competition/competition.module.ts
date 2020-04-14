@@ -8,6 +8,7 @@ import { CompetitionRegistration } from '../shared/entity/competition-registrati
 import { OrganizerAuthorizationService } from './authorization/organizer.authorization.service';
 import { BoulderingModule } from '../bouldering/bouldering.module';
 import { JuryPresidentAuthorizationService } from './authorization/jury-president.authorization.service';
+import { JudgeAuthorizationService } from './authorization/judge.authorization.service';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { JuryPresidentAuthorizationService } from './authorization/jury-presiden
     CompetitionService,
     OrganizerAuthorizationService,
     JuryPresidentAuthorizationService,
+    JudgeAuthorizationService,
   ],
 })
 export class CompetitionModule {}

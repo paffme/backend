@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { Competition } from '../../src/competition/competition.entity';
 import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
-import { BoulderingService } from '../../src/bouldering/bouldering.service';
+import { BoulderingRoundService } from '../../src/bouldering/bouldering-round.service';
 import { CompetitionMapper } from '../../src/shared/mappers/competition.mapper';
 import { RepositoryMock, ServiceMock } from './mocks/types';
 
@@ -46,7 +46,7 @@ describe('Competition service (unit)', () => {
           useFactory: () => userServiceMock,
         },
         {
-          provide: BoulderingService,
+          provide: BoulderingRoundService,
           useFactory: () => boulderingServiceMock,
         },
         {

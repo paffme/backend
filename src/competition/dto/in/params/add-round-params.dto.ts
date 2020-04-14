@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { Competition } from '../../../competition.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class AddBoulderingRoundParamsDto {
+export class AddRoundParamsDto {
   @ApiProperty({ type: Number })
   @Type(() => Number)
   @IsInt()
