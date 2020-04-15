@@ -21,9 +21,4 @@ export class AddBoulderingResultParamsDto {
   @Type(() => Number)
   @IsInt()
   readonly boulderId!: typeof Boulder.prototype.id;
-
-  @ApiProperty({ type: Number })
-  @Type(() => Number)
-  @IsInt()
-  readonly userId!: typeof User.prototype.id;
 }

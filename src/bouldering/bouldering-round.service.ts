@@ -1,7 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
-import { BoulderingRound } from './bouldering-round.entity';
+import {
+  BoulderingRound,
+  BoulderingRoundRankingType,
+  BoulderingRoundType,
+} from './bouldering-round.entity';
 import { BoulderingResult } from './bouldering-result.entity';
 import { Competition } from '../competition/competition.entity';
 import { CreateBoulderingResultDto } from '../competition/dto/in/body/create-bouldering-result.dto';
@@ -38,12 +46,23 @@ export class BoulderingRoundService {
     competition: Competition,
     dto: CreateBoulderingRoundDto,
   ): Promise<BoulderingRound> {
+    if (
+      (dto.type === BoulderingRoundType.SEMI_FINAL ||
+        dto.type === BoulderingRoundType.FINAL) &&
+      dto.rankingType !== BoulderingRoundRankingType.CIRCUIT
+    ) {
+      throw new UnprocessableEntityException(
+        "Can't create a non circuit round for a semi final or final",
+      );
+    }
+
     const roundIndex = dto.index ?? competition.boulderingRounds.count();
 
     const round = new BoulderingRound(
       dto.name,
       roundIndex,
       dto.quota,
+      dto.rankingType,
       dto.type,
       competition,
     );
@@ -81,5 +100,12 @@ export class BoulderingRoundService {
     ]);
 
     return this.boulderingResultService.addResult(round, boulder, climber, dto);
+  }
+
+  static isRoundWithCountedTries(round: BoulderingRound): boolean {
+    return (
+      round.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST ||
+      round.rankingType === BoulderingRoundRankingType.CIRCUIT
+    );
   }
 }

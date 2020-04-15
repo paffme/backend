@@ -15,10 +15,16 @@ import { BoulderingResult } from './bouldering-result.entity';
 import { BaseEntity } from '../shared/base.entity';
 import { Boulder } from './boulder.entity';
 
-export enum BoulderingRoundType {
+export enum BoulderingRoundRankingType {
   CIRCUIT = 'CIRCUIT',
   UNLIMITED_CONTEST = 'UNLIMITED_CONTEST',
   LIMITED_CONTEST = 'LIMITED_CONTEST',
+}
+
+export enum BoulderingRoundType {
+  QUALIFIER = 'QUALIFIER',
+  SEMI_FINAL = 'SEMI_FINAL',
+  FINAL = 'FINAL',
 }
 
 interface BoulderingRanking {
@@ -52,6 +58,9 @@ export class BoulderingRound extends BaseEntity
   competition: Competition;
 
   @Enum()
+  rankingType: BoulderingRoundRankingType;
+
+  @Enum()
   type: BoulderingRoundType;
 
   @ManyToMany(() => User)
@@ -81,6 +90,7 @@ export class BoulderingRound extends BaseEntity
     name: string,
     index: number,
     quota: number,
+    rankingType: BoulderingRoundRankingType,
     type: BoulderingRoundType,
     competition: Competition,
   ) {
@@ -88,6 +98,7 @@ export class BoulderingRound extends BaseEntity
     this.name = name;
     this.index = index;
     this.quota = quota;
+    this.rankingType = rankingType;
     this.type = type;
     this.competition = competition;
   }

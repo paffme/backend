@@ -38,6 +38,18 @@ export class CompetitionService {
     private readonly boulderingService: BoulderingRoundService,
   ) {}
 
+  async existsOrFail(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<void> {
+    const count = await this.competitionRepository.count({
+      id: competitionId,
+    });
+
+    if (count !== 1) {
+      throw new NotFoundException('Competition not found');
+    }
+  }
+
   async getOrFail(
     competitionId: typeof Competition.prototype.id,
     populate?: CompetitionRelation[],
@@ -310,12 +322,11 @@ export class CompetitionService {
     competitionId: typeof Competition.prototype.id,
     roundId: typeof BoulderingRound.prototype.id,
     boulderId: typeof Boulder.prototype.id,
-    userId: typeof User.prototype.id,
     dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResult> {
     const [, user] = await Promise.all([
-      this.getOrFail(competitionId), // for validation only
-      this.userService.getOrFail(userId),
+      this.existsOrFail(competitionId),
+      this.userService.getOrFail(dto.climberId),
     ]);
 
     return this.boulderingService.addResult(roundId, boulderId, user, dto);

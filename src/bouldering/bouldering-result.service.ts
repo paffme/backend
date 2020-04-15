@@ -1,7 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
-import { BoulderingRound } from './bouldering-round.entity';
+import {
+  BoulderingRound,
+  BoulderingRoundRankingType,
+} from './bouldering-round.entity';
 import { BoulderingResult } from './bouldering-result.entity';
 import { CreateBoulderingResultDto } from '../competition/dto/in/body/create-bouldering-result.dto';
 import { User } from '../user/user.entity';
@@ -16,7 +19,7 @@ export class BoulderingResultService {
     >,
   ) {}
 
-  create(
+  createNewInstance(
     round: BoulderingRound,
     boulder: Boulder,
     climber: User,
@@ -37,7 +40,7 @@ export class BoulderingResultService {
     });
 
     if (!result) {
-      return this.create(round, boulder, climber);
+      return this.createNewInstance(round, boulder, climber);
     }
 
     return result;
@@ -52,15 +55,33 @@ export class BoulderingResultService {
     const result = await this.getOrCreateNewInstance(round, boulder, climber);
 
     if (dto.try) {
+      if (round.rankingType === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+        throw new UnprocessableEntityException(
+          "Can't add a try when the round is an unlimited contest",
+        );
+      }
+
       result.tries++;
     }
 
     if (typeof dto.top === 'boolean') {
       result.top = dto.top;
-      result.topInTries = result.top ? result.tries : 0;
+
+      if (
+        round.rankingType === BoulderingRoundRankingType.CIRCUIT ||
+        round.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST
+      ) {
+        result.topInTries = result.top ? result.tries : 0;
+      }
     }
 
     if (typeof dto.zone === 'boolean') {
+      if (round.rankingType == BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+        throw new UnprocessableEntityException(
+          "Can't add a zone when the round is an unlimited contest",
+        );
+      }
+
       result.zone = dto.zone;
       result.zoneInTries = result.zone ? result.tries : 0;
     }

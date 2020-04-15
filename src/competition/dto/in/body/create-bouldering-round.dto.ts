@@ -1,14 +1,10 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+
 import {
-  IsArray,
-  IsEnum,
-  IsInt,
-  IsOptional,
-  IsString,
-  Min, MinLength,
-  ValidateNested,
-} from 'class-validator';
-import { BoulderingRoundType } from '../../../../bouldering/bouldering-round.entity';
+  BoulderingRoundRankingType,
+  BoulderingRoundType,
+} from '../../../../bouldering/bouldering-round.entity';
 
 export class CreateBoulderingRoundDto {
   @ApiProperty()
@@ -30,6 +26,12 @@ export class CreateBoulderingRoundDto {
   @IsInt()
   @Min(1)
   boulders!: number;
+
+  @ApiProperty({
+    enum: BoulderingRoundRankingType,
+  })
+  @IsEnum(BoulderingRoundRankingType)
+  rankingType!: BoulderingRoundRankingType;
 
   @ApiProperty({
     enum: BoulderingRoundType,

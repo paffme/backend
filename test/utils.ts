@@ -9,7 +9,8 @@ import { SystemRole } from '../src/user/user-role.enum';
 
 import {
   CategoryName,
-  Competition, CompetitionRelation,
+  Competition,
+  CompetitionRelation,
   CompetitionType,
   Sex,
 } from '../src/competition/competition.entity';
@@ -17,7 +18,14 @@ import {
 import { UserService } from '../src/user/user.service';
 import { CompetitionService } from '../src/competition/competition.service';
 import { CompetitionRegistration } from '../src/shared/entity/competition-registration.entity';
+import { CreateBoulderingRoundDto } from '../src/competition/dto/in/body/create-bouldering-round.dto';
+import {
+  BoulderingRound,
+  BoulderingRoundRankingType, BoulderingRoundType,
+} from '../src/bouldering/bouldering-round.entity';
+import { Boulder } from '../src/bouldering/boulder.entity';
 
+// FIXME, cut this utils in multiple parts to remove ts-ignore comments
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
 
 export default class TestUtils {
@@ -231,5 +239,22 @@ export default class TestUtils {
 
   getRandomId(): number {
     return Math.floor(Math.random() * 100000);
+  }
+
+  addBoulderingRound(
+    competition: Competition,
+    partialDto?: Partial<CreateBoulderingRoundDto>,
+  ): Promise<BoulderingRound> {
+    const dto: CreateBoulderingRoundDto = {
+      boulders: partialDto?.boulders ?? 4,
+      name: partialDto?.name ?? String(Math.random()),
+      quota: partialDto?.quota ?? 5,
+      rankingType:
+        partialDto?.rankingType ?? BoulderingRoundRankingType.CIRCUIT,
+      type: partialDto?.type ?? BoulderingRoundType.QUALIFIER,
+    };
+
+    // @ts-ignore
+    return this.competitionService.addBoulderingRound(competition.id, dto);
   }
 }

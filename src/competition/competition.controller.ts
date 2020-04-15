@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
 import { CompetitionDto } from './dto/out/competition.dto';
@@ -64,6 +65,7 @@ import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-resul
 import { JudgeAuthorizationGuard } from './authorization/judge.authorization.guard';
 import { BoulderingRoundMapper } from '../shared/mappers/bouldering-round.mapper';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
+import { BoulderingResultMapper } from '../shared/mappers/bouldering-result.mapper';
 
 @Controller('competitions')
 export class CompetitionController {
@@ -72,6 +74,7 @@ export class CompetitionController {
     private readonly competitionRegistrationMapper: CompetitionRegistrationMapper,
     private readonly userMapper: UserMapper,
     private readonly boulderingRoundMapper: BoulderingRoundMapper,
+    private readonly boulderingResultMapper: BoulderingResultMapper,
     private readonly mapper: CompetitionMapper,
   ) {}
 
@@ -424,23 +427,34 @@ export class CompetitionController {
   }
 
   @Post(
-    '/:competitionId/bouldering-rounds/:roundId/boulders/:boulderId/results/:userId',
+    '/:competitionId/bouldering-rounds/:roundId/boulders/:boulderId/results',
   )
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), AuthenticationGuard, JudgeAuthorizationGuard)
   @ApiCreatedResponse()
   @ApiOperation(GetOperationId(Competition.name, 'AddBoulderingResult'))
-  addResult(
+  async addResult(
     @Param() params: AddBoulderingResultParamsDto,
     @Body() dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResultDto> {
-    return this.competitionService.addBoulderingResult(
+    if (
+      typeof dto.try === 'undefined' &&
+      typeof dto.zone === 'undefined' &&
+      typeof dto.top === 'undefined'
+    ) {
+      throw new UnprocessableEntityException(
+        'At least one element in the body is required among try, zone and top',
+      );
+    }
+
+    const result = await this.competitionService.addBoulderingResult(
       params.competitionId,
       params.roundId,
       params.boulderId,
-      params.userId,
       dto,
     );
+
+    return this.boulderingResultMapper.map(result);
   }
 }

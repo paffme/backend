@@ -1,11 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
+import { User } from '../../../../user/user.entity';
 
 export class CreateBoulderingResultDto {
   @ApiProperty()
   @IsInt()
   @Min(0)
-  boulderId!: number;
+  climberId!: typeof User.prototype.id;
 
   @ApiPropertyOptional()
   @IsBoolean()

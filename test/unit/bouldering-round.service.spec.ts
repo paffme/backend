@@ -4,6 +4,7 @@ import { Competition } from '../../src/competition/competition.entity';
 import { BoulderingRoundService } from '../../src/bouldering/bouldering-round.service';
 import {
   BoulderingRound,
+  BoulderingRoundRankingType,
   BoulderingRoundType,
 } from '../../src/bouldering/bouldering-round.entity';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
@@ -69,7 +70,8 @@ describe('Bouldering service (unit)', () => {
     const competition = {} as Competition;
 
     const dto: CreateBoulderingRoundDto = {
-      type: BoulderingRoundType.UNLIMITED_CONTEST,
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      type: BoulderingRoundType.QUALIFIER,
       quota: 0,
       name: 'SuperRound',
       boulders: 4,
@@ -113,7 +115,8 @@ describe('Bouldering service (unit)', () => {
     } as unknown) as Competition;
 
     const dto: CreateBoulderingRoundDto = {
-      type: BoulderingRoundType.UNLIMITED_CONTEST,
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      type: BoulderingRoundType.QUALIFIER,
       quota: 0,
       name: 'SuperRound',
       boulders: 4,
@@ -144,7 +147,8 @@ describe('Bouldering service (unit)', () => {
     const competition = {} as Competition;
 
     const dto: CreateBoulderingRoundDto = {
-      type: BoulderingRoundType.UNLIMITED_CONTEST,
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      type: BoulderingRoundType.QUALIFIER,
       quota: 0,
       name: 'SuperRound',
       boulders: 4,

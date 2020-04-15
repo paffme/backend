@@ -5,7 +5,7 @@ import { User } from '../user/user.entity';
 export interface BaseRound<ResultType> {
   name: string;
   quota: number;
-  type: string;
+  rankingType: string;
   started: boolean;
   competition: Competition;
   climbers: Collection<User>;
