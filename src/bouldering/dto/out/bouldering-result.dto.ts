@@ -22,17 +22,17 @@ export class BoulderingResultDto {
   boulderId!: typeof Boulder.prototype.id;
 
   @ApiProperty()
-  top!: boolean;
+  top!: typeof BoulderingResult.prototype.top;
 
   @ApiPropertyOptional()
-  topInTries?: number;
+  topInTries?: typeof BoulderingResult.prototype.topInTries;
 
   @ApiPropertyOptional()
-  zone?: boolean;
+  zone?: typeof BoulderingResult.prototype.zone;
 
   @ApiPropertyOptional()
-  zoneInTries?: number;
+  zoneInTries?: typeof BoulderingResult.prototype.zoneInTries;
 
   @ApiPropertyOptional()
-  tries?: number;
+  tries?: typeof BoulderingResult.prototype.tries;
 }
