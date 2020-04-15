@@ -9,6 +9,7 @@ import { BoulderingResult } from './bouldering-result.entity';
 import { CreateBoulderingResultDto } from '../competition/dto/in/body/create-bouldering-result.dto';
 import { User } from '../user/user.entity';
 import { Boulder } from './boulder.entity';
+import { BoulderingRoundService } from './bouldering-round.service';
 
 @Injectable()
 export class BoulderingResultService {
@@ -55,9 +56,9 @@ export class BoulderingResultService {
     const result = await this.getOrCreateNewInstance(round, boulder, climber);
 
     if (dto.try) {
-      if (round.rankingType === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+      if (!BoulderingRoundService.isRoundWithCountedTries(round)) {
         throw new UnprocessableEntityException(
-          "Can't add a try when the round is an unlimited contest",
+          "Can't add a try for this kind of round",
         );
       }
 
@@ -67,18 +68,15 @@ export class BoulderingResultService {
     if (typeof dto.top === 'boolean') {
       result.top = dto.top;
 
-      if (
-        round.rankingType === BoulderingRoundRankingType.CIRCUIT ||
-        round.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST
-      ) {
+      if (BoulderingRoundService.isRoundWithCountedTries(round)) {
         result.topInTries = result.top ? result.tries : 0;
       }
     }
 
     if (typeof dto.zone === 'boolean') {
-      if (round.rankingType == BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+      if (!BoulderingRoundService.isRoundWithCountedZones(round)) {
         throw new UnprocessableEntityException(
-          "Can't add a zone when the round is an unlimited contest",
+          "Can't add a zone for this kind of round",
         );
       }
 

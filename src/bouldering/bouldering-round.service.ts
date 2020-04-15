@@ -108,4 +108,11 @@ export class BoulderingRoundService {
       round.rankingType === BoulderingRoundRankingType.CIRCUIT
     );
   }
+
+  static isRoundWithCountedZones(round: BoulderingRound): boolean {
+    return (
+      round.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST ||
+      round.rankingType === BoulderingRoundRankingType.CIRCUIT
+    );
+  }
 }
