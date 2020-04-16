@@ -21,9 +21,9 @@ import { CompetitionRegistration } from '../src/shared/entity/competition-regist
 import { CreateBoulderingRoundDto } from '../src/competition/dto/in/body/create-bouldering-round.dto';
 import {
   BoulderingRound,
-  BoulderingRoundRankingType, BoulderingRoundType,
+  BoulderingRoundRankingType,
+  BoulderingRoundType,
 } from '../src/bouldering/bouldering-round.entity';
-import { Boulder } from '../src/bouldering/boulder.entity';
 
 // FIXME, cut this utils in multiple parts to remove ts-ignore comments
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
