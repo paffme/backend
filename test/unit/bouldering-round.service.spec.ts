@@ -77,7 +77,7 @@ describe('Bouldering round service (unit)', () => {
 
     const res = await boulderingRoundService.getOrFail(123);
 
-    expect(res).toEqual(round);
+    expect(res).toBe(round);
     expect(boulderingRoundRepositoryMock.findOne).toHaveBeenCalledTimes(1);
     expect(boulderingRoundRepositoryMock.findOne).toHaveBeenCalledWith(123);
   });

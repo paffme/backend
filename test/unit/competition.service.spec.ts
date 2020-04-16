@@ -144,8 +144,12 @@ describe('Competition service (unit)', () => {
 
     const res = await competitionService.addBoulderingRound(999999, dto);
 
-    expect(res).toEqual(newRound);
+    expect(res).toBe(newRound);
     expect(boulderingRoundServiceMock.createRound).toHaveBeenCalledTimes(1);
-    expect(boulderingRoundServiceMock.createRound).toHaveBeenCalledWith(competition, dto);
+
+    expect(boulderingRoundServiceMock.createRound).toHaveBeenCalledWith(
+      competition,
+      dto,
+    );
   });
 });

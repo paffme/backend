@@ -34,6 +34,7 @@ export class BoulderingResultService {
   ): Promise<BoulderingResult> {
     const result = await this.boulderingResultRepository.findOne({
       climber,
+      boulder,
       round,
     });
 
@@ -78,7 +79,14 @@ export class BoulderingResultService {
       }
 
       result.zone = dto.zone;
-      result.zoneInTries = result.zone ? result.tries : 0;
+
+      if (result.zone) {
+        result.zoneInTries = result.tries;
+      } else {
+        result.top = false;
+        result.topInTries = 0;
+        result.zoneInTries = 0;
+      }
     }
 
     await this.boulderingResultRepository.persistAndFlush(result);
