@@ -35,7 +35,7 @@ export class CompetitionService {
     >,
     mapper: CompetitionMapper,
     private readonly userService: UserService,
-    private readonly boulderingService: BoulderingRoundService,
+    private readonly boulderingRoundService: BoulderingRoundService,
   ) {}
 
   async existsOrFail(
@@ -315,7 +315,7 @@ export class CompetitionService {
       'boulderingRounds',
     ]);
 
-    return this.boulderingService.createRound(competition, dto);
+    return this.boulderingRoundService.createRound(competition, dto);
   }
 
   async addBoulderingResult(
@@ -329,6 +329,6 @@ export class CompetitionService {
       this.userService.getOrFail(dto.climberId),
     ]);
 
-    return this.boulderingService.addResult(roundId, boulderId, user, dto);
+    return this.boulderingRoundService.addResult(roundId, boulderId, user, dto);
   }
 }

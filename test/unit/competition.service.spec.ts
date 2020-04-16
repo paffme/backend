@@ -3,16 +3,13 @@ import { UserService } from '../../src/user/user.service';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { CompetitionService } from '../../src/competition/competition.service';
-import {
-  BadRequestException,
-  ConflictException,
-  NotFoundException,
-} from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Competition } from '../../src/competition/competition.entity';
 import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
 import { BoulderingRoundService } from '../../src/bouldering/bouldering-round.service';
 import { CompetitionMapper } from '../../src/shared/mappers/competition.mapper';
 import { RepositoryMock, ServiceMock } from './mocks/types';
+import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -31,7 +28,9 @@ const userServiceMock: ServiceMock = {
   getOrFail: jest.fn(),
 };
 
-const boulderingServiceMock: ServiceMock = {};
+const boulderingRoundServiceMock: ServiceMock = {
+  createRound: jest.fn(),
+};
 
 describe('Competition service (unit)', () => {
   let competitionService: CompetitionService;
@@ -47,7 +46,7 @@ describe('Competition service (unit)', () => {
         },
         {
           provide: BoulderingRoundService,
-          useFactory: () => boulderingServiceMock,
+          useFactory: () => boulderingRoundServiceMock,
         },
         {
           provide: getRepositoryToken(Competition),
@@ -72,7 +71,7 @@ describe('Competition service (unit)', () => {
     jest.clearAllMocks();
   });
 
-  it('returns 404 when getting an unknown registration', () => {
+  it('throws 404 when getting an unknown registration', () => {
     competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
 
     return expect(
@@ -80,7 +79,7 @@ describe('Competition service (unit)', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('returns 404 when deleting a registration on an unknown competition', async () => {
+  it('throws 404 when deleting a registration on an unknown competition', async () => {
     competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
     userServiceMock.getOrFail.mockImplementation(async () => ({}));
 
@@ -89,7 +88,7 @@ describe('Competition service (unit)', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('returns 404 when deleting a registration on an unknown user', async () => {
+  it('throws 404 when deleting a registration on an unknown user', async () => {
     competitionRepositoryMock.findOne.mockImplementation(async () => ({}));
     userServiceMock.getOrFail.mockImplementation(async () => undefined);
 
@@ -98,7 +97,7 @@ describe('Competition service (unit)', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('returns 404 when deleting an unknown registration', async () => {
+  it('throws 404 when deleting an unknown registration', async () => {
     competitionRepositoryMock.findOne.mockImplementation(async () => ({}));
     userServiceMock.getOrFail.mockImplementation(async () => ({}));
     competitionRegistrationRepositoryMock.findOne.mockImplementation(
@@ -110,12 +109,43 @@ describe('Competition service (unit)', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('returns 404 when adding a jury president to a unknown competition', async function () {
+  it('throws 404 when adding a jury president to a unknown competition', async function () {
     competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
     userServiceMock.getOrFail.mockImplementation(async () => ({}));
 
     return expect(
       competitionService.addJuryPresident(999999, 888888),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('throws 404 when adding a bouldering round to a unknown competition', async function () {
+    competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
+
+    return expect(
+      competitionService.addBoulderingRound(
+        999999,
+        {} as CreateBoulderingRoundDto,
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('calls bouldering round service to create a bouldering round', async function () {
+    const competition = {};
+    const newRound = {};
+    const dto = {} as CreateBoulderingRoundDto;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.createRound.mockImplementation(
+      async () => newRound,
+    );
+
+    const res = await competitionService.addBoulderingRound(999999, dto);
+
+    expect(res).toEqual(newRound);
+    expect(boulderingRoundServiceMock.createRound).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundServiceMock.createRound).toHaveBeenCalledWith(competition, dto);
   });
 });
