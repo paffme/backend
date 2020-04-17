@@ -10,11 +10,13 @@ import { BoulderingRoundService } from '../../src/bouldering/bouldering-round.se
 import { CompetitionMapper } from '../../src/shared/mappers/competition.mapper';
 import { RepositoryMock, ServiceMock } from './mocks/types';
 import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
+import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
+  count: jest.fn(),
 };
 
 const competitionRegistrationRepositoryMock: RepositoryMock = {
@@ -30,6 +32,7 @@ const userServiceMock: ServiceMock = {
 
 const boulderingRoundServiceMock: ServiceMock = {
   createRound: jest.fn(),
+  addResult: jest.fn(),
 };
 
 describe('Competition service (unit)', () => {
@@ -151,5 +154,57 @@ describe('Competition service (unit)', () => {
       competition,
       dto,
     );
+  });
+
+  it('returns when a competition exists with existsOrFail', async () => {
+    competitionRepositoryMock.count.mockImplementation(async () => 1);
+    const result = await competitionService.existsOrFail(1234);
+
+    expect(result).toBeUndefined();
+    expect(competitionRepositoryMock.count).toHaveBeenCalledTimes(1);
+    expect(competitionRepositoryMock.count).toHaveBeenCalledWith({
+      id: 1234,
+    });
+  });
+
+  it('returns when a competition do not exists with existsOrFail', async () => {
+    competitionRepositoryMock.count.mockImplementation(async () => undefined);
+
+    return expect(competitionService.existsOrFail(1234)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it('adds a bouldering result', async () => {
+    const user = {};
+    competitionRepositoryMock.count.mockImplementation(async () => 1);
+    userServiceMock.getOrFail.mockImplementation(async () => user);
+
+    const boulderingResult = {};
+    boulderingRoundServiceMock.addResult.mockImplementation(
+      async () => boulderingResult,
+    );
+
+    const dto = {
+      climberId: utils.getRandomId(),
+    } as CreateBoulderingResultDto;
+
+    const result = await competitionService.addBoulderingResult(1, 2, 3, dto);
+
+    expect(result).toBe(boulderingResult);
+    expect(boulderingRoundServiceMock.addResult).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundServiceMock.addResult).toHaveBeenCalledWith(
+      2,
+      3,
+      user,
+      dto,
+    );
+
+    expect(userServiceMock.getOrFail).toHaveBeenCalledTimes(1);
+    expect(userServiceMock.getOrFail).toHaveBeenCalledWith(dto.climberId);
+    expect(competitionRepositoryMock.count).toHaveBeenCalledTimes(1);
+    expect(competitionRepositoryMock.count).toHaveBeenCalledWith({
+      id: 1,
+    });
   });
 });

@@ -444,4 +444,47 @@ describe('Bouldering result service (unit)', () => {
     expect(res.zoneInTries).toEqual(0);
     expect(res.topInTries).toEqual(0);
   });
+
+  it('gives a zone on a top', async () => {
+    const boulder = {} as Boulder;
+
+    const instance = {
+      tries: 10,
+      topInTries: 0,
+      top: false,
+      zone: false,
+      zoneInTries: 0,
+    } as BoulderingResult;
+
+    const round = {
+      rankingType: BoulderingRoundRankingType.CIRCUIT,
+    } as BoulderingRound;
+
+    const user = {
+      id: utils.getRandomId(),
+    } as User;
+
+    const dto: CreateBoulderingResultDto = {
+      top: true,
+      climberId: user.id,
+    };
+
+    boulderingResultRepositoryMock.findOne.mockImplementation(
+      async () => instance,
+    );
+
+    const res = await boulderingResultService.addResult(
+      round,
+      boulder,
+      user,
+      dto,
+    );
+
+    expect(res).toBe(instance);
+    expect(res.top).toEqual(true);
+    expect(res.tries).toEqual(10);
+    expect(res.zone).toEqual(true);
+    expect(res.zoneInTries).toEqual(10);
+    expect(res.topInTries).toEqual(10);
+  });
 });

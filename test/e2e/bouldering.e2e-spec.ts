@@ -241,5 +241,107 @@ describe('Bouldering (e2e)', () => {
       expect(body.zoneInTries).toEqual(1);
       expect(body.tries).toEqual(1);
     });
+
+    it('adds a bouldering result by a jury president', async function () {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const {
+        user: juryPresident,
+        credentials: juryPresidentCredentials,
+      } = await utils.givenUser();
+
+      const presidentJuryAuth = await utils.login(juryPresidentCredentials);
+      await utils.addJuryPresidentInCompetition(juryPresident, competition);
+
+      const dto: CreateBoulderingResultDto = {
+        top: true,
+        climberId: climber.id,
+      };
+
+      await api
+        .post(
+          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+        )
+        .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
+        .send(dto)
+        .expect(201);
+    });
+
+    it('does not allow to add an empty result', async function () {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+        judgeAuth,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const dto: CreateBoulderingResultDto = {
+        climberId: climber.id,
+      };
+
+      const { body } = await api
+        .post(
+          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .send(dto)
+        .expect(422);
+
+      expect(body.message).toEqual(
+        'At least one element in the body is required among try, zone and top',
+      );
+    });
+
+    it('does not allow a non jury user to add a result', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      const dto: CreateBoulderingResultDto = {
+        top: true,
+        climberId: climber.id,
+      };
+
+      return api
+        .post(
+          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+        )
+        .set('Authorization', `Bearer ${auth.token}`)
+        .send(dto)
+        .expect(403);
+    });
+
+    it('does not allow a non authenticated user to add a result', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const dto: CreateBoulderingResultDto = {
+        top: true,
+        climberId: climber.id,
+      };
+
+      return api
+        .post(
+          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+        )
+        .send(dto)
+        .expect(401);
+    });
   });
 });

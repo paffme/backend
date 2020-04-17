@@ -69,6 +69,14 @@ export class BoulderingResultService {
       if (BoulderingRoundService.isRoundWithCountedTries(round)) {
         result.topInTries = result.top ? result.tries : 0;
       }
+
+      if (
+        !result.zone &&
+        BoulderingRoundService.isRoundWithCountedZones(round)
+      ) {
+        // When there is a top there is automatically a zone
+        dto.zone = true;
+      }
     }
 
     if (typeof dto.zone === 'boolean') {
