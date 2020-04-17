@@ -10,6 +10,7 @@ import { SystemRole } from '../src/user/user-role.enum';
 import {
   CategoryName,
   Competition,
+  CompetitionRelation,
   CompetitionType,
   Sex,
 } from '../src/competition/competition.entity';
@@ -17,7 +18,14 @@ import {
 import { UserService } from '../src/user/user.service';
 import { CompetitionService } from '../src/competition/competition.service';
 import { CompetitionRegistration } from '../src/shared/entity/competition-registration.entity';
+import { CreateBoulderingRoundDto } from '../src/competition/dto/in/body/create-bouldering-round.dto';
+import {
+  BoulderingRound,
+  BoulderingRoundRankingType,
+  BoulderingRoundType,
+} from '../src/bouldering/bouldering-round.entity';
 
+// FIXME, cut this utils in multiple parts to remove ts-ignore comments
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
 
 export default class TestUtils {
@@ -118,14 +126,22 @@ export default class TestUtils {
     };
   }
 
+  getCompetition(
+    competitionId: typeof Competition.prototype.id,
+    populate?: CompetitionRelation[],
+  ): Promise<Competition> {
+    // @ts-ignore
+    return this.competitionService.getOrFail(competitionId, populate);
+  }
+
   async givenCompetition(user: User): Promise<Competition> {
     // @ts-ignore
     return this.competitionService.create(this.givenCompetitionData(), user);
   }
 
-  login(user: CredentialsDto): Promise<TokenResponseDto> {
+  login(credentials: CredentialsDto): Promise<TokenResponseDto> {
     // @ts-ignore
-    return this.userService.login(user);
+    return this.userService.login(credentials);
   }
 
   async registerUserInCompetition(
@@ -219,5 +235,26 @@ export default class TestUtils {
   getOrganizers(competition: Competition): Promise<User[]> {
     // @ts-ignore
     return this.competitionService.getOrganizers(competition.id);
+  }
+
+  getRandomId(): number {
+    return Math.floor(Math.random() * 100000);
+  }
+
+  addBoulderingRound(
+    competition: Competition,
+    partialDto?: Partial<CreateBoulderingRoundDto>,
+  ): Promise<BoulderingRound> {
+    const dto: CreateBoulderingRoundDto = {
+      boulders: partialDto?.boulders ?? 4,
+      name: partialDto?.name ?? String(Math.random()),
+      quota: partialDto?.quota ?? 5,
+      rankingType:
+        partialDto?.rankingType ?? BoulderingRoundRankingType.CIRCUIT,
+      type: partialDto?.type ?? BoulderingRoundType.QUALIFIER,
+    };
+
+    // @ts-ignore
+    return this.competitionService.addBoulderingRound(competition.id, dto);
   }
 }

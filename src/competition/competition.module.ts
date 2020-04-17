@@ -5,7 +5,10 @@ import { CompetitionController } from './competition.controller';
 import { CompetitionService } from './competition.service';
 import { UserModule } from '../user/user.module';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
-import { CompetitionOrganizerAuthorizationService } from './authorization/competition-organizer.authorization.service';
+import { OrganizerAuthorizationService } from './authorization/organizer.authorization.service';
+import { BoulderingModule } from '../bouldering/bouldering.module';
+import { JuryPresidentAuthorizationService } from './authorization/jury-president.authorization.service';
+import { JudgeAuthorizationService } from './authorization/judge.authorization.service';
 
 @Module({
   imports: [
@@ -13,8 +16,14 @@ import { CompetitionOrganizerAuthorizationService } from './authorization/compet
       entities: [Competition, CompetitionRegistration],
     }),
     UserModule,
+    BoulderingModule,
   ],
   controllers: [CompetitionController],
-  providers: [CompetitionService, CompetitionOrganizerAuthorizationService],
+  providers: [
+    CompetitionService,
+    OrganizerAuthorizationService,
+    JuryPresidentAuthorizationService,
+    JudgeAuthorizationService,
+  ],
 })
 export class CompetitionModule {}

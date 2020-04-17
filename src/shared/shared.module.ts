@@ -9,6 +9,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { CompetitionMapper } from './mappers/competition.mapper';
 import { CompetitionRegistrationMapper } from './mappers/competition-registration.mapper';
 import { UserAuthorizationService } from './authorization/user.authorization.service';
+import { BoulderingRoundMapper } from './mappers/bouldering-round.mapper';
+import { BoulderingResultMapper } from './mappers/bouldering-result.mapper';
+import { BoulderMapper } from './mappers/boulder.mapper';
 
 @Global()
 @Module({
@@ -19,6 +22,9 @@ import { UserAuthorizationService } from './authorization/user.authorization.ser
     UserMapper,
     CompetitionMapper,
     CompetitionRegistrationMapper,
+    BoulderingRoundMapper,
+    BoulderingResultMapper,
+    BoulderMapper,
     UserAuthorizationService,
   ],
   exports: [
@@ -27,6 +33,9 @@ import { UserAuthorizationService } from './authorization/user.authorization.ser
     UserMapper,
     CompetitionMapper,
     CompetitionRegistrationMapper,
+    BoulderingRoundMapper,
+    BoulderingResultMapper,
+    BoulderMapper,
     UserAuthorizationService,
   ],
   imports: [

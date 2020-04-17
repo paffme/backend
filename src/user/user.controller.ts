@@ -50,6 +50,7 @@ import { AppRoles } from '../app.roles';
 import { AllowedAppRoles } from '../shared/decorators/allowed-app-roles.decorator';
 import { OptionalJwtAuthenticationGuard } from '../shared/guards/optional-jwt-authentication.guard';
 import { UserAuthorizationGuard } from '../shared/authorization/user.authorization.guard';
+import { UserMapper } from '../shared/mappers/user.mapper';
 
 @Controller('users')
 @ApiTags(User.name)
@@ -59,6 +60,7 @@ export class UserController {
     private readonly userService: UserService,
     private readonly competitionRegistrationMapper: CompetitionRegistrationMapper,
     private readonly competitionMapper: CompetitionMapper,
+    private readonly mapper: UserMapper,
   ) {}
 
   @Post()
@@ -70,7 +72,7 @@ export class UserController {
   @ApiOperation(GetOperationId(User.name, 'Register'))
   async register(@Body() dto: RegisterDto): Promise<UserDto> {
     const newUser = await this.userService.register(dto);
-    return this.userService.mapper.map(newUser);
+    return this.mapper.map(newUser);
   }
 
   @Post('token')
@@ -93,7 +95,7 @@ export class UserController {
   @ApiParam({ name: 'userId', required: true })
   async findById(@Param() params: FindByIdParamsDto): Promise<UserDto> {
     const user = await this.userService.getOrFail(params.userId);
-    return this.userService.mapper.map(user);
+    return this.mapper.map(user);
   }
 
   @Delete(':userId')
@@ -123,7 +125,7 @@ export class UserController {
     @Body() dto: UpdateUserDto,
   ): Promise<UserDto> {
     const updatedUser = await this.userService.updateUser(params.userId, dto);
-    return this.userService.mapper.map(updatedUser);
+    return this.mapper.map(updatedUser);
   }
 
   @Get('/:userId/registrations')

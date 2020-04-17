@@ -11,11 +11,11 @@ const types = [String, Boolean, Number, Array, Object];
 
 @Injectable()
 export class ValidationPipe implements PipeTransform<unknown> {
-  async transform(value: any, metadata: ArgumentMetadata): Promise<void> {
+  async transform(value: unknown, metadata: ArgumentMetadata): Promise<void> {
     const { metatype } = metadata;
 
     if (!metatype || !this.toValidate(metatype)) {
-      return value;
+      return;
     }
 
     const object = plainToClass(metatype, value);
@@ -24,11 +24,9 @@ export class ValidationPipe implements PipeTransform<unknown> {
     if (errors.length > 0) {
       throw new BadRequestException('Validation failed');
     }
-
-    return value;
   }
 
-  private toValidate(metatype): boolean {
+  private toValidate(metatype: unknown): boolean {
     return !types.find((type) => metatype === type);
   }
 }

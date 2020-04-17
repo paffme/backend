@@ -1,28 +1,31 @@
 import {
   BadRequestException,
   ConflictException,
-  HttpException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { BaseService } from '../shared/base.service';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
-import { Competition, CompetitionRelation } from './competition.entity';
+import {
+  Competition,
+  CompetitionRelation,
+  UserCompetitionRelation,
+} from './competition.entity';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
-import { CompetitionDto } from './dto/out/competition.dto';
-import { validate } from 'class-validator';
 import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
 import { UserService } from '../user/user.service';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
+import { BoulderingRoundDto } from '../bouldering/dto/out/bouldering-round.dto';
+import { BoulderingRoundService } from '../bouldering/bouldering-round.service';
+import { BoulderingRound } from '../bouldering/bouldering-round.entity';
+import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
+import { BoulderingResult } from '../bouldering/bouldering-result.entity';
+import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
+import { Boulder } from '../bouldering/boulder.entity';
 
 @Injectable()
-export class CompetitionService extends BaseService<
-  Competition,
-  CompetitionDto
-> {
+export class CompetitionService {
   constructor(
     @InjectRepository(Competition)
     private readonly competitionRepository: EntityRepository<Competition>,
@@ -32,13 +35,24 @@ export class CompetitionService extends BaseService<
     >,
     mapper: CompetitionMapper,
     private readonly userService: UserService,
-  ) {
-    super(Competition.prototype, mapper);
+    private readonly boulderingRoundService: BoulderingRoundService,
+  ) {}
+
+  async existsOrFail(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<void> {
+    const count = await this.competitionRepository.count({
+      id: competitionId,
+    });
+
+    if (count !== 1) {
+      throw new NotFoundException('Competition not found');
+    }
   }
 
   async getOrFail(
     competitionId: typeof Competition.prototype.id,
-    populate?: string[],
+    populate?: CompetitionRelation[],
   ): Promise<Competition> {
     const competition = await this.competitionRepository.findOne(
       competitionId,
@@ -117,22 +131,22 @@ export class CompetitionService extends BaseService<
   private async addUserRelation(
     competitionId: typeof Competition.prototype.id,
     userId: typeof User.prototype.id,
-    relation: CompetitionRelation,
+    relation: UserCompetitionRelation,
   ): Promise<void> {
     const competition = await this.getOrFail(competitionId, [relation]);
     const user = await this.userService.getOrFail(userId);
 
     if (competition[relation].contains(user)) {
       throw new ConflictException('User is already in this relation');
-    } else {
-      competition[relation].add(user);
-      await this.competitionRepository.persistAndFlush(competition);
     }
+
+    competition[relation].add(user);
+    await this.competitionRepository.persistAndFlush(competition);
   }
 
   private async getUserRelation(
     competitionId: typeof Competition.prototype.id,
-    relation: CompetitionRelation,
+    relation: UserCompetitionRelation,
   ): Promise<User[]> {
     const competition = await this.getOrFail(competitionId, [relation]);
     return competition[relation].getItems();
@@ -141,7 +155,7 @@ export class CompetitionService extends BaseService<
   private async removeUserInRelation(
     competitionId: typeof Competition.prototype.id,
     userId: typeof User.prototype.id,
-    relation: CompetitionRelation,
+    relation: UserCompetitionRelation,
   ): Promise<void> {
     const [competition, user] = await Promise.all([
       this.getOrFail(competitionId, [relation]),
@@ -291,5 +305,30 @@ export class CompetitionService extends BaseService<
     }
 
     await this.competitionRepository.persistAndFlush(competition);
+  }
+
+  async addBoulderingRound(
+    competitionId: typeof Competition.prototype.id,
+    dto: CreateBoulderingRoundDto,
+  ): Promise<BoulderingRound> {
+    const competition = await this.getOrFail(competitionId, [
+      'boulderingRounds',
+    ]);
+
+    return this.boulderingRoundService.createRound(competition, dto);
+  }
+
+  async addBoulderingResult(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    dto: CreateBoulderingResultDto,
+  ): Promise<BoulderingResult> {
+    const [, user] = await Promise.all([
+      this.existsOrFail(competitionId),
+      this.userService.getOrFail(dto.climberId),
+    ]);
+
+    return this.boulderingRoundService.addResult(roundId, boulderId, user, dto);
   }
 }

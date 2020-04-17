@@ -16,23 +16,18 @@ import { CredentialsDto } from './dto/in/body/credentials.dto';
 import { TokenResponseDto } from './dto/out/token-response.dto';
 import { JwtPayload } from '../shared/authentication/jwt-payload.interface';
 import { AuthenticationService } from '../shared/authentication/authentication.service';
-import { validate } from 'class-validator';
 import { UserMapper } from '../shared/mappers/user.mapper';
-import { BaseService } from '../shared/base.service';
-import { UserDto } from './dto/out/user.dto';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { Competition } from '../competition/competition.entity';
 
 @Injectable()
-export class UserService extends BaseService<User, UserDto> {
+export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: EntityRepository<User>,
     mapper: UserMapper,
     private readonly authService: AuthenticationService,
-  ) {
-    super(User.prototype, mapper);
-  }
+  ) {}
 
   private readonly SCRYPT_MEMBERS_SEPARATOR = '$';
   private readonly SCRYPT_MEMBERS_ENCODING = 'hex';
