@@ -27,12 +27,12 @@ export enum BoulderingRoundType {
   FINAL = 'FINAL',
 }
 
-interface BoulderingRanking {
+export interface BoulderingRanking {
   ranking: number;
-  tops?: boolean[];
-  topInTries?: number[];
-  zones?: boolean[];
-  zoneInTries?: number[];
+  tops: boolean[];
+  topsInTries: number[];
+  zones: boolean[];
+  zonesInTries: number[];
   climberId: typeof User.prototype.id;
 }
 
