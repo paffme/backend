@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  NotImplementedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
@@ -20,17 +19,26 @@ import { CreateBoulderingRoundDto } from '../competition/dto/in/body/create-boul
 import { User } from '../user/user.entity';
 import { Boulder } from './boulder.entity';
 import { BoulderService } from './boulder.service';
-
-type AggregatedResults = Pick<
-  BoulderingRanking,
-  'tops' | 'topsInTries' | 'zones' | 'zonesInTries'
->;
-
-type ClimberResultsMap = Map<typeof User.prototype.id, AggregatedResults>;
-type ClimberResultsMapEntry = [number, AggregatedResults];
+import { BoulderingUnlimitedContestRankingService } from './bouldering-unlimited-contest-ranking.service';
 
 @Injectable()
 export class BoulderingRoundService {
+  private readonly getRankingsFunctions: {
+    [key in BoulderingRoundRankingType]: (
+      round: BoulderingRound,
+    ) => BoulderingRanking[];
+  } = {
+    [BoulderingRoundRankingType.UNLIMITED_CONTEST]: this.boulderingUnlimitedContestRankingService.getRankings.bind(
+      this.boulderingUnlimitedContestRankingService,
+    ),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore
+    [BoulderingRoundRankingType.LIMITED_CONTEST]: undefined,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // @ts-ignore
+    [BoulderingRoundRankingType.CIRCUIT]: undefined,
+  };
+
   constructor(
     @InjectRepository(BoulderingRound)
     private readonly boulderingRoundRepository: EntityRepository<
@@ -38,6 +46,7 @@ export class BoulderingRoundService {
     >,
     private readonly boulderingResultService: BoulderingResultService,
     private readonly boulderService: BoulderService,
+    private readonly boulderingUnlimitedContestRankingService: BoulderingUnlimitedContestRankingService,
   ) {}
 
   async getOrFail(
@@ -98,175 +107,99 @@ export class BoulderingRoundService {
     return round;
   }
 
-  private compareByTops(
-    a: ClimberResultsMapEntry,
-    b: ClimberResultsMapEntry,
-  ): number {
-    if (a[1].tops > b[1].tops) {
-      return -1;
-    }
-
-    if (a[1].tops < b[1].tops) {
-      return 1;
-    }
-
-    return 0;
-  }
-
-  private compareByTopsInTries(
-    a: ClimberResultsMapEntry,
-    b: ClimberResultsMapEntry,
-  ): number {
-    if (a[1].topsInTries > b[1].topsInTries) {
-      return 1;
-    }
-
-    if (a[1].topsInTries < b[1].topsInTries) {
-      return -1;
-    }
-
-    return 0;
-  }
-
-  private compareByZones(
-    a: ClimberResultsMapEntry,
-    b: ClimberResultsMapEntry,
-  ): number {
-    if (a[1].zones > b[1].zones) {
-      return -1;
-    }
-
-    if (a[1].zones < b[1].zones) {
-      return 1;
-    }
-
-    return 0;
-  }
-
-  private compareByZonesInTries(
-    a: ClimberResultsMapEntry,
-    b: ClimberResultsMapEntry,
-  ): number {
-    if (a[1].zonesInTries > b[1].zonesInTries) {
-      return 1;
-    }
-
-    if (a[1].zonesInTries < b[1].zonesInTries) {
-      return -1;
-    }
-
-    return 0;
-  }
-
-  private areExAequo(
-    round: BoulderingRound,
-    a: ClimberResultsMapEntry,
-    b: ClimberResultsMapEntry,
-  ): boolean {
-    if (a[1].tops !== b[1].tops) {
-      return false;
-    }
-
-    if (BoulderingRoundService.isRoundWithCountedZones(round)) {
-      if (
-        a[1].zones !== b[1].zones ||
-        a[1].zonesInTries !== b[1].zonesInTries
-      ) {
-        return false;
-      }
-    }
-
-    if (
-      BoulderingRoundService.isRoundWithCountedTries(round) &&
-      a[1].topsInTries !== b[1].topsInTries
-    ) {
-      return false;
-    }
-
-    return true;
-  }
+  // private compareByTops(
+  //   a: ClimberResultsMapEntry<BoulderingRanking>,
+  //   b: ClimberResultsMapEntry<BoulderingRanking>,
+  // ): number {
+  //   if (a[1].tops > b[1].tops) {
+  //     return -1;
+  //   }
+  //
+  //   if (a[1].tops < b[1].tops) {
+  //     return 1;
+  //   }
+  //
+  //   return 0;
+  // }
+  //
+  // private compareByTopsInTries(
+  //   a: ClimberResultsMapEntry<BoulderingCountedRanking>,
+  //   b: ClimberResultsMapEntry<BoulderingCountedRanking>,
+  // ): number {
+  //   if (a[1].topsInTries > b[1].topsInTries) {
+  //     return 1;
+  //   }
+  //
+  //   if (a[1].topsInTries < b[1].topsInTries) {
+  //     return -1;
+  //   }
+  //
+  //   return 0;
+  // }
+  //
+  // private compareByZones(
+  //   a: ClimberResultsMapEntry<BoulderingCountedRanking>,
+  //   b: ClimberResultsMapEntry<BoulderingCountedRanking>,
+  // ): number {
+  //   if (a[1].zones > b[1].zones) {
+  //     return -1;
+  //   }
+  //
+  //   if (a[1].zones < b[1].zones) {
+  //     return 1;
+  //   }
+  //
+  //   return 0;
+  // }
+  //
+  // private compareByZonesInTries(
+  //   a: ClimberResultsMapEntry<BoulderingCountedRanking>,
+  //   b: ClimberResultsMapEntry<BoulderingCountedRanking>,
+  // ): number {
+  //   if (a[1].zonesInTries > b[1].zonesInTries) {
+  //     return 1;
+  //   }
+  //
+  //   if (a[1].zonesInTries < b[1].zonesInTries) {
+  //     return -1;
+  //   }
+  //
+  //   return 0;
+  // }
+  //
+  // private areExAequo(
+  //   round: BoulderingRound,
+  //   a: ClimberResultsMapEntry<BoulderingRanking>,
+  //   b: ClimberResultsMapEntry<BoulderingRanking>,
+  // ): boolean {
+  //   const resultA = a[1];
+  //   const resultB = b[1];
+  //
+  //   if (resultA.tops !== resultB.tops) {
+  //     return false;
+  //   }
+  //
+  //   if (resultA.type === BoulderingRoundRankingType.LIMITED_CONTEST) {
+  //     if (
+  //       result.zones !== b[1].zones ||
+  //       result.zonesInTries !== b[1].zonesInTries
+  //     ) {
+  //       return false;
+  //     }
+  //   }
+  //
+  //   if (
+  //     BoulderingRoundService.isRankingWithCountedTries(round) &&
+  //     a[1].topsInTries !== b[1].topsInTries
+  //   ) {
+  //     return false;
+  //   }
+  //
+  //   return true;
+  // }
 
   async updateRankings(round: BoulderingRound): Promise<void> {
-    // Group results by climber and aggregate results
-    const climberResults = round.results
-      .getItems()
-      .reduce<ClimberResultsMap>((map, result) => {
-        const boulderIndex = result.boulder.index;
-        const boulders = result.round.boulders.count();
-
-        const aggregatedResults = map.get(result.climber.id) || {
-          tops: new Array(boulders).fill(false),
-          topsInTries: new Array(boulders).fill(0),
-          zones: new Array(boulders).fill(false),
-          zonesInTries: new Array(boulders).fill(0),
-        };
-
-        aggregatedResults.tops[boulderIndex] = result.top;
-        aggregatedResults.topsInTries[boulderIndex] = result.topInTries;
-        aggregatedResults.zones[boulderIndex] = result.zone;
-        aggregatedResults.zonesInTries[boulderIndex] = result.zoneInTries;
-
-        map.set(result.climber.id, aggregatedResults);
-        return map;
-      }, new Map());
-
-    // Do the ranking by sorting results
-    let entries = Array.from(climberResults);
-
-    // Sort without handling ex-aequo results
-    switch (round.rankingType) {
-      case BoulderingRoundRankingType.CIRCUIT:
-      case BoulderingRoundRankingType.LIMITED_CONTEST:
-        entries = entries
-          .sort(this.compareByTops)
-          .sort(this.compareByZones)
-          .sort(this.compareByTopsInTries)
-          .sort(this.compareByZonesInTries);
-        break;
-      case BoulderingRoundRankingType.UNLIMITED_CONTEST:
-        entries = entries.sort(this.compareByTops);
-        break;
-      default:
-        throw new NotImplementedException('Unhandled ranking type');
-    }
-
-    // Handle ex-aequo results
-    const rankings: Map<typeof User.prototype.id, number> = new Map();
-    let previousClimberEntry: ClimberResultsMapEntry | undefined;
-    let previousClimberRanking: number | undefined;
-
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-      const [climberId] = entry;
-      let ranking: number;
-
-      if (
-        typeof previousClimberRanking === 'number' &&
-        previousClimberEntry &&
-        this.areExAequo(round, previousClimberEntry, entry)
-      ) {
-        ranking = previousClimberRanking;
-      } else {
-        ranking = i + 1;
-      }
-
-      rankings.set(climberId, ranking);
-      previousClimberEntry = entry;
-      previousClimberRanking = ranking;
-    }
-
-    // Gather all information
-    round.rankings = entries.map(
-      ([climberId, aggregatedResults]): BoulderingRanking => {
-        return {
-          climberId,
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          ranking: rankings.get(climberId)!,
-          ...aggregatedResults,
-        };
-      },
-    );
-
+    round.rankings = this.getRankingsFunctions[round.rankingType](round);
     await this.boulderingRoundRepository.persistAndFlush(round);
   }
 
@@ -293,17 +226,25 @@ export class BoulderingRoundService {
     return result;
   }
 
-  static isRoundWithCountedTries(round: BoulderingRound): boolean {
+  static isRankingWithCountedTries(
+    rankingType: BoulderingRoundRankingType,
+  ): rankingType is
+    | BoulderingRoundRankingType.LIMITED_CONTEST
+    | BoulderingRoundRankingType.CIRCUIT {
     return (
-      round.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST ||
-      round.rankingType === BoulderingRoundRankingType.CIRCUIT
+      rankingType === BoulderingRoundRankingType.LIMITED_CONTEST ||
+      rankingType === BoulderingRoundRankingType.CIRCUIT
     );
   }
 
-  static isRoundWithCountedZones(round: BoulderingRound): boolean {
+  static isRankingWithCountedZones(
+    rankingType: BoulderingRoundRankingType,
+  ): rankingType is
+    | BoulderingRoundRankingType.LIMITED_CONTEST
+    | BoulderingRoundRankingType.CIRCUIT {
     return (
-      round.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST ||
-      round.rankingType === BoulderingRoundRankingType.CIRCUIT
+      rankingType === BoulderingRoundRankingType.LIMITED_CONTEST ||
+      rankingType === BoulderingRoundRankingType.CIRCUIT
     );
   }
 }

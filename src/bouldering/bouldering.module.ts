@@ -6,6 +6,7 @@ import { BoulderingRoundService } from './bouldering-round.service';
 import { BoulderingResultService } from './bouldering-result.service';
 import { BoulderService } from './boulder.service';
 import { Boulder } from './boulder.entity';
+import { BoulderingUnlimitedContestRankingService } from './bouldering-unlimited-contest-ranking.service';
 
 @Module({
   imports: [
@@ -14,7 +15,12 @@ import { Boulder } from './boulder.entity';
     }),
   ],
   controllers: [],
-  providers: [BoulderingRoundService, BoulderingResultService, BoulderService],
+  providers: [
+    BoulderingRoundService,
+    BoulderingResultService,
+    BoulderService,
+    BoulderingUnlimitedContestRankingService,
+  ],
   exports: [BoulderingRoundService, BoulderingResultService, BoulderService],
 })
 export class BoulderingModule {}

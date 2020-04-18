@@ -252,19 +252,19 @@ describe('Bouldering round service (unit)', () => {
 
   it('returns correctly competitions with counted tries', () => {
     expect(
-      BoulderingRoundService.isRoundWithCountedTries({
+      BoulderingRoundService.isRankingWithCountedTries({
         rankingType: BoulderingRoundRankingType.CIRCUIT,
       } as BoulderingRound),
     ).toEqual(true);
 
     expect(
-      BoulderingRoundService.isRoundWithCountedTries({
+      BoulderingRoundService.isRankingWithCountedTries({
         rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
       } as BoulderingRound),
     ).toEqual(true);
 
     expect(
-      BoulderingRoundService.isRoundWithCountedTries({
+      BoulderingRoundService.isRankingWithCountedTries({
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       } as BoulderingRound),
     ).toEqual(false);
@@ -272,19 +272,19 @@ describe('Bouldering round service (unit)', () => {
 
   it('returns correctly competitions with counted zones', () => {
     expect(
-      BoulderingRoundService.isRoundWithCountedTries({
+      BoulderingRoundService.isRankingWithCountedTries({
         rankingType: BoulderingRoundRankingType.CIRCUIT,
       } as BoulderingRound),
     ).toEqual(true);
 
     expect(
-      BoulderingRoundService.isRoundWithCountedTries({
+      BoulderingRoundService.isRankingWithCountedTries({
         rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
       } as BoulderingRound),
     ).toEqual(true);
 
     expect(
-      BoulderingRoundService.isRoundWithCountedTries({
+      BoulderingRoundService.isRankingWithCountedTries({
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       } as BoulderingRound),
     ).toEqual(false);

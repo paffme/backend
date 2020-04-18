@@ -19,19 +19,27 @@ export class BoulderingResultMapper extends BaseMapper<
       competitionId: (result) => result.round.competition.id,
       top: 'top',
       topInTries: (result) =>
-        BoulderingRoundService.isRoundWithCountedTries(result.round)
+        BoulderingRoundService.isRankingWithCountedTries(
+          result.round.rankingType,
+        )
           ? result.topInTries
           : undefined,
       zone: (result) =>
-        BoulderingRoundService.isRoundWithCountedTries(result.round)
+        BoulderingRoundService.isRankingWithCountedZones(
+          result.round.rankingType,
+        )
           ? result.zone
           : undefined,
       zoneInTries: (result) =>
-        BoulderingRoundService.isRoundWithCountedTries(result.round)
+        BoulderingRoundService.isRankingWithCountedZones(
+          result.round.rankingType,
+        )
           ? result.zoneInTries
           : undefined,
       tries: (result) =>
-        BoulderingRoundService.isRoundWithCountedTries(result.round)
+        BoulderingRoundService.isRankingWithCountedTries(
+          result.round.rankingType,
+        )
           ? result.tries
           : undefined,
     });

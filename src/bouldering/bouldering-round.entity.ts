@@ -27,14 +27,39 @@ export enum BoulderingRoundType {
   FINAL = 'FINAL',
 }
 
-export interface BoulderingRanking {
+export interface BaseBoulderingRanking {
   ranking: number;
+  type: BoulderingRoundRankingType;
+  climberId: typeof User.prototype.id;
+}
+
+export interface BoulderingCountedRanking extends BaseBoulderingRanking {
   tops: boolean[];
   topsInTries: number[];
   zones: boolean[];
   zonesInTries: number[];
-  climberId: typeof User.prototype.id;
 }
+
+export interface BoulderingCircuitRanking extends BoulderingCountedRanking {
+  type: BoulderingRoundRankingType.CIRCUIT;
+}
+
+export interface BoulderingLimitedContestRanking
+  extends BoulderingCountedRanking {
+  type: BoulderingRoundRankingType.LIMITED_CONTEST;
+}
+
+export interface BoulderingUnlimitedContestRanking
+  extends BaseBoulderingRanking {
+  tops: boolean[];
+  nbTops: number;
+  points: number;
+}
+
+export type BoulderingRanking =
+  | BoulderingCircuitRanking
+  | BoulderingLimitedContestRanking
+  | BoulderingUnlimitedContestRanking;
 
 @Entity()
 export class BoulderingRound extends BaseEntity
