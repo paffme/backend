@@ -9,12 +9,12 @@ import { CompetitionRegistration } from '../../src/shared/entity/competition-reg
 import { User } from '../../src/user/user.entity';
 import config from '../../src/mikro-orm.config';
 import { SharedModule } from '../../src/shared/shared.module';
-import { BoulderingRoundService } from '../../src/bouldering/bouldering-round.service';
-import { BoulderingRound } from '../../src/bouldering/bouldering-round.entity';
-import { BoulderingResult } from '../../src/bouldering/bouldering-result.entity';
-import { BoulderingResultService } from '../../src/bouldering/bouldering-result.service';
-import { BoulderService } from '../../src/bouldering/boulder.service';
-import { Boulder } from '../../src/bouldering/boulder.entity';
+import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
+import { BoulderingRound } from '../../src/bouldering/round/bouldering-round.entity';
+import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
+import { BoulderingResultService } from '../../src/bouldering/result/bouldering-result.service';
+import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
+import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 
 describe('Competition service (integration)', () => {
   let competitionService: CompetitionService;

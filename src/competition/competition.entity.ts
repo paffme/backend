@@ -10,7 +10,7 @@ import {
 import { BaseEntity } from '../shared/base.entity';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
-import { BoulderingRound } from '../bouldering/bouldering-round.entity';
+import { BoulderingRound } from '../bouldering/round/bouldering-round.entity';
 
 export enum CompetitionType {
   Bouldering = 'bouldering',

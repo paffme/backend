@@ -1,23 +1,25 @@
 import TestUtils from '../utils';
 import { Test } from '@nestjs/testing';
 import { Competition } from '../../src/competition/competition.entity';
-import { BoulderingRoundService } from '../../src/bouldering/bouldering-round.service';
+import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
   BoulderingRoundType,
-} from '../../src/bouldering/bouldering-round.entity';
+  BoulderingRoundUnlimitedContestRankings,
+} from '../../src/bouldering/round/bouldering-round.entity';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { BoulderingRoundMapper } from '../../src/shared/mappers/bouldering-round.mapper';
 import { RepositoryMock, ServiceMock } from './mocks/types';
 import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
-import { BoulderService } from '../../src/bouldering/boulder.service';
-import { BoulderingResultService } from '../../src/bouldering/bouldering-result.service';
+import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
+import { BoulderingResultService } from '../../src/bouldering/result/bouldering-result.service';
 import { BoulderMapper } from '../../src/shared/mappers/boulder.mapper';
 import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/ranking/bouldering-round-unlimited-contest-ranking.service';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -27,6 +29,10 @@ const boulderingRoundRepositoryMock: RepositoryMock = {
 };
 
 const boulderingResultServiceMock: ServiceMock = {};
+
+const boulderingUnlimitedContestRankingServiceMock: ServiceMock = {
+  getRankings: jest.fn(),
+};
 
 const boulderServiceMock: ServiceMock = {
   createMany: jest.fn(),
@@ -51,6 +57,10 @@ describe('Bouldering round service (unit)', () => {
         {
           provide: BoulderService,
           useFactory: () => boulderServiceMock,
+        },
+        {
+          provide: BoulderingRoundUnlimitedContestRankingService,
+          useFactory: () => boulderingUnlimitedContestRankingServiceMock,
         },
         {
           provide: BoulderingRoundMapper,
@@ -252,41 +262,85 @@ describe('Bouldering round service (unit)', () => {
 
   it('returns correctly competitions with counted tries', () => {
     expect(
-      BoulderingRoundService.isRankingWithCountedTries({
-        rankingType: BoulderingRoundRankingType.CIRCUIT,
-      } as BoulderingRound),
+      BoulderingRoundService.isRankingWithCountedTries(
+        BoulderingRoundRankingType.CIRCUIT,
+      ),
     ).toEqual(true);
 
     expect(
-      BoulderingRoundService.isRankingWithCountedTries({
-        rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
-      } as BoulderingRound),
+      BoulderingRoundService.isRankingWithCountedTries(
+        BoulderingRoundRankingType.LIMITED_CONTEST,
+      ),
     ).toEqual(true);
 
     expect(
-      BoulderingRoundService.isRankingWithCountedTries({
-        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      } as BoulderingRound),
+      BoulderingRoundService.isRankingWithCountedTries(
+        BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      ),
     ).toEqual(false);
   });
 
   it('returns correctly competitions with counted zones', () => {
     expect(
-      BoulderingRoundService.isRankingWithCountedTries({
-        rankingType: BoulderingRoundRankingType.CIRCUIT,
-      } as BoulderingRound),
+      BoulderingRoundService.isRankingWithCountedZones(
+        BoulderingRoundRankingType.CIRCUIT,
+      ),
     ).toEqual(true);
 
     expect(
-      BoulderingRoundService.isRankingWithCountedTries({
-        rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
-      } as BoulderingRound),
+      BoulderingRoundService.isRankingWithCountedZones(
+        BoulderingRoundRankingType.LIMITED_CONTEST,
+      ),
     ).toEqual(true);
 
     expect(
-      BoulderingRoundService.isRankingWithCountedTries({
-        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      } as BoulderingRound),
+      BoulderingRoundService.isRankingWithCountedZones(
+        BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      ),
     ).toEqual(false);
+  });
+
+  it('updates rankings for an unlimited contest', async () => {
+    const round = {
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+    } as BoulderingRound;
+
+    const rankings = {} as BoulderingRoundUnlimitedContestRankings;
+
+    boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    boulderingUnlimitedContestRankingServiceMock.getRankings.mockImplementation(
+      async () => rankings,
+    );
+
+    const res = await boulderingRoundService.updateRankings(round);
+
+    expect(res).toBeUndefined();
+    expect(round.rankings).toBe(rankings);
+
+    expect(
+      boulderingUnlimitedContestRankingServiceMock.getRankings,
+    ).toHaveBeenCalledTimes(1);
+
+    expect(
+      boulderingUnlimitedContestRankingServiceMock.getRankings,
+    ).toHaveBeenCalledWith(round);
+
+    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledWith(
+      round,
+    );
+  });
+
+  it('updates rankings for a limited contest', async () => {
+    // TODO
+  });
+
+  it('updates rankings for a circuit', async () => {
+    // TODO
   });
 });

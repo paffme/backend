@@ -1,10 +1,10 @@
-import { BoulderService } from '../../src/bouldering/boulder.service';
+import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
 import { RepositoryMock } from './mocks/types';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
-import { Boulder } from '../../src/bouldering/boulder.entity';
+import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { BoulderingRound } from '../../src/bouldering/bouldering-round.entity';
+import { BoulderingRound } from '../../src/bouldering/round/bouldering-round.entity';
 
 const boulderRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),

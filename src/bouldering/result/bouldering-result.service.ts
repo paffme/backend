@@ -1,12 +1,12 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
-import { BoulderingRound } from './bouldering-round.entity';
+import { BoulderingRound } from '../round/bouldering-round.entity';
 import { BoulderingResult } from './bouldering-result.entity';
-import { CreateBoulderingResultDto } from '../competition/dto/in/body/create-bouldering-result.dto';
-import { User } from '../user/user.entity';
-import { Boulder } from './boulder.entity';
-import { BoulderingRoundService } from './bouldering-round.service';
+import { CreateBoulderingResultDto } from '../../competition/dto/in/body/create-bouldering-result.dto';
+import { User } from '../../user/user.entity';
+import { Boulder } from '../boulder/boulder.entity';
+import { BoulderingRoundService } from '../round/bouldering-round.service';
 
 @Injectable()
 export class BoulderingResultService {

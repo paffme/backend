@@ -1,8 +1,8 @@
 import { User } from '../../../user/user.entity';
-import { BoulderingRound } from '../../bouldering-round.entity';
-import { Boulder } from '../../boulder.entity';
+import { BoulderingRound } from '../../round/bouldering-round.entity';
+import { Boulder } from '../../boulder/boulder.entity';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { BoulderingResult } from '../../bouldering-result.entity';
+import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { Competition } from '../../../competition/competition.entity';
 
 export class BoulderingResultDto {

@@ -5,9 +5,9 @@ import { ConfigurationService } from './shared/configuration/configuration.servi
 import { Competition } from './competition/competition.entity';
 import { CompetitionRegistration } from './shared/entity/competition-registration.entity';
 import { Timestamp } from './shared/entity/timestamp.entity';
-import { BoulderingRound } from './bouldering/bouldering-round.entity';
-import { BoulderingResult } from './bouldering/bouldering-result.entity';
-import { Boulder } from './bouldering/boulder.entity';
+import { BoulderingRound } from './bouldering/round/bouldering-round.entity';
+import { BoulderingResult } from './bouldering/result/bouldering-result.entity';
+import { Boulder } from './bouldering/boulder/boulder.entity';
 const configService = new ConfigurationService();
 
 const config: Options = {

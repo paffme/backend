@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Boulder } from '../../boulder.entity';
+import { Boulder } from '../../boulder/boulder.entity';
 
 export class BoulderDto {
   @ApiProperty({

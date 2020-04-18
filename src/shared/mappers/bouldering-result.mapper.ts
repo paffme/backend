@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';
 import { BoulderingResultDto } from '../../bouldering/dto/out/bouldering-result.dto';
-import { BoulderingResult } from '../../bouldering/bouldering-result.entity';
-import { BoulderingRoundService } from '../../bouldering/bouldering-round.service';
+import { BoulderingResult } from '../../bouldering/result/bouldering-result.entity';
+import { BoulderingRoundService } from '../../bouldering/round/bouldering-round.service';
 
 @Injectable()
 export class BoulderingResultMapper extends BaseMapper<

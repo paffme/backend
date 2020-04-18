@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { Boulder } from './boulder.entity';
-import { BoulderingRound } from './bouldering-round.entity';
+import { BoulderingRound } from '../round/bouldering-round.entity';
 
 @Injectable()
 export class BoulderService {

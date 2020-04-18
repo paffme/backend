@@ -1,9 +1,9 @@
-import { BaseResult } from '../competition/base-result';
+import { BaseResult } from '../../competition/base-result';
 import { Entity, ManyToOne, Property } from 'mikro-orm';
-import { BoulderingRound } from './bouldering-round.entity';
-import { User } from '../user/user.entity';
-import { BaseEntity } from '../shared/base.entity';
-import { Boulder } from './boulder.entity';
+import { BoulderingRound } from '../round/bouldering-round.entity';
+import { User } from '../../user/user.entity';
+import { BaseEntity } from '../../shared/base.entity';
+import { Boulder } from '../boulder/boulder.entity';
 
 @Entity()
 // TODO : Refactor into multiple class to handle multiple bouldering result types when discriminator is available in MikroORM

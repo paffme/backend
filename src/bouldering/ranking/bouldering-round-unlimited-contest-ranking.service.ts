@@ -3,14 +3,16 @@ import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
-  BoulderingUnlimitedContestRanking,
-} from './bouldering-round.entity';
+  BoulderingRoundUnlimitedContestRanking,
+  BoulderingRoundUnlimitedContestRankings,
+} from '../round/bouldering-round.entity';
 
-import { User } from '../user/user.entity';
-import { BoulderingResult } from './bouldering-result.entity';
+import { User } from '../../user/user.entity';
+import { BoulderingResult } from '../result/bouldering-result.entity';
+import { BoulderingRoundRankingService } from './bouldering-round-ranking.service';
 
 type AggregatedBoulderingUnlimitedResults = Pick<
-  BoulderingUnlimitedContestRanking,
+  BoulderingRoundUnlimitedContestRanking,
   'tops' | 'points'
 >;
 
@@ -27,7 +29,10 @@ type AggregatedClimbersResultsMap = Map<
 type RankingsMap = Map<typeof User.prototype.id, number>;
 
 @Injectable()
-export class BoulderingUnlimitedContestRankingService {
+export class BoulderingRoundUnlimitedContestRankingService
+  implements BoulderingRoundRankingService {
+  readonly rankingType = BoulderingRoundRankingType.UNLIMITED_CONTEST;
+
   private getBouldersPoints(
     results: BoulderingResult[],
     boulders: number,
@@ -53,10 +58,9 @@ export class BoulderingUnlimitedContestRankingService {
 
   private groupResultsByClimber(
     results: BoulderingResult[],
+    bouldersPoints: number[],
     boulders: number,
   ): AggregatedClimbersResultsMap {
-    const bouldersPoints = this.getBouldersPoints(results, boulders);
-
     return results.reduce<AggregatedClimbersResultsMap>((map, result) => {
       const boulderIndex = result.boulder.index;
       const aggregatedResults = map.get(result.climber.id) ?? {
@@ -65,7 +69,11 @@ export class BoulderingUnlimitedContestRankingService {
       };
 
       aggregatedResults.tops[boulderIndex] = result.top;
-      aggregatedResults.points += bouldersPoints[boulderIndex];
+
+      if (result.top) {
+        aggregatedResults.points += bouldersPoints[boulderIndex];
+      }
+
       map.set(result.climber.id, aggregatedResults);
       return map;
     }, new Map());
@@ -84,10 +92,7 @@ export class BoulderingUnlimitedContestRankingService {
   ): RankingsMap {
     const rankings: RankingsMap = new Map();
 
-    let previousClimberEntry:
-      | [typeof User.prototype.id, AggregatedBoulderingUnlimitedResults]
-      | undefined;
-
+    let previousClimberEntry: AggregatedClimbersResultsEntry | undefined;
     let previousClimberRanking: number | undefined;
 
     // Firstly sort entries by points
@@ -117,38 +122,50 @@ export class BoulderingUnlimitedContestRankingService {
     return rankings;
   }
 
-  getRankings(round: BoulderingRound): BoulderingUnlimitedContestRanking[] {
-    if (round.rankingType !== BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+  async getRankings(
+    round: BoulderingRound,
+  ): Promise<BoulderingRoundUnlimitedContestRankings> {
+    if (round.rankingType !== this.rankingType) {
       throw new InternalServerErrorException('Wrong ranking type');
     }
 
+    await Promise.all([round.results.init(), round.boulders.init()]);
     const results = round.results.getItems();
     const boulders = round.boulders.count();
 
-    // Group results by climber and aggregate results
-    const climberResults = this.groupResultsByClimber(results, boulders);
+    // First compute each boulder points
+    const bouldersPoints = this.getBouldersPoints(results, boulders);
 
-    // Sort by points
-    const entries = Array.from(climberResults);
+    // Group results by climber and aggregate results
+    const climberResults = this.groupResultsByClimber(
+      results,
+      bouldersPoints,
+      boulders,
+    );
 
     // Then handle rankings
+    const entries = Array.from(climberResults);
     const rankings = this.computeRankings(entries);
 
     // Gather all information
-    return entries.map(
-      ([climberId, aggregatedResults]): BoulderingUnlimitedContestRanking => {
-        return {
+    return {
+      type: this.rankingType,
+      bouldersPoints,
+      rankings: entries.map(
+        ([
+          climberId,
+          aggregatedResults,
+        ]): BoulderingRoundUnlimitedContestRanking => ({
           nbTops: aggregatedResults.tops.reduce(
             (tops, top) => (top ? tops + 1 : tops),
             0,
           ),
-          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           ranking: rankings.get(climberId)!,
           ...aggregatedResults,
           climberId,
-        };
-      },
-    );
+        }),
+      ),
+    };
   }
 }
