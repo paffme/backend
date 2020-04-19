@@ -54,6 +54,52 @@ describe('Bouldering (e2e)', () => {
     await app.close();
   });
 
+  async function givenReadyCompetition(
+    rankingType: BoulderingRoundRankingType,
+  ): Promise<{
+    competition: Competition;
+    organizer: User;
+    climber: User;
+    judge: User;
+    judgeAuth: TokenResponseDto;
+    boulder: Boulder;
+    round: BoulderingRound;
+  }> {
+    const { user: organizer } = await utils.givenUser();
+    const { user: climber } = await utils.givenUser();
+
+    const {
+      user: judge,
+      credentials: judgeCredentials,
+    } = await utils.givenUser();
+
+    const judgeAuth = await utils.login(judgeCredentials);
+    const competition = await utils.givenCompetition(organizer, {
+      type: CompetitionType.Bouldering,
+    });
+    await utils.registerUserInCompetition(climber, competition);
+    await utils.addJudgeInCompetition(judge, competition);
+
+    const round = await utils.addBoulderingRound(competition, {
+      rankingType,
+      type: BoulderingRoundType.QUALIFIER,
+      boulders: 1,
+    });
+
+    const boulder = round.boulders.getItems()[0];
+    utils.clearORM();
+
+    return {
+      competition,
+      organizer,
+      climber,
+      judge,
+      judgeAuth,
+      boulder,
+      round,
+    };
+  }
+
   describe('POST /competitions/{competitionId}/bouldering-rounds', () => {
     it('adds a bouldering round', async function () {
       const { user, credentials } = await utils.givenUser();
@@ -93,52 +139,6 @@ describe('Bouldering (e2e)', () => {
   });
 
   describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/boulders/:boulderId/results', () => {
-    async function givenReadyCompetition(
-      rankingType: BoulderingRoundRankingType,
-    ): Promise<{
-      competition: Competition;
-      organizer: User;
-      climber: User;
-      judge: User;
-      judgeAuth: TokenResponseDto;
-      boulder: Boulder;
-      round: BoulderingRound;
-    }> {
-      const { user: organizer } = await utils.givenUser();
-      const { user: climber } = await utils.givenUser();
-
-      const {
-        user: judge,
-        credentials: judgeCredentials,
-      } = await utils.givenUser();
-
-      const judgeAuth = await utils.login(judgeCredentials);
-      const competition = await utils.givenCompetition(organizer, {
-        type: CompetitionType.Bouldering,
-      });
-      await utils.registerUserInCompetition(climber, competition);
-      await utils.addJudgeInCompetition(judge, competition);
-
-      const round = await utils.addBoulderingRound(competition, {
-        rankingType,
-        type: BoulderingRoundType.QUALIFIER,
-        boulders: 1,
-      });
-
-      const boulder = round.boulders.getItems()[0];
-      utils.clearORM();
-
-      return {
-        competition,
-        organizer,
-        climber,
-        judge,
-        judgeAuth,
-        boulder,
-        round,
-      };
-    }
-
     it('adds a bouldering result for an unlimited contest', async function () {
       const {
         climber,
@@ -350,8 +350,10 @@ describe('Bouldering (e2e)', () => {
         .send(dto)
         .expect(401);
     });
+  });
 
-    it('updates the competition ranking', async () => {
+  describe('GET /api/competitions/{competitionId}/rankings', () => {
+    it('gets the competition ranking', async () => {
       const {
         climber,
         competition,
@@ -360,7 +362,6 @@ describe('Bouldering (e2e)', () => {
       } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
 
       await utils.addBoulderingResult(competition, round, boulder, climber);
-      utils.clearORM();
 
       const res = await api
         .get(`/api/competitions/${competition.id}/rankings`)
@@ -371,7 +372,7 @@ describe('Bouldering (e2e)', () => {
       expect(body).toHaveLength(1);
       expect(body[0].ranking).toEqual(1);
       expect(body[0].climber.id).toEqual(climber.id);
-      expect(body[0].climber.club).toEqual(climber.club);
+      expect(body[0].climber.club).toEqual(null);
       expect(body[0].climber.firstName).toEqual(climber.firstName);
       expect(body[0].climber.lastName).toEqual(climber.lastName);
     });

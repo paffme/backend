@@ -14,6 +14,7 @@ import { AuthenticationService } from '../../src/shared/authentication/authentic
 import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
 import { JwtService } from '@nestjs/jwt';
 import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
+import * as uuid from 'uuid';
 
 const userRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -79,6 +80,8 @@ describe('User service (unit)', () => {
 
     return expect(
       userService.register({
+        firstName: uuid.v4(),
+        lastName: uuid.v4(),
         email: 'super@email.com',
         password: String(Math.random()),
       }),

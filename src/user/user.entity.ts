@@ -9,13 +9,13 @@ import { Competition } from '../competition/competition.entity';
 export class User extends BaseEntity {
   @Property({ hidden: true })
   @IsEmail()
-  email!: string;
+  email: string;
 
   @Property()
-  firstName?: string;
+  firstName: string;
 
   @Property()
-  lastName?: string;
+  lastName: string;
 
   @Property()
   club?: string;
@@ -27,7 +27,7 @@ export class User extends BaseEntity {
   systemRole: SystemRole = SystemRole.User;
 
   @Property({ hidden: true, length: 512 })
-  password!: string;
+  password: string;
 
   @OneToMany(() => CompetitionRegistration, (item) => item.climber)
   registrations: Collection<CompetitionRegistration> = new Collection<
@@ -58,6 +58,19 @@ export class User extends BaseEntity {
 
   @ManyToMany(() => Competition, (competition) => competition.organizers)
   organizations: Collection<Competition> = new Collection<Competition>(this);
+
+  constructor(
+    firstName: string,
+    lastName: string,
+    email: string,
+    password: string,
+  ) {
+    super();
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.email = email.trim();
+    this.password = password;
+  }
 }
 
 export type UserRelation =

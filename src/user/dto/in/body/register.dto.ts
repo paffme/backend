@@ -18,4 +18,14 @@ export class RegisterDto {
   @IsString()
   @Length(6, 32)
   readonly password!: string;
+
+  @ApiProperty()
+  @IsString()
+  @Length(2, 32)
+  readonly firstName!: string;
+
+  @ApiProperty()
+  @IsString()
+  @Length(2, 32)
+  readonly lastName!: string;
 }

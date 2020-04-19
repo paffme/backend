@@ -77,7 +77,8 @@ export class BoulderingRoundService {
       );
     }
 
-    const roundIndex = dto.index ?? competition.boulderingRounds.count();
+    const rounds = competition.boulderingRounds.getItems();
+    const roundIndex = rounds.length === 0 ? 0 : dto.index ?? rounds.length;
 
     const round = new BoulderingRound(
       dto.name,
@@ -90,26 +91,31 @@ export class BoulderingRoundService {
 
     // Add registrations if this is the first round
     if (round.index === 0) {
-      const registrations = await competition.registrations.loadItems();
+      const registrations = competition.registrations.getItems();
       const climbersRegistered = registrations.map((r) => r.climber);
       round.climbers.add(...climbersRegistered);
     }
 
-    // Handle other rounds indexes
-    const rounds = await this.boulderingRoundRepository.find(
-      {
-        competition,
-      },
-      ['climbers'],
-    );
+    if (rounds.length > 0) {
+      // Verify that the round index will be next to another index
+      const minDistance = rounds.reduce((minDistance, round) => {
+        const distance = Math.abs(round.index - roundIndex);
+        return distance < minDistance ? distance : minDistance;
+      }, Number.MAX_SAFE_INTEGER);
 
-    for (const r of rounds) {
-      if (r.index >= roundIndex) {
-        r.index++;
-        // Remove climbers in this round because when we add a round before
-        // then it has no sense to already have climbers in this round
-        r.climbers.remove(...r.climbers.getItems());
-        this.boulderingRoundRepository.persistLater(r);
+      if (minDistance > 1) {
+        throw new UnprocessableEntityException('Invalid round index');
+      }
+
+      // Shift other rounds indexes if necessary
+      for (const r of rounds) {
+        if (r.index >= roundIndex) {
+          r.index++;
+          // Remove climbers in this round because when we add a round before it
+          // then it has no sense to already have climbers in this round
+          r.climbers.removeAll();
+          this.boulderingRoundRepository.persistLater(r);
+        }
       }
     }
 

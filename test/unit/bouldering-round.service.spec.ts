@@ -98,7 +98,10 @@ describe('Bouldering round service (unit)', () => {
 
     expect(res).toBe(round);
     expect(boulderingRoundRepositoryMock.findOne).toHaveBeenCalledTimes(1);
-    expect(boulderingRoundRepositoryMock.findOne).toHaveBeenCalledWith(123);
+    expect(boulderingRoundRepositoryMock.findOne).toHaveBeenCalledWith(
+      123,
+      undefined,
+    );
   });
 
   it('throws not found when getting an unknown round', () => {
@@ -109,130 +112,6 @@ describe('Bouldering round service (unit)', () => {
     return expect(boulderingRoundService.getOrFail(123)).rejects.toBeInstanceOf(
       NotFoundException,
     );
-  });
-
-  it('should create a round', async () => {
-    const competition = {} as Competition;
-
-    const dto: CreateBoulderingRoundDto = {
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.QUALIFIER,
-      quota: 0,
-      name: 'SuperRound',
-      boulders: 4,
-      index: 0,
-    };
-
-    const id = utils.getRandomId();
-
-    boulderingRoundRepositoryMock.find.mockImplementation(async () => []);
-
-    boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
-      async (roundInstance) => {
-        roundInstance.id = id;
-      },
-    );
-
-    const round = await boulderingRoundService.createRound(competition, dto);
-    expect(round.index).toEqual(dto.index);
-    expect(round.name).toEqual(dto.name);
-    expect(round.id).toEqual(id);
-
-    expect(boulderServiceMock.createMany).toHaveBeenCalledTimes(1);
-    expect(boulderServiceMock.createMany).toHaveBeenCalledWith(
-      round,
-      dto.boulders,
-    );
-
-    expect(boulderingRoundRepositoryMock.find).toHaveBeenCalledTimes(1);
-    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
-      1,
-    );
-  });
-
-  it('should create a round and put it at the last one if no index is specified', async () => {
-    const competition = ({
-      boulderingRounds: {
-        count(): number {
-          return 1;
-        },
-      },
-    } as unknown) as Competition;
-
-    const dto: CreateBoulderingRoundDto = {
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.QUALIFIER,
-      quota: 0,
-      name: 'SuperRound',
-      boulders: 4,
-    };
-
-    boulderingRoundRepositoryMock.find.mockImplementation(() => []);
-
-    boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
-      async () => undefined,
-    );
-
-    const round = await boulderingRoundService.createRound(competition, dto);
-    expect(round.index).toEqual(1);
-
-    expect(boulderServiceMock.createMany).toHaveBeenCalledTimes(1);
-    expect(boulderServiceMock.createMany).toHaveBeenCalledWith(
-      round,
-      dto.boulders,
-    );
-
-    expect(boulderingRoundRepositoryMock.find).toHaveBeenCalledTimes(1);
-    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
-      1,
-    );
-  });
-
-  it('should create a round and shift other rounds', async () => {
-    const competition = {} as Competition;
-
-    const dto: CreateBoulderingRoundDto = {
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.QUALIFIER,
-      quota: 0,
-      name: 'SuperRound',
-      boulders: 4,
-      index: 0,
-    };
-
-    const firstRound = {
-      index: 0,
-    };
-
-    boulderingRoundRepositoryMock.find.mockImplementation(() => [firstRound]);
-
-    boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
-      async () => undefined,
-    );
-
-    boulderingRoundRepositoryMock.persistLater.mockImplementation(
-      () => undefined,
-    );
-
-    const round = await boulderingRoundService.createRound(competition, dto);
-    expect(round.index).toEqual(dto.index);
-
-    expect(boulderServiceMock.createMany).toHaveBeenCalledTimes(1);
-    expect(boulderServiceMock.createMany).toHaveBeenCalledWith(
-      round,
-      dto.boulders,
-    );
-
-    expect(boulderingRoundRepositoryMock.find).toHaveBeenCalledTimes(1);
-    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
-      1,
-    );
-
-    expect(boulderingRoundRepositoryMock.persistLater).toHaveBeenCalledWith(
-      firstRound,
-    );
-
-    expect(firstRound.index).toEqual(1);
   });
 
   it('should not create a non-circuit round for a semi-final', async () => {

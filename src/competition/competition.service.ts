@@ -319,6 +319,7 @@ export class CompetitionService {
   ): Promise<BoulderingRound> {
     const competition = await this.getOrFail(competitionId, [
       'boulderingRounds',
+      'registrations',
     ]);
 
     return this.boulderingRoundService.createRound(competition, dto);
@@ -393,6 +394,8 @@ export class CompetitionService {
       }
     }
 
+    // TODO : handle ex aequos :)
+
     return rankings;
   }
 
@@ -431,6 +434,8 @@ export class CompetitionService {
         };
       },
     );
+
+    await this.competitionRepository.persistAndFlush(competition);
   }
 
   async getRankings(

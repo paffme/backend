@@ -110,7 +110,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
   }
 
   function givenUser(): User {
-    const user = new User();
+    const user = new User(uuid.v4(), uuid.v4(), uuid.v4(), uuid.v4());
     user.id = utils.getRandomId();
     return user;
   }

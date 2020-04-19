@@ -4,7 +4,10 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { CompetitionService } from '../../src/competition/competition.service';
 import { NotFoundException } from '@nestjs/common';
-import { Competition } from '../../src/competition/competition.entity';
+import {
+  Competition,
+  CompetitionType,
+} from '../../src/competition/competition.entity';
 import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
 import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
 import { CompetitionMapper } from '../../src/shared/mappers/competition.mapper';
@@ -16,7 +19,6 @@ const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
-  count: jest.fn(),
 };
 
 const competitionRegistrationRepositoryMock: RepositoryMock = {
@@ -157,8 +159,24 @@ describe('Competition service (unit)', () => {
   });
 
   it('adds a bouldering result', async () => {
-    const user = {};
-    competitionRepositoryMock.count.mockImplementation(async () => 1);
+    const user = {
+      id: utils.getRandomId(),
+    };
+
+    const competition = {
+      type: CompetitionType.Bouldering,
+      registrations: {
+        getItems: jest.fn().mockImplementation(() => [{ climber: user }]),
+      },
+      boulderingRounds: {
+        loadItems: jest.fn().mockImplementation(async () => []),
+      },
+    };
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
     userServiceMock.getOrFail.mockImplementation(async () => user);
 
     const boulderingResult = {};
@@ -183,9 +201,9 @@ describe('Competition service (unit)', () => {
 
     expect(userServiceMock.getOrFail).toHaveBeenCalledTimes(1);
     expect(userServiceMock.getOrFail).toHaveBeenCalledWith(dto.climberId);
-    expect(competitionRepositoryMock.count).toHaveBeenCalledTimes(1);
-    expect(competitionRepositoryMock.count).toHaveBeenCalledWith({
-      id: 1,
-    });
+    expect(competitionRepositoryMock.findOne).toHaveBeenCalledTimes(1);
+    expect(competitionRepositoryMock.findOne).toHaveBeenCalledWith(1, [
+      'registrations',
+    ]);
   });
 });

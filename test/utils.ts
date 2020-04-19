@@ -49,6 +49,8 @@ export default class TestUtils {
     credentials: CredentialsDto;
   }> {
     const registerDto: RegisterDto = {
+      firstName: uuid.v4(),
+      lastName: uuid.v4(),
       email: `${uuid.v4()}@${uuid.v4()}.fr`,
       password: uuid.v4().substr(0, 10),
     };
@@ -65,6 +67,8 @@ export default class TestUtils {
     credentials: CredentialsDto;
   }> {
     const registerDto: RegisterDto = {
+      firstName: uuid.v4(),
+      lastName: uuid.v4(),
       email: `${uuid.v4()}@${uuid.v4()}.fr`,
       password: uuid.v4().substr(0, 10),
     };
