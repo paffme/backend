@@ -20,6 +20,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/ranking/bouldering-round-unlimited-contest-ranking.service';
+import { BoulderingRoundCountedRankingService } from '../../src/bouldering/ranking/bouldering-round-counted-ranking.service';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -31,6 +32,10 @@ const boulderingRoundRepositoryMock: RepositoryMock = {
 const boulderingResultServiceMock: ServiceMock = {};
 
 const boulderingUnlimitedContestRankingServiceMock: ServiceMock = {
+  getRankings: jest.fn(),
+};
+
+const boulderingRoundCircuitRankingServiceMock: ServiceMock = {
   getRankings: jest.fn(),
 };
 
@@ -61,6 +66,10 @@ describe('Bouldering round service (unit)', () => {
         {
           provide: BoulderingRoundUnlimitedContestRankingService,
           useFactory: () => boulderingUnlimitedContestRankingServiceMock,
+        },
+        {
+          provide: BoulderingRoundCountedRankingService,
+          useFactory: () => boulderingRoundCircuitRankingServiceMock,
         },
         {
           provide: BoulderingRoundMapper,

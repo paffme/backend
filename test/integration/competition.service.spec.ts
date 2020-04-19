@@ -15,6 +15,8 @@ import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.
 import { BoulderingResultService } from '../../src/bouldering/result/bouldering-result.service';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
+import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/ranking/bouldering-round-unlimited-contest-ranking.service';
+import { BoulderingRoundCountedRankingService } from '../../src/bouldering/ranking/bouldering-round-counted-ranking.service';
 
 describe('Competition service (integration)', () => {
   let competitionService: CompetitionService;
@@ -29,6 +31,8 @@ describe('Competition service (integration)', () => {
         BoulderingRoundService,
         BoulderingResultService,
         BoulderService,
+        BoulderingRoundUnlimitedContestRankingService,
+        BoulderingRoundCountedRankingService,
       ],
       imports: [
         MikroOrmModule.forRoot(config),

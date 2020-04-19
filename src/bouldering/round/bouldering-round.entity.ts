@@ -32,7 +32,8 @@ export interface BaseBoulderingRoundRanking {
   climberId: typeof User.prototype.id;
 }
 
-export interface BoulderingRoundCountedRanking extends BaseBoulderingRoundRanking {
+export interface BoulderingRoundCountedRanking
+  extends BaseBoulderingRoundRanking {
   tops: boolean[];
   topsInTries: number[];
   zones: boolean[];

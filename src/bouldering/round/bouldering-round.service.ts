@@ -20,7 +20,7 @@ import { Boulder } from '../boulder/boulder.entity';
 import { BoulderService } from '../boulder/boulder.service';
 import { BoulderingRoundUnlimitedContestRankingService } from '../ranking/bouldering-round-unlimited-contest-ranking.service';
 import { BoulderingRoundRankingService } from '../ranking/bouldering-round-ranking.service';
-import { BoulderingRoundCircuitRankingService } from '../ranking/bouldering-round-circuit-ranking.service';
+import { BoulderingRoundCountedRankingService } from '../ranking/bouldering-round-counted-ranking.service';
 
 @Injectable()
 export class BoulderingRoundService {
@@ -30,9 +30,9 @@ export class BoulderingRoundService {
     [BoulderingRoundRankingType.UNLIMITED_CONTEST]: this
       .boulderingUnlimitedContestRankingService,
     [BoulderingRoundRankingType.LIMITED_CONTEST]: this
-      .boulderingRoundCircuitRankingService,
+      .boulderingRoundCountedTriesRankingService,
     [BoulderingRoundRankingType.CIRCUIT]: this
-      .boulderingRoundCircuitRankingService,
+      .boulderingRoundCountedTriesRankingService,
   };
 
   constructor(
@@ -43,7 +43,7 @@ export class BoulderingRoundService {
     private readonly boulderingResultService: BoulderingResultService,
     private readonly boulderService: BoulderService,
     private readonly boulderingUnlimitedContestRankingService: BoulderingRoundUnlimitedContestRankingService,
-    private readonly boulderingRoundCircuitRankingService: BoulderingRoundCircuitRankingService,
+    private readonly boulderingRoundCountedTriesRankingService: BoulderingRoundCountedRankingService,
   ) {}
 
   async getOrFail(
@@ -123,7 +123,7 @@ export class BoulderingRoundService {
       this.boulderService.getOrFail(boulderId),
     ]);
 
-    const result = this.boulderingResultService.addResult(
+    const result = await this.boulderingResultService.addResult(
       round,
       boulder,
       climber,
@@ -146,14 +146,7 @@ export class BoulderingRoundService {
     );
   }
 
-  static isRankingWithCountedZones(
-    rankingType: BoulderingRoundRankingType,
-  ): rankingType is
-    | BoulderingRoundRankingType.LIMITED_CONTEST
-    | BoulderingRoundRankingType.CIRCUIT {
-    return (
-      rankingType === BoulderingRoundRankingType.LIMITED_CONTEST ||
-      rankingType === BoulderingRoundRankingType.CIRCUIT
-    );
+  static isRankingWithCountedZones(rankingType: BoulderingRoundRankingType) {
+    return BoulderingRoundService.isRankingWithCountedTries(rankingType);
   }
 }

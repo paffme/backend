@@ -10,7 +10,6 @@ import { SystemRole } from '../src/user/user-role.enum';
 import {
   CategoryName,
   Competition,
-  CompetitionRelation,
   CompetitionType,
   Sex,
 } from '../src/competition/competition.entity';

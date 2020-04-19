@@ -7,7 +7,7 @@ import { BoulderingResultService } from './result/bouldering-result.service';
 import { BoulderService } from './boulder/boulder.service';
 import { Boulder } from './boulder/boulder.entity';
 import { BoulderingRoundUnlimitedContestRankingService } from './ranking/bouldering-round-unlimited-contest-ranking.service';
-import { BoulderingRoundCircuitRankingService } from './ranking/bouldering-round-circuit-ranking.service';
+import { BoulderingRoundCountedRankingService } from './ranking/bouldering-round-counted-ranking.service';
 
 @Module({
   imports: [
@@ -21,7 +21,7 @@ import { BoulderingRoundCircuitRankingService } from './ranking/bouldering-round
     BoulderingResultService,
     BoulderService,
     BoulderingRoundUnlimitedContestRankingService,
-    BoulderingRoundCircuitRankingService,
+    BoulderingRoundCountedRankingService,
   ],
   exports: [BoulderingRoundService, BoulderingResultService, BoulderService],
 })

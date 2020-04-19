@@ -1,10 +1,11 @@
 import { BoulderingRoundRankingService } from './bouldering-round-ranking.service';
 
 import {
-  BoulderingRoundCircuitRankings,
   BoulderingRound,
-  BoulderingRoundRankingType,
+  BoulderingRoundCircuitRankings,
   BoulderingRoundCountedRanking,
+  BoulderingRoundLimitedContestRankings,
+  BoulderingRoundRankingType,
 } from '../round/bouldering-round.entity';
 
 import { InternalServerErrorException } from '@nestjs/common';
@@ -14,7 +15,12 @@ import { User } from '../../user/user.entity';
 type AggregatedBoulderingCircuitResults = Pick<
   BoulderingRoundCountedRanking,
   'tops' | 'topsInTries' | 'zones' | 'zonesInTries'
->;
+> & {
+  sumTops: number;
+  sumTopsInTries: number;
+  sumZones: number;
+  sumZonesInTries: number;
+};
 
 type AggregatedClimbersResultsEntry = [
   typeof User.prototype.id,
@@ -28,10 +34,8 @@ type AggregatedClimbersResultsMap = Map<
 
 type RankingsMap = Map<typeof User.prototype.id, number>;
 
-export class BoulderingRoundCircuitRankingService
+export class BoulderingRoundCountedRankingService
   implements BoulderingRoundRankingService {
-  readonly rankingType = BoulderingRoundRankingType.CIRCUIT;
-
   private groupResultsByClimber(
     results: BoulderingResult[],
     boulders: number,
@@ -41,14 +45,31 @@ export class BoulderingRoundCircuitRankingService
       const aggregatedResults = map.get(result.climber.id) ?? {
         tops: new Array(boulders).fill(false),
         topsInTries: new Array(boulders).fill(0),
+        sumTops: 0,
+        sumTopsInTries: 0,
         zones: new Array(boulders).fill(false),
         zonesInTries: new Array(boulders).fill(0),
+        sumZones: 0,
+        sumZonesInTries: 0,
       };
 
       aggregatedResults.tops[boulderIndex] = result.top;
+
+      if (result.top) {
+        aggregatedResults.sumTops++;
+      }
+
       aggregatedResults.topsInTries[boulderIndex] = result.topInTries;
+      aggregatedResults.sumTopsInTries += result.topInTries;
+
       aggregatedResults.zones[boulderIndex] = result.zone;
+
+      if (result.zone) {
+        aggregatedResults.sumZones++;
+      }
+
       aggregatedResults.zonesInTries[boulderIndex] = result.zoneInTries;
+      aggregatedResults.sumZonesInTries += result.zoneInTries;
 
       map.set(result.climber.id, aggregatedResults);
       return map;
@@ -59,11 +80,14 @@ export class BoulderingRoundCircuitRankingService
     a: AggregatedClimbersResultsEntry,
     b: AggregatedClimbersResultsEntry,
   ): number {
-    if (a[1].tops > b[1].tops) {
+    const aSumTops = a[1].sumTops;
+    const bSumTops = b[1].sumTops;
+
+    if (aSumTops > bSumTops) {
       return -1;
     }
 
-    if (a[1].tops < b[1].tops) {
+    if (aSumTops < bSumTops) {
       return 1;
     }
 
@@ -74,11 +98,22 @@ export class BoulderingRoundCircuitRankingService
     a: AggregatedClimbersResultsEntry,
     b: AggregatedClimbersResultsEntry,
   ): number {
-    if (a[1].topsInTries > b[1].topsInTries) {
+    const aSumTopsInTries = a[1].sumTopsInTries;
+    const bSumTopsInTries = b[1].sumTopsInTries;
+
+    if (aSumTopsInTries === 0 && bSumTopsInTries === 0) {
+      return 0;
+    }
+
+    if (aSumTopsInTries === 0) {
       return 1;
     }
 
-    if (a[1].topsInTries < b[1].topsInTries) {
+    if (aSumTopsInTries > bSumTopsInTries) {
+      return 1;
+    }
+
+    if (aSumTopsInTries < bSumTopsInTries) {
       return -1;
     }
 
@@ -89,11 +124,14 @@ export class BoulderingRoundCircuitRankingService
     a: AggregatedClimbersResultsEntry,
     b: AggregatedClimbersResultsEntry,
   ): number {
-    if (a[1].zones > b[1].zones) {
+    const aSumZones = a[1].sumZones;
+    const bSumZones = b[1].sumZones;
+
+    if (aSumZones > bSumZones) {
       return -1;
     }
 
-    if (a[1].zones < b[1].zones) {
+    if (aSumZones < bSumZones) {
       return 1;
     }
 
@@ -104,11 +142,22 @@ export class BoulderingRoundCircuitRankingService
     a: AggregatedClimbersResultsEntry,
     b: AggregatedClimbersResultsEntry,
   ): number {
-    if (a[1].zonesInTries > b[1].zonesInTries) {
+    const aSumZonesInTries = a[1].sumZonesInTries;
+    const bSumZonesInTries = b[1].sumZonesInTries;
+
+    if (aSumZonesInTries === 0 && bSumZonesInTries === 0) {
+      return 0;
+    }
+
+    if (aSumZonesInTries === 0) {
       return 1;
     }
 
-    if (a[1].zonesInTries < b[1].zonesInTries) {
+    if (aSumZonesInTries > bSumZonesInTries) {
+      return 1;
+    }
+
+    if (aSumZonesInTries < bSumZonesInTries) {
       return -1;
     }
 
@@ -122,19 +171,19 @@ export class BoulderingRoundCircuitRankingService
     const resultA = a[1];
     const resultB = b[1];
 
-    if (resultA.tops !== resultB.tops) {
+    if (resultA.sumTops !== resultB.sumTops) {
       return false;
     }
 
-    if (resultA.zones !== resultB.zones) {
+    if (resultA.sumZones !== resultB.sumZones) {
       return false;
     }
 
-    if (resultA.zonesInTries !== resultB.zonesInTries) {
+    if (resultA.sumZonesInTries !== resultB.sumZonesInTries) {
       return false;
     }
 
-    if (resultA.topsInTries !== resultB.topsInTries) {
+    if (resultA.sumTopsInTries !== resultB.sumTopsInTries) {
       return false;
     }
 
@@ -151,15 +200,15 @@ export class BoulderingRoundCircuitRankingService
 
     // Firstly sort entries by points
     entries = entries
-      .sort(this.compareByTops)
-      .sort(this.compareByZones)
-      .sort(this.compareByTopsInTries)
-      .sort(this.compareByZonesInTries);
+      .sort(this.compareByTops.bind(this))
+      .sort(this.compareByZones.bind(this))
+      .sort(this.compareByTopsInTries.bind(this))
+      .sort(this.compareByZonesInTries.bind(this));
 
     // Then handle ex-aequo and define final ranking
     for (let i = 0; i < entries.length; i++) {
       const entry = entries[i];
-      const [climberId] = entry;
+      const climberId = entry[0];
       let ranking: number;
 
       if (
@@ -182,8 +231,13 @@ export class BoulderingRoundCircuitRankingService
 
   async getRankings(
     round: BoulderingRound,
-  ): Promise<BoulderingRoundCircuitRankings> {
-    if (round.rankingType !== this.rankingType) {
+  ): Promise<
+    BoulderingRoundCircuitRankings | BoulderingRoundLimitedContestRankings
+  > {
+    if (
+      round.rankingType !== BoulderingRoundRankingType.CIRCUIT &&
+      round.rankingType !== BoulderingRoundRankingType.LIMITED_CONTEST
+    ) {
       throw new InternalServerErrorException('Wrong ranking type');
     }
 
@@ -200,7 +254,7 @@ export class BoulderingRoundCircuitRankingService
 
     // Gather all information
     return {
-      type: this.rankingType,
+      type: round.rankingType,
       rankings: entries.map(
         ([climberId, aggregatedResults]): BoulderingRoundCountedRanking => ({
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
