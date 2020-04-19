@@ -6,7 +6,7 @@ import { CompetitionService } from '../../src/competition/competition.service';
 import { NotFoundException } from '@nestjs/common';
 import { Competition } from '../../src/competition/competition.entity';
 import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
-import { BoulderingRoundService } from '../../src/bouldering/bouldering-round.service';
+import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
 import { CompetitionMapper } from '../../src/shared/mappers/competition.mapper';
 import { RepositoryMock, ServiceMock } from './mocks/types';
 import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';

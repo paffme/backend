@@ -10,12 +10,12 @@ import {
   BoulderingRound,
   BoulderingRoundRankingType,
   BoulderingRoundType,
-} from '../../src/bouldering/bouldering-round.entity';
+} from '../../src/bouldering/round/bouldering-round.entity';
 import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
 import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
 import { User } from '../../src/user/user.entity';
 import { TokenResponseDto } from '../../src/user/dto/out/token-response.dto';
-import { Boulder } from '../../src/bouldering/boulder.entity';
+import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { Competition } from '../../src/competition/competition.entity';
 
 describe('Bouldering (e2e)', () => {

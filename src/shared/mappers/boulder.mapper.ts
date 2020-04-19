@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';
 
-import { Boulder } from '../../bouldering/boulder.entity';
+import { Boulder } from '../../bouldering/boulder/boulder.entity';
 import { BoulderDto } from '../../bouldering/dto/out/boulder.dto';
 
 @Injectable()

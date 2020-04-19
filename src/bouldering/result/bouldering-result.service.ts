@@ -1,12 +1,12 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
-import { BoulderingRound } from './bouldering-round.entity';
+import { BoulderingRound } from '../round/bouldering-round.entity';
 import { BoulderingResult } from './bouldering-result.entity';
-import { CreateBoulderingResultDto } from '../competition/dto/in/body/create-bouldering-result.dto';
-import { User } from '../user/user.entity';
-import { Boulder } from './boulder.entity';
-import { BoulderingRoundService } from './bouldering-round.service';
+import { CreateBoulderingResultDto } from '../../competition/dto/in/body/create-bouldering-result.dto';
+import { User } from '../../user/user.entity';
+import { Boulder } from '../boulder/boulder.entity';
+import { BoulderingRoundService } from '../round/bouldering-round.service';
 
 @Injectable()
 export class BoulderingResultService {
@@ -54,7 +54,9 @@ export class BoulderingResultService {
     const result = await this.getOrCreateNewInstance(round, boulder, climber);
 
     if (dto.try) {
-      if (!BoulderingRoundService.isRoundWithCountedTries(round)) {
+      if (
+        !BoulderingRoundService.isRankingWithCountedTries(round.rankingType)
+      ) {
         throw new UnprocessableEntityException(
           "Can't add a try for this kind of round",
         );
@@ -66,13 +68,13 @@ export class BoulderingResultService {
     if (typeof dto.top === 'boolean') {
       result.top = dto.top;
 
-      if (BoulderingRoundService.isRoundWithCountedTries(round)) {
+      if (BoulderingRoundService.isRankingWithCountedTries(round.rankingType)) {
         result.topInTries = result.top ? result.tries : 0;
       }
 
       if (
         !result.zone &&
-        BoulderingRoundService.isRoundWithCountedZones(round)
+        BoulderingRoundService.isRankingWithCountedZones(round.rankingType)
       ) {
         // When there is a top there is automatically a zone
         dto.zone = true;
@@ -80,7 +82,9 @@ export class BoulderingResultService {
     }
 
     if (typeof dto.zone === 'boolean') {
-      if (!BoulderingRoundService.isRoundWithCountedZones(round)) {
+      if (
+        !BoulderingRoundService.isRankingWithCountedZones(round.rankingType)
+      ) {
         throw new UnprocessableEntityException(
           "Can't add a zone for this kind of round",
         );

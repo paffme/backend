@@ -1,14 +1,14 @@
 import TestUtils from '../utils';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
-import { BoulderingResultService } from '../../src/bouldering/bouldering-result.service';
-import { BoulderingResult } from '../../src/bouldering/bouldering-result.entity';
+import { BoulderingResultService } from '../../src/bouldering/result/bouldering-result.service';
+import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
 import { RepositoryMock } from './mocks/types';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
-} from '../../src/bouldering/bouldering-round.entity';
-import { Boulder } from '../../src/bouldering/boulder.entity';
+} from '../../src/bouldering/round/bouldering-round.entity';
+import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { User } from '../../src/user/user.entity';
 import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
 import { UnprocessableEntityException } from '@nestjs/common';

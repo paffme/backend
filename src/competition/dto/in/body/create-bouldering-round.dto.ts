@@ -4,7 +4,7 @@ import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
 import {
   BoulderingRoundRankingType,
   BoulderingRoundType,
-} from '../../../../bouldering/bouldering-round.entity';
+} from '../../../../bouldering/round/bouldering-round.entity';
 
 export class CreateBoulderingRoundDto {
   @ApiProperty()

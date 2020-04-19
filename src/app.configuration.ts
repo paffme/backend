@@ -26,7 +26,11 @@ export function configure(app: NestExpressApplication): void {
     ? `https://${AppModule.host}:${AppModule.port}`
     : AppModule.host;
 
-  app.useStaticAssets(join(__dirname, '../static'));
+  if (AppModule.isDev) {
+    app.useStaticAssets(join(__dirname, '../static'));
+  } else {
+    app.useStaticAssets(join(__dirname, '../../static'));
+  }
 
   const swaggerOptions = new DocumentBuilder()
     .setTitle(packageJson.name)

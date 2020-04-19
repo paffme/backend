@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
-} from '../../bouldering-round.entity';
+} from '../../round/bouldering-round.entity';
 import { BoulderDto } from './boulder.dto';
 import { Competition } from '../../../competition/competition.entity';
 

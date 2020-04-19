@@ -1,6 +1,6 @@
-import { BaseEntity } from '../shared/base.entity';
+import { BaseEntity } from '../../shared/base.entity';
 import { Entity, ManyToOne, Property } from 'mikro-orm';
-import { BoulderingRound } from './bouldering-round.entity';
+import { BoulderingRound } from '../round/bouldering-round.entity';
 
 @Entity()
 export class Boulder extends BaseEntity {

@@ -10,7 +10,6 @@ import { SystemRole } from '../src/user/user-role.enum';
 import {
   CategoryName,
   Competition,
-  CompetitionRelation,
   CompetitionType,
   Sex,
 } from '../src/competition/competition.entity';
@@ -23,7 +22,7 @@ import {
   BoulderingRound,
   BoulderingRoundRankingType,
   BoulderingRoundType,
-} from '../src/bouldering/bouldering-round.entity';
+} from '../src/bouldering/round/bouldering-round.entity';
 
 // FIXME, cut this utils in multiple parts to remove ts-ignore comments
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
@@ -124,14 +123,6 @@ export default class TestUtils {
       startDate: today,
       endDate: tomorrow,
     };
-  }
-
-  getCompetition(
-    competitionId: typeof Competition.prototype.id,
-    populate?: CompetitionRelation[],
-  ): Promise<Competition> {
-    // @ts-ignore
-    return this.competitionService.getOrFail(competitionId, populate);
   }
 
   async givenCompetition(user: User): Promise<Competition> {

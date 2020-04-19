@@ -8,12 +8,12 @@ import {
   Property,
 } from 'mikro-orm';
 
-import { Competition } from '../competition/competition.entity';
-import { BaseRound } from '../competition/base-round';
-import { User } from '../user/user.entity';
-import { BoulderingResult } from './bouldering-result.entity';
-import { BaseEntity } from '../shared/base.entity';
-import { Boulder } from './boulder.entity';
+import { Competition } from '../../competition/competition.entity';
+import { BaseRound } from '../../competition/base-round';
+import { User } from '../../user/user.entity';
+import { BoulderingResult } from '../result/bouldering-result.entity';
+import { BaseEntity } from '../../shared/base.entity';
+import { Boulder } from '../boulder/boulder.entity';
 
 export enum BoulderingRoundRankingType {
   CIRCUIT = 'CIRCUIT',
@@ -27,14 +27,46 @@ export enum BoulderingRoundType {
   FINAL = 'FINAL',
 }
 
-interface BoulderingRanking {
+export interface BaseBoulderingRoundRanking {
   ranking: number;
-  tops?: boolean[];
-  topInTries?: number[];
-  zones?: boolean[];
-  zoneInTries?: number[];
   climberId: typeof User.prototype.id;
 }
+
+export interface BoulderingRoundCountedRanking
+  extends BaseBoulderingRoundRanking {
+  tops: boolean[];
+  topsInTries: number[];
+  zones: boolean[];
+  zonesInTries: number[];
+}
+
+export interface BoulderingRoundCircuitRankings {
+  type: BoulderingRoundRankingType.CIRCUIT;
+  rankings: BoulderingRoundCountedRanking[];
+}
+
+export interface BoulderingRoundLimitedContestRankings {
+  type: BoulderingRoundRankingType.LIMITED_CONTEST;
+  rankings: BoulderingRoundCountedRanking[];
+}
+
+export interface BoulderingRoundUnlimitedContestRanking
+  extends BaseBoulderingRoundRanking {
+  tops: boolean[];
+  nbTops: number;
+  points: number;
+}
+
+export interface BoulderingRoundUnlimitedContestRankings {
+  type: BoulderingRoundRankingType.UNLIMITED_CONTEST;
+  rankings: BoulderingRoundUnlimitedContestRanking[];
+  bouldersPoints: number[];
+}
+
+export type BoulderingRoundRankings =
+  | BoulderingRoundCircuitRankings
+  | BoulderingRoundLimitedContestRankings
+  | BoulderingRoundUnlimitedContestRankings;
 
 @Entity()
 export class BoulderingRound extends BaseEntity
@@ -84,7 +116,7 @@ export class BoulderingRound extends BaseEntity
       if the ranking algorithm change
    */
   @Property()
-  rankings: BoulderingRanking[] = [];
+  rankings?: BoulderingRoundRankings;
 
   constructor(
     name: string,

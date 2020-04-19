@@ -17,12 +17,12 @@ import { UserService } from '../user/user.service';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
 import { BoulderingRoundDto } from '../bouldering/dto/out/bouldering-round.dto';
-import { BoulderingRoundService } from '../bouldering/bouldering-round.service';
-import { BoulderingRound } from '../bouldering/bouldering-round.entity';
+import { BoulderingRoundService } from '../bouldering/round/bouldering-round.service';
+import { BoulderingRound } from '../bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
-import { BoulderingResult } from '../bouldering/bouldering-result.entity';
+import { BoulderingResult } from '../bouldering/result/bouldering-result.entity';
 import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
-import { Boulder } from '../bouldering/boulder.entity';
+import { Boulder } from '../bouldering/boulder/boulder.entity';
 
 @Injectable()
 export class CompetitionService {

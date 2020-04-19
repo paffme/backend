@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';
 import { BoulderingResultDto } from '../../bouldering/dto/out/bouldering-result.dto';
-import { BoulderingResult } from '../../bouldering/bouldering-result.entity';
-import { BoulderingRoundService } from '../../bouldering/bouldering-round.service';
+import { BoulderingResult } from '../../bouldering/result/bouldering-result.entity';
+import { BoulderingRoundService } from '../../bouldering/round/bouldering-round.service';
 
 @Injectable()
 export class BoulderingResultMapper extends BaseMapper<
@@ -19,19 +19,27 @@ export class BoulderingResultMapper extends BaseMapper<
       competitionId: (result) => result.round.competition.id,
       top: 'top',
       topInTries: (result) =>
-        BoulderingRoundService.isRoundWithCountedTries(result.round)
+        BoulderingRoundService.isRankingWithCountedTries(
+          result.round.rankingType,
+        )
           ? result.topInTries
           : undefined,
       zone: (result) =>
-        BoulderingRoundService.isRoundWithCountedTries(result.round)
+        BoulderingRoundService.isRankingWithCountedZones(
+          result.round.rankingType,
+        )
           ? result.zone
           : undefined,
       zoneInTries: (result) =>
-        BoulderingRoundService.isRoundWithCountedTries(result.round)
+        BoulderingRoundService.isRankingWithCountedZones(
+          result.round.rankingType,
+        )
           ? result.zoneInTries
           : undefined,
       tries: (result) =>
-        BoulderingRoundService.isRoundWithCountedTries(result.round)
+        BoulderingRoundService.isRankingWithCountedTries(
+          result.round.rankingType,
+        )
           ? result.tries
           : undefined,
     });
