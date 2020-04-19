@@ -39,7 +39,7 @@ export interface Category {
   name: CategoryName;
 }
 
-interface Ranking {
+export interface Ranking {
   ranking: number;
   climber: {
     id: typeof User.prototype.id;

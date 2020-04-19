@@ -35,7 +35,7 @@ const boulderingUnlimitedContestRankingServiceMock: ServiceMock = {
   getRankings: jest.fn(),
 };
 
-const boulderingRoundCircuitRankingServiceMock: ServiceMock = {
+const boulderingRoundCountedRankingServiceMock: ServiceMock = {
   getRankings: jest.fn(),
 };
 
@@ -69,7 +69,7 @@ describe('Bouldering round service (unit)', () => {
         },
         {
           provide: BoulderingRoundCountedRankingService,
-          useFactory: () => boulderingRoundCircuitRankingServiceMock,
+          useFactory: () => boulderingRoundCountedRankingServiceMock,
         },
         {
           provide: BoulderingRoundMapper,
@@ -346,10 +346,74 @@ describe('Bouldering round service (unit)', () => {
   });
 
   it('updates rankings for a limited contest', async () => {
-    // TODO
+    const round = {
+      rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
+    } as BoulderingRound;
+
+    const rankings = {} as BoulderingRoundUnlimitedContestRankings;
+
+    boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    boulderingRoundCountedRankingServiceMock.getRankings.mockImplementation(
+      async () => rankings,
+    );
+
+    const res = await boulderingRoundService.updateRankings(round);
+
+    expect(res).toBeUndefined();
+    expect(round.rankings).toBe(rankings);
+
+    expect(
+      boulderingRoundCountedRankingServiceMock.getRankings,
+    ).toHaveBeenCalledTimes(1);
+
+    expect(
+      boulderingRoundCountedRankingServiceMock.getRankings,
+    ).toHaveBeenCalledWith(round);
+
+    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledWith(
+      round,
+    );
   });
 
   it('updates rankings for a circuit', async () => {
-    // TODO
+    const round = {
+      rankingType: BoulderingRoundRankingType.CIRCUIT,
+    } as BoulderingRound;
+
+    const rankings = {} as BoulderingRoundUnlimitedContestRankings;
+
+    boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    boulderingRoundCountedRankingServiceMock.getRankings.mockImplementation(
+      async () => rankings,
+    );
+
+    const res = await boulderingRoundService.updateRankings(round);
+
+    expect(res).toBeUndefined();
+    expect(round.rankings).toBe(rankings);
+
+    expect(
+      boulderingRoundCountedRankingServiceMock.getRankings,
+    ).toHaveBeenCalledTimes(1);
+
+    expect(
+      boulderingRoundCountedRankingServiceMock.getRankings,
+    ).toHaveBeenCalledWith(round);
+
+    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledWith(
+      round,
+    );
   });
 });

@@ -26,7 +26,7 @@ import { CompetitionService } from './competition.service';
 import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
 import { RegisterParamsDto } from './dto/in/params/register-params.dto';
 import { CompetitionRegistrationDto } from './dto/out/competition-registration.dto';
-import { Competition } from './competition.entity';
+import { Competition, Ranking } from './competition.entity';
 import { CompetitionRegistrationMapper } from '../shared/mappers/competition-registration.mapper';
 import { GetCompetitionRegistrationsParamsDto } from './dto/in/params/get-competition-registrations-params.dto';
 import { UserDto } from '../user/dto/out/user.dto';
@@ -66,6 +66,9 @@ import { JudgeAuthorizationGuard } from './authorization/judge.authorization.gua
 import { BoulderingRoundMapper } from '../shared/mappers/bouldering-round.mapper';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
 import { BoulderingResultMapper } from '../shared/mappers/bouldering-result.mapper';
+import { GetRankingsParamsDto } from './dto/in/params/get-rankings-params.dto';
+import { RankingDto } from './dto/out/ranking.dto';
+import { RankingMapper } from '../shared/mappers/ranking.mapper';
 
 @Controller('competitions')
 export class CompetitionController {
@@ -75,6 +78,7 @@ export class CompetitionController {
     private readonly userMapper: UserMapper,
     private readonly boulderingRoundMapper: BoulderingRoundMapper,
     private readonly boulderingResultMapper: BoulderingResultMapper,
+    private readonly rankingMapper: RankingMapper,
     private readonly mapper: CompetitionMapper,
   ) {}
 
@@ -456,5 +460,18 @@ export class CompetitionController {
     );
 
     return this.boulderingResultMapper.map(result);
+  }
+
+  @Get('/:competitionId/rankings')
+  @ApiOkResponse({ type: RankingDto, isArray: true })
+  @ApiOperation(GetOperationId(Competition.name, 'GetCompetitionRankings'))
+  async getRankings(
+    @Param() params: GetRankingsParamsDto,
+  ): Promise<RankingDto[]> {
+    const rankings = await this.competitionService.getRankings(
+      params.competitionId,
+    );
+
+    return this.rankingMapper.mapArray(rankings);
   }
 }

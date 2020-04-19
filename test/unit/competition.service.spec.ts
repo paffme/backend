@@ -156,25 +156,6 @@ describe('Competition service (unit)', () => {
     );
   });
 
-  it('returns when a competition exists with existsOrFail', async () => {
-    competitionRepositoryMock.count.mockImplementation(async () => 1);
-    const result = await competitionService.existsOrFail(1234);
-
-    expect(result).toBeUndefined();
-    expect(competitionRepositoryMock.count).toHaveBeenCalledTimes(1);
-    expect(competitionRepositoryMock.count).toHaveBeenCalledWith({
-      id: 1234,
-    });
-  });
-
-  it('returns when a competition do not exists with existsOrFail', async () => {
-    competitionRepositoryMock.count.mockImplementation(async () => undefined);
-
-    return expect(competitionService.existsOrFail(1234)).rejects.toBeInstanceOf(
-      NotFoundException,
-    );
-  });
-
   it('adds a bouldering result', async () => {
     const user = {};
     competitionRepositoryMock.count.mockImplementation(async () => 1);

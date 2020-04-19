@@ -8,6 +8,7 @@ import { EntityRepository } from 'mikro-orm';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
+  BoulderingRoundRelation,
   BoulderingRoundType,
 } from './bouldering-round.entity';
 import { BoulderingResult } from '../result/bouldering-result.entity';
@@ -48,8 +49,12 @@ export class BoulderingRoundService {
 
   async getOrFail(
     roundId: typeof BoulderingRound.prototype.id,
+    populate?: BoulderingRoundRelation[],
   ): Promise<BoulderingRound> {
-    const round = await this.boulderingRoundRepository.findOne(roundId);
+    const round = await this.boulderingRoundRepository.findOne(
+      roundId,
+      populate,
+    );
 
     if (!round) {
       throw new NotFoundException('Round not found');
@@ -83,23 +88,34 @@ export class BoulderingRoundService {
       competition,
     );
 
+    // Add registrations if this is the first round
+    if (round.index === 0) {
+      const registrations = await competition.registrations.loadItems();
+      const climbersRegistered = registrations.map((r) => r.climber);
+      round.climbers.add(...climbersRegistered);
+    }
+
     // Handle other rounds indexes
-    const rounds = await this.boulderingRoundRepository.find({
-      competition,
-    });
+    const rounds = await this.boulderingRoundRepository.find(
+      {
+        competition,
+      },
+      ['climbers'],
+    );
 
     for (const r of rounds) {
       if (r.index >= roundIndex) {
         r.index++;
+        // Remove climbers in this round because when we add a round before
+        // then it has no sense to already have climbers in this round
+        r.climbers.remove(...r.climbers.getItems());
         this.boulderingRoundRepository.persistLater(r);
       }
     }
 
-    // Persist
-    await this.boulderingRoundRepository.persistAndFlush(round);
-
-    // Create boulders
+    this.boulderingRoundRepository.persistLater(round);
     await this.boulderService.createMany(round, dto.boulders);
+    await this.boulderingRoundRepository.flush();
 
     return round;
   }
@@ -119,9 +135,17 @@ export class BoulderingRoundService {
     dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResult> {
     const [round, boulder] = await Promise.all([
-      this.getOrFail(roundId),
+      this.getOrFail(roundId, ['climbers', 'boulders']),
       this.boulderService.getOrFail(boulderId),
     ]);
+
+    if (!round.climbers.contains(climber)) {
+      throw new UnprocessableEntityException('Climber not in round');
+    }
+
+    if (!round.boulders.contains(boulder)) {
+      throw new UnprocessableEntityException('Boulder not in round');
+    }
 
     const result = await this.boulderingResultService.addResult(
       round,
@@ -148,5 +172,10 @@ export class BoulderingRoundService {
 
   static isRankingWithCountedZones(rankingType: BoulderingRoundRankingType) {
     return BoulderingRoundService.isRankingWithCountedTries(rankingType);
+  }
+
+  async addClimber(round: BoulderingRound, climber: User): Promise<void> {
+    round.climbers.add(climber);
+    await this.boulderingRoundRepository.persistAndFlush(round);
   }
 }

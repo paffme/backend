@@ -16,7 +16,11 @@ import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/cre
 import { User } from '../../src/user/user.entity';
 import { TokenResponseDto } from '../../src/user/dto/out/token-response.dto';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
-import { Competition } from '../../src/competition/competition.entity';
+import {
+  Competition,
+  CompetitionType,
+} from '../../src/competition/competition.entity';
+import { RankingDto } from '../../src/competition/dto/out/ranking.dto';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -88,7 +92,7 @@ describe('Bouldering (e2e)', () => {
     });
   });
 
-  describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/boulders/:boulderId/results/{userId}', () => {
+  describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/boulders/:boulderId/results', () => {
     async function givenReadyCompetition(
       rankingType: BoulderingRoundRankingType,
     ): Promise<{
@@ -109,7 +113,10 @@ describe('Bouldering (e2e)', () => {
       } = await utils.givenUser();
 
       const judgeAuth = await utils.login(judgeCredentials);
-      const competition = await utils.givenCompetition(organizer);
+      const competition = await utils.givenCompetition(organizer, {
+        type: CompetitionType.Bouldering,
+      });
+      await utils.registerUserInCompetition(climber, competition);
       await utils.addJudgeInCompetition(judge, competition);
 
       const round = await utils.addBoulderingRound(competition, {
@@ -342,6 +349,31 @@ describe('Bouldering (e2e)', () => {
         )
         .send(dto)
         .expect(401);
+    });
+
+    it('updates the competition ranking', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      await utils.addBoulderingResult(competition, round, boulder, climber);
+      utils.clearORM();
+
+      const res = await api
+        .get(`/api/competitions/${competition.id}/rankings`)
+        .expect(200);
+
+      const body: RankingDto[] = res.body;
+
+      expect(body).toHaveLength(1);
+      expect(body[0].ranking).toEqual(1);
+      expect(body[0].climber.id).toEqual(climber.id);
+      expect(body[0].climber.club).toEqual(climber.club);
+      expect(body[0].climber.firstName).toEqual(climber.firstName);
+      expect(body[0].climber.lastName).toEqual(climber.lastName);
     });
   });
 });

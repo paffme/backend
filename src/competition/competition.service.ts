@@ -2,13 +2,18 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
+  NotImplementedException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import {
   Competition,
   CompetitionRelation,
+  CompetitionType,
+  Ranking,
   UserCompetitionRelation,
 } from './competition.entity';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
@@ -16,9 +21,11 @@ import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
 import { UserService } from '../user/user.service';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
-import { BoulderingRoundDto } from '../bouldering/dto/out/bouldering-round.dto';
 import { BoulderingRoundService } from '../bouldering/round/bouldering-round.service';
-import { BoulderingRound } from '../bouldering/round/bouldering-round.entity';
+import {
+  BoulderingRound,
+  BoulderingRoundType,
+} from '../bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
 import { BoulderingResult } from '../bouldering/result/bouldering-result.entity';
 import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
@@ -37,18 +44,6 @@ export class CompetitionService {
     private readonly userService: UserService,
     private readonly boulderingRoundService: BoulderingRoundService,
   ) {}
-
-  async existsOrFail(
-    competitionId: typeof Competition.prototype.id,
-  ): Promise<void> {
-    const count = await this.competitionRepository.count({
-      id: competitionId,
-    });
-
-    if (count !== 1) {
-      throw new NotFoundException('Competition not found');
-    }
-  }
 
   async getOrFail(
     competitionId: typeof Competition.prototype.id,
@@ -95,9 +90,20 @@ export class CompetitionService {
     const competition = await this.getOrFail(competitionId);
     const user = await this.userService.getOrFail(userId);
 
-    await this.competitionRegistrationRepository.persistAndFlush(
+    this.competitionRegistrationRepository.persistLater(
       new CompetitionRegistration(competition, user),
     );
+
+    if (competition.type === CompetitionType.Bouldering) {
+      const rounds = await competition.boulderingRounds.loadItems();
+      const firstRound = rounds.find((r) => r.index === 0);
+
+      if (firstRound) {
+        await this.boulderingRoundService.addClimber(firstRound, user);
+      }
+    }
+
+    await this.competitionRegistrationRepository.flush();
   }
 
   async getRegistrations(
@@ -324,11 +330,113 @@ export class CompetitionService {
     boulderId: typeof Boulder.prototype.id,
     dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResult> {
-    const [, user] = await Promise.all([
-      this.existsOrFail(competitionId),
+    const [competition, user] = await Promise.all([
+      this.getOrFail(competitionId, ['registrations']),
       this.userService.getOrFail(dto.climberId),
     ]);
 
-    return this.boulderingRoundService.addResult(roundId, boulderId, user, dto);
+    const registrations = competition.registrations.getItems();
+    const climberRegistered = registrations.find(
+      (r) => r.climber.id === user.id,
+    );
+
+    if (!climberRegistered) {
+      throw new UnprocessableEntityException('Climber not registered');
+    }
+
+    const result = await this.boulderingRoundService.addResult(
+      roundId,
+      boulderId,
+      user,
+      dto,
+    );
+
+    await this.updateRankings(competition);
+
+    return result;
+  }
+
+  private getBoulderingRankings(
+    rounds: BoulderingRound[],
+  ): Map<typeof User.prototype.id, number> {
+    const rankings = new Map<typeof User.prototype.id, number>();
+
+    const qualifier = rounds.find(
+      (r) => r.type === BoulderingRoundType.QUALIFIER,
+    );
+
+    const semiFinal = rounds.find(
+      (r) => r.type === BoulderingRoundType.SEMI_FINAL,
+    );
+
+    const final = rounds.find((r) => r.type === BoulderingRoundType.FINAL);
+
+    if (final && final.rankings) {
+      for (const r of final.rankings.rankings) {
+        rankings.set(r.climberId, r.ranking);
+      }
+    }
+
+    if (semiFinal && semiFinal.rankings) {
+      for (const r of semiFinal.rankings.rankings) {
+        if (!rankings.has(r.climberId)) {
+          rankings.set(r.climberId, r.ranking);
+        }
+      }
+    }
+
+    if (qualifier && qualifier.rankings) {
+      for (const r of qualifier.rankings.rankings) {
+        if (!rankings.has(r.climberId)) {
+          rankings.set(r.climberId, r.ranking);
+        }
+      }
+    }
+
+    return rankings;
+  }
+
+  private async updateRankings(competition: Competition): Promise<void> {
+    let rankings: Map<typeof User.prototype.id, number>;
+
+    if (competition.type === CompetitionType.Bouldering) {
+      rankings = this.getBoulderingRankings(
+        await competition.boulderingRounds.loadItems(),
+      );
+    } else {
+      throw new NotImplementedException();
+    }
+
+    const climbers = competition.registrations.getItems().map((r) => r.climber);
+
+    competition.rankings = Array.from(
+      rankings,
+      ([climberId, ranking]): Ranking => {
+        const climber = climbers.find((c) => c.id === climberId);
+
+        if (!climber) {
+          throw new InternalServerErrorException(
+            'Climber not found when computing competition rankings',
+          );
+        }
+
+        return {
+          ranking,
+          climber: {
+            id: climberId,
+            firstName: climber.firstName,
+            lastName: climber.lastName,
+            club: climber.club,
+          },
+        };
+      },
+    );
+  }
+
+  async getRankings(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<Ranking[]> {
+    const competition = await this.getOrFail(competitionId);
+    return competition.rankings;
   }
 }
