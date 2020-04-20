@@ -20,13 +20,14 @@ import {
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiTags,
 } from '@nestjs/swagger';
 import { GetOperationId } from '../shared/utils/get-operation-id.helper';
 import { CompetitionService } from './competition.service';
 import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
 import { RegisterParamsDto } from './dto/in/params/register-params.dto';
 import { CompetitionRegistrationDto } from './dto/out/competition-registration.dto';
-import { Competition, Ranking } from './competition.entity';
+import { Competition } from './competition.entity';
 import { CompetitionRegistrationMapper } from '../shared/mappers/competition-registration.mapper';
 import { GetCompetitionRegistrationsParamsDto } from './dto/in/params/get-competition-registrations-params.dto';
 import { UserDto } from '../user/dto/out/user.dto';
@@ -71,6 +72,7 @@ import { RankingDto } from './dto/out/ranking.dto';
 import { RankingMapper } from '../shared/mappers/ranking.mapper';
 
 @Controller('competitions')
+@ApiTags('Competition')
 export class CompetitionController {
   constructor(
     private readonly competitionService: CompetitionService,
