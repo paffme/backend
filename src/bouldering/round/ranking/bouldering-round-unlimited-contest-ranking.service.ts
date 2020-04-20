@@ -10,6 +10,7 @@ import {
 import { User } from '../../../user/user.entity';
 import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { BoulderingRoundRankingService } from './bouldering-round-ranking.service';
+import { RankingsMap } from '../../types/rankings-map';
 
 type AggregatedBoulderingUnlimitedResults = Pick<
   BoulderingRoundUnlimitedContestRanking,
@@ -25,8 +26,6 @@ type AggregatedClimbersResultsMap = Map<
   AggregatedClimbersResultsEntry[0],
   AggregatedClimbersResultsEntry[1]
 >;
-
-type RankingsMap = Map<typeof User.prototype.id, number>;
 
 @Injectable()
 export class BoulderingRoundUnlimitedContestRankingService

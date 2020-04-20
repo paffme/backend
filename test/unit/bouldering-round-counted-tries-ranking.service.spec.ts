@@ -769,4 +769,126 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(thirdClimberRanking).toBeTruthy();
     expect(thirdClimberRanking!.ranking).toEqual(3);
   });
+
+  it('handles equality for the 1st, 2nd and 3th climbers in a final by using the number of tops in the first try, second try, etc...', async () => {
+    const firstClimber = givenUser();
+    const secondClimber = givenUser();
+    const thirdClimber = givenUser();
+    const boulders = [
+      givenBoulder(0),
+      givenBoulder(1),
+      givenBoulder(2),
+      givenBoulder(3),
+    ];
+
+    const results = [
+      // FIRST CLIMBER
+      givenResult(firstClimber, boulders[0], {
+        top: true,
+        topInTries: 1,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      givenResult(firstClimber, boulders[1], {
+        top: true,
+        topInTries: 1,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      givenResult(firstClimber, boulders[2], {
+        top: true,
+        topInTries: 1,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      givenResult(firstClimber, boulders[3], {
+        top: true,
+        topInTries: 5,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      // SECOND CLIMBER
+      givenResult(secondClimber, boulders[0], {
+        top: true,
+        topInTries: 1,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      givenResult(secondClimber, boulders[1], {
+        top: true,
+        topInTries: 2,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      givenResult(secondClimber, boulders[2], {
+        top: true,
+        topInTries: 2,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      givenResult(secondClimber, boulders[3], {
+        top: true,
+        topInTries: 3,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      // THIRD CLIMBER
+      givenResult(thirdClimber, boulders[0], {
+        top: true,
+        topInTries: 2,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      givenResult(thirdClimber, boulders[1], {
+        top: true,
+        topInTries: 2,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      givenResult(thirdClimber, boulders[2], {
+        top: true,
+        topInTries: 2,
+        zone: true,
+        zoneInTries: 1,
+      }),
+      givenResult(thirdClimber, boulders[3], {
+        top: true,
+        topInTries: 2,
+        zone: true,
+        zoneInTries: 1,
+      }),
+    ];
+
+    const round = givenRound(boulders, results, {
+      rankingType: BoulderingRoundRankingType.CIRCUIT,
+      type: BoulderingRoundType.FINAL,
+    });
+
+    const { rankings } = await boulderingRoundCountedRankingService.getRankings(
+      round,
+    );
+
+    expect(rankings).toHaveLength(3);
+
+    const firstClimberRanking = rankings.find(
+      (c) => c.climberId === firstClimber.id,
+    );
+
+    expect(firstClimberRanking).toBeTruthy();
+    expect(firstClimberRanking!.ranking).toEqual(1);
+
+    const secondClimberRanking = rankings.find(
+      (c) => c.climberId === secondClimber.id,
+    );
+
+    expect(secondClimberRanking).toBeTruthy();
+    expect(secondClimberRanking!.ranking).toEqual(2);
+
+    const thirdClimberRanking = rankings.find(
+      (c) => c.climberId === thirdClimber.id,
+    );
+
+    expect(thirdClimberRanking).toBeTruthy();
+    expect(thirdClimberRanking!.ranking).toEqual(3);
+  });
 });

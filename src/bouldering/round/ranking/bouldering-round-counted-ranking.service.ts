@@ -6,11 +6,14 @@ import {
   BoulderingRoundCountedRanking,
   BoulderingRoundLimitedContestRankings,
   BoulderingRoundRankingType,
+  BoulderingRoundType,
 } from '../bouldering-round.entity';
 
 import { InternalServerErrorException } from '@nestjs/common';
 import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { User } from '../../../user/user.entity';
+import { getExAequoClimbers } from '../../ranking/ranking.utils';
+import { RankingsMap } from '../../types/rankings-map';
 
 type AggregatedBoulderingCircuitResults = Pick<
   BoulderingRoundCountedRanking,
@@ -31,8 +34,6 @@ type AggregatedClimbersResultsMap = Map<
   AggregatedClimbersResultsEntry[0],
   AggregatedClimbersResultsEntry[1]
 >;
-
-type RankingsMap = Map<typeof User.prototype.id, number>;
 
 export class BoulderingRoundCountedRankingService
   implements BoulderingRoundRankingService {
@@ -229,6 +230,70 @@ export class BoulderingRoundCountedRankingService
     return rankings;
   }
 
+  private getTopsInTriesByTry(
+    climbersIds: typeof User.prototype.id[],
+    results: AggregatedClimbersResultsMap,
+  ): Map<typeof User.prototype.id, Map<number, number>> {
+    const map = new Map();
+
+    const climbersTopsInTries = climbersIds.map((climberId) => ({
+      climberId,
+      topsInTries: results.get(climberId)!.topsInTries,
+    }));
+
+    for (const { climberId, topsInTries } of climbersTopsInTries) {
+      const maxNumTry = topsInTries.reduce((maxNumTry, topInTries) => {
+        const maxTopInTries = Math.max(topInTries);
+
+        if (maxTopInTries > maxNumTry) {
+          return maxTopInTries;
+        }
+
+        return maxNumTry;
+      }, 1);
+
+      const climberTriesByTryMap = new Map();
+
+      for (let i = 1; i < maxNumTry; i++) {
+        // à l'aide je me perd
+      }
+
+      map.set(climberId, climberTriesByTryMap);
+    }
+
+    return map;
+  }
+
+  private handlePodiumExAequos(
+    rankings: RankingsMap,
+    results: AggregatedClimbersResultsMap,
+  ): void {
+    const podiumExAequos = getExAequoClimbers(rankings).filter((climbers) => {
+      const ranking = rankings.get(climbers[0])!;
+      return ranking >= 1 && ranking <= 3;
+    });
+
+    if (podiumExAequos.length === 0) {
+      return;
+    }
+
+    // Sort by numbers of top for the first try, then the second try, etc...
+    for (const exAequos of podiumExAequos) {
+      const numTry = 1;
+
+      while (true) {
+        const climbersTopsForSpecificTry = exAequos.map((climberId) =>
+          results
+            .get(climberId)!
+            .topsInTries.reduce(
+              (counter, tries) => (tries === numTry ? counter + 1 : counter),
+              0,
+            ),
+        );
+      }
+    }
+  }
+
   async getRankings(
     round: BoulderingRound,
   ): Promise<
@@ -251,6 +316,11 @@ export class BoulderingRoundCountedRankingService
     // Then handle rankings
     const entries = Array.from(climberResults);
     const rankings = this.computeRankings(entries);
+
+    // Handle equality in the podium for the final
+    if (round.type === BoulderingRoundType.FINAL) {
+      this.handlePodiumExAequos(rankings, climberResults);
+    }
 
     // Gather all information
     return {
