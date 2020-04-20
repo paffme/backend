@@ -268,4 +268,61 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     expect(firstClimberRanking!.points).toEqual(0);
     expect(firstClimberRanking!.tops).toEqual([false]);
   });
+
+  it('shifts rankings after ex-aequos', async () => {
+    const firstClimber = givenUser();
+    const secondClimber = givenUser();
+    const thirdClimber = givenUser();
+
+    const boulders = [givenBoulder(0)];
+
+    const results = [
+      givenResult(firstClimber, boulders[0], {
+        top: true,
+      }),
+      givenResult(secondClimber, boulders[0], {
+        top: true,
+      }),
+      givenResult(thirdClimber, boulders[0], {
+        top: false,
+      }),
+    ];
+
+    const round = givenRound(boulders, results);
+
+    const {
+      rankings,
+      bouldersPoints,
+    } = await boulderingUnlimitedContestRankingService.getRankings(round);
+
+    expect(rankings).toHaveLength(3);
+    expect(bouldersPoints).toHaveLength(1);
+    expect(bouldersPoints[0]).toEqual(500);
+
+    const firstClimberRanking = rankings.find(
+      (r) => r.climberId === firstClimber.id,
+    );
+
+    expect(firstClimberRanking).toBeTruthy();
+
+    const secondClimberRanking = rankings.find(
+      (r) => r.climberId === secondClimber.id,
+    );
+
+    expect(secondClimberRanking).toBeTruthy();
+
+    const thirdClimberRanking = rankings.find(
+      (r) => r.climberId === thirdClimber.id,
+    );
+
+    expect(thirdClimberRanking).toBeTruthy();
+
+    expect(firstClimberRanking!.climberId).toEqual(firstClimber.id);
+    expect(secondClimberRanking!.climberId).toEqual(secondClimber.id);
+    expect(thirdClimberRanking!.climberId).toEqual(thirdClimber.id);
+
+    expect(firstClimberRanking!.ranking).toEqual(1);
+    expect(secondClimberRanking!.ranking).toEqual(1);
+    expect(thirdClimberRanking!.ranking).toEqual(3);
+  });
 });

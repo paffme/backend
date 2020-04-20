@@ -107,7 +107,7 @@ export class BoulderingRoundUnlimitedContestRankingService
       if (
         typeof previousClimberRanking === 'number' &&
         previousClimberEntry &&
-        Math.abs(points - previousClimberEntry[1].points) < 1e3
+        Math.abs(points - previousClimberEntry[1].points) < 0.01
       ) {
         ranking = previousClimberRanking;
       } else {
