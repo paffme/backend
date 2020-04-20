@@ -416,7 +416,9 @@ export class CompetitionController {
     AuthenticationGuard,
     JuryPresidentAuthorizationGuard,
   )
-  @ApiCreatedResponse()
+  @ApiCreatedResponse({
+    type: BoulderingRoundDto,
+  })
   @ApiOperation(GetOperationId(Competition.name, 'AddRound'))
   async addBoulderingRound(
     @Param() params: AddRoundParamsDto,
@@ -436,7 +438,9 @@ export class CompetitionController {
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), AuthenticationGuard, JudgeAuthorizationGuard)
-  @ApiCreatedResponse()
+  @ApiCreatedResponse({
+    type: BoulderingResultDto,
+  })
   @ApiOperation(GetOperationId(Competition.name, 'AddBoulderingResult'))
   async addResult(
     @Param() params: AddBoulderingResultParamsDto,

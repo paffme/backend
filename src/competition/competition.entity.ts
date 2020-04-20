@@ -11,28 +11,9 @@ import { BaseEntity } from '../shared/base.entity';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
 import { BoulderingRound } from '../bouldering/round/bouldering-round.entity';
-
-export enum CompetitionType {
-  Bouldering = 'bouldering',
-  Lead = 'lead',
-  Speed = 'speed',
-}
-
-export enum Sex {
-  Male = 'male',
-  Female = 'female',
-}
-
-export enum CategoryName {
-  Microbe = 'microbe',
-  Poussin = 'poussin',
-  Benjamin = 'benjamin',
-  Minime = 'minime',
-  Cadet = 'cadet',
-  Junior = 'junior',
-  Senior = 'senior',
-  Veteran = 'veteran',
-}
+import { Sex } from './types/sex.enum';
+import { CategoryName } from './types/category-name.enum';
+import { CompetitionType } from './types/competition-type.enum';
 
 export interface Category {
   sex: Sex;

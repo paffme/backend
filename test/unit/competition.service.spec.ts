@@ -4,16 +4,15 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { CompetitionService } from '../../src/competition/competition.service';
 import { NotFoundException } from '@nestjs/common';
-import {
-  Competition,
-  CompetitionType,
-} from '../../src/competition/competition.entity';
+import { Competition } from '../../src/competition/competition.entity';
 import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
 import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
 import { CompetitionMapper } from '../../src/shared/mappers/competition.mapper';
 import { RepositoryMock, ServiceMock } from './mocks/types';
 import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
 import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
+import { CompetitionType } from '../../src/competition/types/competition-type.enum';
+import { BoulderingRankingService } from '../../src/bouldering/ranking/bouldering-ranking.service';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -37,6 +36,10 @@ const boulderingRoundServiceMock: ServiceMock = {
   addResult: jest.fn(),
 };
 
+const boulderingRankingServiceMock: ServiceMock = {
+  getRankings: jest.fn(),
+};
+
 describe('Competition service (unit)', () => {
   let competitionService: CompetitionService;
   let utils: TestUtils;
@@ -52,6 +55,10 @@ describe('Competition service (unit)', () => {
         {
           provide: BoulderingRoundService,
           useFactory: () => boulderingRoundServiceMock,
+        },
+        {
+          provide: BoulderingRankingService,
+          useFactory: () => boulderingRankingServiceMock,
         },
         {
           provide: getRepositoryToken(Competition),
@@ -163,13 +170,17 @@ describe('Competition service (unit)', () => {
       id: utils.getRandomId(),
     };
 
+    const boulderingResult = {};
+    const boulderingRounds: unknown[] = [];
+    const rankings = new Map();
+
     const competition = {
       type: CompetitionType.Bouldering,
       registrations: {
         getItems: jest.fn().mockImplementation(() => [{ climber: user }]),
       },
       boulderingRounds: {
-        loadItems: jest.fn().mockImplementation(async () => []),
+        loadItems: jest.fn().mockImplementation(async () => boulderingRounds),
       },
     };
 
@@ -179,10 +190,11 @@ describe('Competition service (unit)', () => {
 
     userServiceMock.getOrFail.mockImplementation(async () => user);
 
-    const boulderingResult = {};
     boulderingRoundServiceMock.addResult.mockImplementation(
       async () => boulderingResult,
     );
+
+    boulderingRankingServiceMock.getRankings.mockImplementation(() => rankings);
 
     const dto = {
       climberId: utils.getRandomId(),
@@ -197,6 +209,11 @@ describe('Competition service (unit)', () => {
       3,
       user,
       dto,
+    );
+
+    expect(boulderingRankingServiceMock.getRankings).toHaveBeenCalledTimes(1);
+    expect(boulderingRankingServiceMock.getRankings).toHaveBeenCalledWith(
+      boulderingRounds,
     );
 
     expect(userServiceMock.getOrFail).toHaveBeenCalledTimes(1);

@@ -6,11 +6,11 @@ import {
   BoulderingRoundCountedRanking,
   BoulderingRoundLimitedContestRankings,
   BoulderingRoundRankingType,
-} from '../round/bouldering-round.entity';
+} from '../bouldering-round.entity';
 
 import { InternalServerErrorException } from '@nestjs/common';
-import { BoulderingResult } from '../result/bouldering-result.entity';
-import { User } from '../../user/user.entity';
+import { BoulderingResult } from '../../result/bouldering-result.entity';
+import { User } from '../../../user/user.entity';
 
 type AggregatedBoulderingCircuitResults = Pick<
   BoulderingRoundCountedRanking,

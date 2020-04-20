@@ -24,21 +24,15 @@ describe('AppController (e2e)', () => {
     await app.close();
   });
 
-  it('/ (GET)', () =>
-    api
-      .get('/api')
-      .expect(200)
-      .then((res) => {
-        expect(res.body).toHaveProperty('startedAt');
-        expect(res.body).toHaveProperty('uptime');
-      }));
+  it('/ (GET)', async () => {
+    const { body } = await api.get('/api').expect(200);
+    expect(body).toHaveProperty('startedAt');
+    expect(body).toHaveProperty('uptime');
+  });
 
-  it('/swagger.json (GET)', () =>
-    api
-      .get('/swagger.json')
-      .expect(200)
-      .then(async (res) => {
-        expect(res.body.openapi).toEqual('3.0.0');
-        expect(await SwaggerParser.validate(res.body)).toBeTruthy();
-      }));
+  it('/swagger.json (GET)', async () => {
+    const { body } = await api.get('/swagger.json').expect(200);
+    expect(body.openapi).toEqual('3.0.0');
+    expect(await SwaggerParser.validate(body)).toBeTruthy();
+  });
 });

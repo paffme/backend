@@ -3,12 +3,12 @@ import { Boulder } from '../../boulder/boulder.entity';
 
 export class BoulderDto {
   @ApiProperty({
-    type: typeof Boulder.prototype.id,
+    type: Number,
   })
   id!: typeof Boulder.prototype.id;
 
   @ApiProperty({
-    type: typeof Boulder.prototype.index,
+    type: Number,
   })
   index!: typeof Boulder.prototype.index;
 }

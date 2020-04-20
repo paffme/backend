@@ -1,7 +1,4 @@
-import {
-  Competition,
-  CompetitionType,
-} from '../../src/competition/competition.entity';
+import { Competition } from '../../src/competition/competition.entity';
 import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
 import {
   BoulderingRound,
@@ -19,12 +16,14 @@ import { SharedModule } from '../../src/shared/shared.module';
 import { CompetitionService } from '../../src/competition/competition.service';
 import { BoulderingResultService } from '../../src/bouldering/result/bouldering-result.service';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
-import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/ranking/bouldering-round-unlimited-contest-ranking.service';
-import { BoulderingRoundCountedRankingService } from '../../src/bouldering/ranking/bouldering-round-counted-ranking.service';
+import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
+import { BoulderingRoundCountedRankingService } from '../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
 import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
 import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { UnprocessableEntityException } from '@nestjs/common';
+import { CompetitionType } from '../../src/competition/types/competition-type.enum';
+import { BoulderingRankingService } from '../../src/bouldering/ranking/bouldering-ranking.service';
 
 describe('Bouldering round service (integration)', () => {
   let boulderingRoundService: BoulderingRoundService;
@@ -40,6 +39,7 @@ describe('Bouldering round service (integration)', () => {
         BoulderService,
         BoulderingRoundUnlimitedContestRankingService,
         BoulderingRoundCountedRankingService,
+        BoulderingRankingService,
       ],
       imports: [
         MikroOrmModule.forRoot(config),

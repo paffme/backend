@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/ranking/bouldering-round-unlimited-contest-ranking.service';
+import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,

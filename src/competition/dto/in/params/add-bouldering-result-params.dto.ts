@@ -4,7 +4,6 @@ import { Competition } from '../../../competition.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { BoulderingRound } from '../../../../bouldering/round/bouldering-round.entity';
 import { Boulder } from '../../../../bouldering/boulder/boulder.entity';
-import { User } from '../../../../user/user.entity';
 
 export class AddBoulderingResultParamsDto {
   @ApiProperty({ type: Number })

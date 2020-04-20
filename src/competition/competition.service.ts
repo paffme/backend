@@ -12,7 +12,6 @@ import { EntityRepository } from 'mikro-orm';
 import {
   Competition,
   CompetitionRelation,
-  CompetitionType,
   Ranking,
   UserCompetitionRelation,
 } from './competition.entity';
@@ -22,14 +21,13 @@ import { UserService } from '../user/user.service';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
 import { BoulderingRoundService } from '../bouldering/round/bouldering-round.service';
-import {
-  BoulderingRound,
-  BoulderingRoundType,
-} from '../bouldering/round/bouldering-round.entity';
+import { BoulderingRound } from '../bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
 import { BoulderingResult } from '../bouldering/result/bouldering-result.entity';
 import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
 import { Boulder } from '../bouldering/boulder/boulder.entity';
+import { BoulderingRankingService } from '../bouldering/ranking/bouldering-ranking.service';
+import { CompetitionType } from './types/competition-type.enum';
 
 @Injectable()
 export class CompetitionService {
@@ -43,6 +41,7 @@ export class CompetitionService {
     mapper: CompetitionMapper,
     private readonly userService: UserService,
     private readonly boulderingRoundService: BoulderingRoundService,
+    private readonly boulderingRankingService: BoulderingRankingService,
   ) {}
 
   async getOrFail(
@@ -357,53 +356,11 @@ export class CompetitionService {
     return result;
   }
 
-  private getBoulderingRankings(
-    rounds: BoulderingRound[],
-  ): Map<typeof User.prototype.id, number> {
-    const rankings = new Map<typeof User.prototype.id, number>();
-
-    const qualifier = rounds.find(
-      (r) => r.type === BoulderingRoundType.QUALIFIER,
-    );
-
-    const semiFinal = rounds.find(
-      (r) => r.type === BoulderingRoundType.SEMI_FINAL,
-    );
-
-    const final = rounds.find((r) => r.type === BoulderingRoundType.FINAL);
-
-    if (final && final.rankings) {
-      for (const r of final.rankings.rankings) {
-        rankings.set(r.climberId, r.ranking);
-      }
-    }
-
-    if (semiFinal && semiFinal.rankings) {
-      for (const r of semiFinal.rankings.rankings) {
-        if (!rankings.has(r.climberId)) {
-          rankings.set(r.climberId, r.ranking);
-        }
-      }
-    }
-
-    if (qualifier && qualifier.rankings) {
-      for (const r of qualifier.rankings.rankings) {
-        if (!rankings.has(r.climberId)) {
-          rankings.set(r.climberId, r.ranking);
-        }
-      }
-    }
-
-    // TODO : handle ex aequos :)
-
-    return rankings;
-  }
-
   private async updateRankings(competition: Competition): Promise<void> {
     let rankings: Map<typeof User.prototype.id, number>;
 
     if (competition.type === CompetitionType.Bouldering) {
-      rankings = this.getBoulderingRankings(
+      rankings = this.boulderingRankingService.getRankings(
         await competition.boulderingRounds.loadItems(),
       );
     } else {

@@ -5,10 +5,10 @@ import {
   BoulderingRoundRankingType,
   BoulderingRoundUnlimitedContestRanking,
   BoulderingRoundUnlimitedContestRankings,
-} from '../round/bouldering-round.entity';
+} from '../bouldering-round.entity';
 
-import { User } from '../../user/user.entity';
-import { BoulderingResult } from '../result/bouldering-result.entity';
+import { User } from '../../../user/user.entity';
+import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { BoulderingRoundRankingService } from './bouldering-round-ranking.service';
 
 type AggregatedBoulderingUnlimitedResults = Pick<

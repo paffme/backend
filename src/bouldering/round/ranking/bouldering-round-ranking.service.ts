@@ -1,7 +1,7 @@
 import type {
   BoulderingRoundRankings,
   BoulderingRound,
-} from '../round/bouldering-round.entity';
+} from '../bouldering-round.entity';
 
 export interface BoulderingRoundRankingService {
   getRankings(round: BoulderingRound): Promise<BoulderingRoundRankings>;

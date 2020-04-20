@@ -6,14 +6,7 @@ import { CreateCompetitionDTO } from '../src/competition/dto/in/body/create-comp
 import { MikroORM } from 'mikro-orm';
 import { User } from '../src/user/user.entity';
 import { SystemRole } from '../src/user/user-role.enum';
-
-import {
-  CategoryName,
-  Competition,
-  CompetitionType,
-  Sex,
-} from '../src/competition/competition.entity';
-
+import { Competition } from '../src/competition/competition.entity';
 import { UserService } from '../src/user/user.service';
 import { CompetitionService } from '../src/competition/competition.service';
 import { CompetitionRegistration } from '../src/shared/entity/competition-registration.entity';
@@ -25,6 +18,9 @@ import {
 } from '../src/bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from '../src/competition/dto/in/body/create-bouldering-result.dto';
 import { Boulder } from '../src/bouldering/boulder/boulder.entity';
+import { Sex } from '../src/competition/types/sex.enum';
+import { CategoryName } from '../src/competition/types/category-name.enum';
+import { CompetitionType } from '../src/competition/types/competition-type.enum';
 
 // FIXME, cut this utils in multiple parts to remove ts-ignore comments
 /* eslint-disable @typescript-eslint/ban-ts-ignore */

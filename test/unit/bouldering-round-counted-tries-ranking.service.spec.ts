@@ -11,7 +11,7 @@ import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import TestUtils from '../utils';
 import { User } from '../../src/user/user.entity';
-import { BoulderingRoundCountedRankingService } from '../../src/bouldering/ranking/bouldering-round-counted-ranking.service';
+import { BoulderingRoundCountedRankingService } from '../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 

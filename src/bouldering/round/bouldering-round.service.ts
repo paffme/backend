@@ -19,9 +19,9 @@ import { CreateBoulderingRoundDto } from '../../competition/dto/in/body/create-b
 import { User } from '../../user/user.entity';
 import { Boulder } from '../boulder/boulder.entity';
 import { BoulderService } from '../boulder/boulder.service';
-import { BoulderingRoundUnlimitedContestRankingService } from '../ranking/bouldering-round-unlimited-contest-ranking.service';
-import { BoulderingRoundRankingService } from '../ranking/bouldering-round-ranking.service';
-import { BoulderingRoundCountedRankingService } from '../ranking/bouldering-round-counted-ranking.service';
+import { BoulderingRoundUnlimitedContestRankingService } from './ranking/bouldering-round-unlimited-contest-ranking.service';
+import { BoulderingRoundRankingService } from './ranking/bouldering-round-ranking.service';
+import { BoulderingRoundCountedRankingService } from './ranking/bouldering-round-counted-ranking.service';
 
 @Injectable()
 export class BoulderingRoundService {

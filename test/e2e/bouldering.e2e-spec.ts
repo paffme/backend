@@ -16,11 +16,9 @@ import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/cre
 import { User } from '../../src/user/user.entity';
 import { TokenResponseDto } from '../../src/user/dto/out/token-response.dto';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
-import {
-  Competition,
-  CompetitionType,
-} from '../../src/competition/competition.entity';
+import { Competition } from '../../src/competition/competition.entity';
 import { RankingDto } from '../../src/competition/dto/out/ranking.dto';
+import { CompetitionType } from '../../src/competition/types/competition-type.enum';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
