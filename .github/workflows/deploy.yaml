@@ -32,4 +32,4 @@ jobs:
           source ~/.nvm/nvm.sh
           cd backend
           npm ci
-          pm2 restart paffme_backend
+          pm2 reload paffme_backend
