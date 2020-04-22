@@ -28,6 +28,8 @@ jobs:
         username: ${{ secrets.REMOTE_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
+          export NVM_DIR=~/.nvm
+          source ~/.nvm/nvm.sh
           cd backend
           npm ci
           pm2 restart paffme_backend
