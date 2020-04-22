@@ -6,7 +6,7 @@
   "scripts": {
     "start:dev": "ts-node src/main.ts",
     "start:watch": "nodemon",
-    "prestart:prod": "rimraf dist && tsc",
+    "build": "rimraf dist && tsc",
     "start:prod": "node .",
     "lint": "npm run prettier:check && npm run eslint",
     "lint:fix": "npm run eslint:fix && npm run prettier:fix",

@@ -32,4 +32,5 @@ jobs:
           source ~/.nvm/nvm.sh
           cd backend
           npm ci
+          npm run build
           pm2 reload paffme_backend
