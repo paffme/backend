@@ -26,6 +26,8 @@ jobs:
         username: ${{ secrets.REMOTE_USER }}
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
+          export NVM_DIR=~/.nvm
+          source ~/.nvm/nvm.sh
           whoami
           echo $0
           cd backend
