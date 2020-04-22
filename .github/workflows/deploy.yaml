@@ -28,12 +28,6 @@ jobs:
         script: |
           export NVM_DIR=~/.nvm
           source ~/.nvm/nvm.sh
-          whoami
-          echo $0
           cd backend
-          echo $PATH
-          whereis npm
-          whereis pm2
-          whereis node
           npm ci
           pm2 restart paffme_backend
