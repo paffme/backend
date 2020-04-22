@@ -1,8 +1,7 @@
 name: Deploy
 
-on:
- push:
-  branches: [ master ]
+on: push
+#  branches: [ master ]
 
 jobs:
   deploy:
@@ -14,7 +13,7 @@ jobs:
       uses: easingthemes/ssh-deploy@v2.0.8
       env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          ARGS: "-rltgoDzqO --delete"
+          ARGS: "-rltgoDzvO --delete"
           SOURCE: "./"
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
