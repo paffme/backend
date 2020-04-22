@@ -1,8 +1,6 @@
 name: Deploy
 
-on:
- push:
-  branches: [ master ]
+on: push
 
 jobs:
   deploy:
@@ -29,5 +27,9 @@ jobs:
         key: ${{ secrets.SERVER_SSH_KEY }}
         script: |
           cd backend
+          echo $PATH
+          whereis npm
+          whereis pm2
+          whereis node
           npm ci
           pm2 restart paffme_backend
