@@ -8,6 +8,7 @@ import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
 import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
 import { UserService } from '../../src/user/user.service';
 import { CompetitionService } from '../../src/competition/competition.service';
+import { givenCreateCompetitionDto } from '../fixture/competition.fixture';
 
 describe('Competition (e2e)', () => {
   let app: NestExpressApplication;
@@ -61,7 +62,7 @@ describe('Competition (e2e)', () => {
     it('creates a competition', async function () {
       const { credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
-      const competition = utils.givenCompetitionData();
+      const competition = givenCreateCompetitionDto();
 
       return api
         .post('/api/competitions')

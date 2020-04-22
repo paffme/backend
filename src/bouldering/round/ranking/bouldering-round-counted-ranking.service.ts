@@ -12,8 +12,10 @@ import {
 import { InternalServerErrorException } from '@nestjs/common';
 import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { User } from '../../../user/user.entity';
-import { getExAequoClimbers } from '../../ranking/ranking.utils';
+import { getExAequoClimbers, getPodium } from '../../ranking/ranking.utils';
 import { RankingsMap } from '../../types/rankings-map';
+
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 type AggregatedBoulderingCircuitResults = Pick<
   BoulderingRoundCountedRanking,
@@ -230,66 +232,151 @@ export class BoulderingRoundCountedRankingService
     return rankings;
   }
 
-  private getTopsInTriesByTry(
+  private getTopsInTriesByClimber(
     climbersIds: typeof User.prototype.id[],
     results: AggregatedClimbersResultsMap,
-  ): Map<typeof User.prototype.id, Map<number, number>> {
-    const map = new Map();
-
-    const climbersTopsInTries = climbersIds.map((climberId) => ({
-      climberId,
-      topsInTries: results.get(climberId)!.topsInTries,
-    }));
-
-    for (const { climberId, topsInTries } of climbersTopsInTries) {
-      const maxNumTry = topsInTries.reduce((maxNumTry, topInTries) => {
-        const maxTopInTries = Math.max(topInTries);
-
-        if (maxTopInTries > maxNumTry) {
-          return maxTopInTries;
+  ): Map<typeof User.prototype.id, number[]> {
+    return climbersIds.reduce<Map<typeof User.prototype.id, number[]>>(
+      (map, climberId) => {
+        if (results.has(climberId)) {
+          map.set(climberId, results.get(climberId)!.topsInTries);
         }
 
-        return maxNumTry;
-      }, 1);
-
-      const climberTriesByTryMap = new Map();
-
-      for (let i = 1; i < maxNumTry; i++) {
-        // à l'aide je me perd
-      }
-
-      map.set(climberId, climberTriesByTryMap);
-    }
-
-    return map;
+        return map;
+      },
+      new Map(),
+    );
   }
 
+  private getZonesInTriesByClimber(
+    climbersIds: typeof User.prototype.id[],
+    results: AggregatedClimbersResultsMap,
+  ): Map<typeof User.prototype.id, number[]> {
+    return climbersIds.reduce<Map<typeof User.prototype.id, number[]>>(
+      (map, climberId) => {
+        if (results.has(climberId)) {
+          map.set(climberId, results.get(climberId)!.zonesInTries);
+        }
+
+        return map;
+      },
+      new Map(),
+    );
+  }
+
+  private getTryOccurrenceByClimber(
+    triesByClimber: Map<typeof User.prototype.id, number[]>,
+  ): {
+    map: Map<typeof User.prototype.id, Map<number, number>>;
+    minTry: number;
+    maxTry: number;
+  } {
+    const map = new Map();
+    let maxTry = 1;
+    let minTry = Number.MAX_SAFE_INTEGER;
+
+    for (const [climberId, tries] of triesByClimber) {
+      const maxNumTry = Math.max(...tries);
+      const triesByTryMap = new Map();
+
+      for (let i = 1; i <= maxNumTry; i++) {
+        const triesOccurrence = tries.reduce(
+          (counter, tries) => (tries === i ? counter + 1 : counter),
+          0,
+        );
+
+        if (triesOccurrence > 0) {
+          if (i > maxTry) {
+            maxTry = i;
+          }
+
+          if (i < minTry) {
+            minTry = i;
+          }
+
+          triesByTryMap.set(i, triesOccurrence);
+        }
+      }
+
+      map.set(climberId, triesByTryMap);
+    }
+
+    return {
+      map,
+      minTry,
+      maxTry,
+    };
+  }
+
+  private sortByTryOccurrence(
+    rankings: RankingsMap,
+    climbers: typeof User.prototype.id[],
+    tryOccurrence: Map<typeof User.prototype.id, Map<number, number>>,
+    minTry: number,
+    maxTry: number,
+  ): void {
+    let sorted = false;
+
+    for (let tryId = minTry; tryId <= maxTry; tryId++) {
+      for (let i = 0; i < climbers.length; i++) {
+        const climberA = climbers[i];
+        const climberATryOccurrence = tryOccurrence.get(climberA)!.get(tryId);
+
+        if (typeof climberATryOccurrence === 'undefined') {
+          continue;
+        }
+
+        for (let j = 0; j < climbers.length; j++) {
+          const climberB = climbers[j];
+
+          if (climberA === climberB) {
+            continue;
+          }
+
+          const climberBTryOccurrence = tryOccurrence.get(climberB)!.get(tryId);
+
+          if (
+            typeof climberBTryOccurrence === 'undefined' ||
+            climberATryOccurrence > climberBTryOccurrence
+          ) {
+            rankings.set(climberB, rankings.get(climberB)! + 1);
+            sorted = true;
+          } else if (climberATryOccurrence < climberBTryOccurrence) {
+            rankings.set(climberA, rankings.get(climberA)! + 1);
+            sorted = true;
+          }
+        }
+
+        if (sorted) {
+          return;
+        }
+      }
+    }
+  }
+
+  /**
+   * Sort podium ex aequos by using the number of top done for the first try, then the second try, etc...
+   * @param rankings
+   * @param results
+   */
   private handlePodiumExAequos(
     rankings: RankingsMap,
     results: AggregatedClimbersResultsMap,
   ): void {
-    const podiumExAequos = getExAequoClimbers(rankings).filter((climbers) => {
-      const ranking = rankings.get(climbers[0])!;
-      return ranking >= 1 && ranking <= 3;
-    });
+    const podium = getPodium(rankings);
+    const exAequos = getExAequoClimbers(podium);
 
-    if (podiumExAequos.length === 0) {
+    if (exAequos.length === 0) {
       return;
     }
 
-    // Sort by numbers of top for the first try, then the second try, etc...
-    for (const exAequos of podiumExAequos) {
-      const numTry = 1;
+    for (const climbers of exAequos) {
+      const topsInTries = this.getTopsInTriesByClimber(climbers, results);
+      const zonesInTries = this.getZonesInTriesByClimber(climbers, results);
 
-      while (true) {
-        const climbersTopsForSpecificTry = exAequos.map((climberId) =>
-          results
-            .get(climberId)!
-            .topsInTries.reduce(
-              (counter, tries) => (tries === numTry ? counter + 1 : counter),
-              0,
-            ),
-        );
+      for (const tries of [topsInTries, zonesInTries]) {
+        const { map, minTry, maxTry } = this.getTryOccurrenceByClimber(tries);
+        this.sortByTryOccurrence(rankings, climbers, map, minTry, maxTry);
       }
     }
   }

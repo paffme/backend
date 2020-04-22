@@ -68,11 +68,20 @@ export type BoulderingRoundRankings =
   | BoulderingRoundLimitedContestRankings
   | BoulderingRoundUnlimitedContestRankings;
 
+export enum BoulderingRoundState {
+  PENDING = 'PENDING',
+  ONGOING = 'ONGOING',
+  ENDED = 'ENDED',
+}
+
 @Entity()
 export class BoulderingRound extends BaseEntity
   implements BaseRound<BoulderingResult> {
   @Property()
   name: string;
+
+  @Enum(() => BoulderingRoundState)
+  state: BoulderingRoundState = BoulderingRoundState.PENDING;
 
   @Property()
   index: number;
@@ -89,10 +98,10 @@ export class BoulderingRound extends BaseEntity
   @ManyToOne()
   competition: Competition;
 
-  @Enum()
+  @Enum(() => BoulderingRoundRankingType)
   rankingType: BoulderingRoundRankingType;
 
-  @Enum()
+  @Enum(() => BoulderingRoundType)
   type: BoulderingRoundType;
 
   @ManyToMany(() => User)
@@ -117,6 +126,24 @@ export class BoulderingRound extends BaseEntity
    */
   @Property()
   rankings?: BoulderingRoundRankings;
+
+  takesNewClimbers(): boolean {
+    return (
+      this.state === BoulderingRoundState.PENDING ||
+      this.state === BoulderingRoundState.ONGOING
+    );
+  }
+
+  isRankingWithCountedTries(): boolean {
+    return (
+      this.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST ||
+      this.rankingType === BoulderingRoundRankingType.CIRCUIT
+    );
+  }
+
+  isRankingWithCountedZones(): boolean {
+    return this.isRankingWithCountedTries();
+  }
 
   constructor(
     name: string,

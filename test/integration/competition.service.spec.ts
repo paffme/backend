@@ -18,6 +18,7 @@ import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
 import { BoulderingRoundCountedRankingService } from '../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
 import { BoulderingRankingService } from '../../src/bouldering/ranking/bouldering-ranking.service';
+import { givenCreateCompetitionDto } from '../fixture/competition.fixture';
 
 describe('Competition service (integration)', () => {
   let competitionService: CompetitionService;
@@ -59,7 +60,7 @@ describe('Competition service (integration)', () => {
 
   it('adds the organizer on creation', async function () {
     const { user } = await utils.givenUser();
-    const competitionData = utils.givenCompetitionData();
+    const competitionData = givenCreateCompetitionDto();
     const competition = await competitionService.create(competitionData, user);
 
     expect(competition.organizers.getItems()[0].id).toEqual(user.id);

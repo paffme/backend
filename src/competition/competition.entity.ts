@@ -30,13 +30,22 @@ export interface Ranking {
   };
 }
 
+export enum CompetitionState {
+  PENDING = 'PENDING',
+  ONGOING = 'ONGOING',
+  ENDED = 'ENDED',
+}
+
 @Entity()
 // TODO : Refactor into multiple class when discriminator is available in MikroORM
 export class Competition extends BaseEntity {
   @Property()
   name: string;
 
-  @Enum()
+  @Enum(() => CompetitionState)
+  state: CompetitionState;
+
+  @Enum(() => CompetitionType)
   type: CompetitionType;
 
   @Property()
@@ -117,6 +126,13 @@ export class Competition extends BaseEntity {
   })
   organizers = new Collection<User>(this);
 
+  takesRegistrations(): boolean {
+    return (
+      this.state === CompetitionState.PENDING ||
+      this.state === CompetitionState.ONGOING
+    );
+  }
+
   constructor(
     name: string,
     type: CompetitionType,
@@ -126,6 +142,7 @@ export class Competition extends BaseEntity {
     city: string,
     postalCode: string,
     categories: Category[],
+    state: CompetitionState = CompetitionState.PENDING,
   ) {
     super();
     this.name = name;
@@ -136,6 +153,7 @@ export class Competition extends BaseEntity {
     this.city = city;
     this.postalCode = postalCode;
     this.categories = categories;
+    this.state = state;
   }
 }
 

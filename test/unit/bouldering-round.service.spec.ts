@@ -148,46 +148,6 @@ describe('Bouldering round service (unit)', () => {
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
-  it('returns correctly competitions with counted tries', () => {
-    expect(
-      BoulderingRoundService.isRankingWithCountedTries(
-        BoulderingRoundRankingType.CIRCUIT,
-      ),
-    ).toEqual(true);
-
-    expect(
-      BoulderingRoundService.isRankingWithCountedTries(
-        BoulderingRoundRankingType.LIMITED_CONTEST,
-      ),
-    ).toEqual(true);
-
-    expect(
-      BoulderingRoundService.isRankingWithCountedTries(
-        BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      ),
-    ).toEqual(false);
-  });
-
-  it('returns correctly competitions with counted zones', () => {
-    expect(
-      BoulderingRoundService.isRankingWithCountedZones(
-        BoulderingRoundRankingType.CIRCUIT,
-      ),
-    ).toEqual(true);
-
-    expect(
-      BoulderingRoundService.isRankingWithCountedZones(
-        BoulderingRoundRankingType.LIMITED_CONTEST,
-      ),
-    ).toEqual(true);
-
-    expect(
-      BoulderingRoundService.isRankingWithCountedZones(
-        BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      ),
-    ).toEqual(false);
-  });
-
   it('updates rankings for an unlimited contest', async () => {
     const round = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,

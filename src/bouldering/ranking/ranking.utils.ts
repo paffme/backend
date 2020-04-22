@@ -4,11 +4,16 @@ import { RankingsMap } from '../types/rankings-map';
 export function getExAequoClimbers(
   rankings: RankingsMap,
 ): typeof User.prototype.id[][] {
-  const exAequoClimbers = [];
+  const exAequoClimbers: typeof User.prototype.id[][] = [];
   const entries = Array.from(rankings);
 
   for (let i = 0; i < rankings.size; i++) {
     const [climberIdA, climberRankingA] = entries[i];
+
+    if (exAequoClimbers.flat().includes(climberIdA)) {
+      continue;
+    }
+
     const tmp = new Set<typeof User.prototype.id>();
 
     for (let j = i + 1; j < rankings.size; j++) {
@@ -26,4 +31,10 @@ export function getExAequoClimbers(
   }
 
   return exAequoClimbers;
+}
+
+export function getPodium(rankings: RankingsMap): RankingsMap {
+  return new Map(
+    Array.from(rankings).filter(([, ranking]) => ranking >= 1 && ranking <= 3),
+  );
 }

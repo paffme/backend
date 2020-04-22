@@ -6,7 +6,6 @@ import { BoulderingResult } from './bouldering-result.entity';
 import { CreateBoulderingResultDto } from '../../competition/dto/in/body/create-bouldering-result.dto';
 import { User } from '../../user/user.entity';
 import { Boulder } from '../boulder/boulder.entity';
-import { BoulderingRoundService } from '../round/bouldering-round.service';
 
 @Injectable()
 export class BoulderingResultService {
@@ -54,9 +53,7 @@ export class BoulderingResultService {
     const result = await this.getOrCreateNewInstance(round, boulder, climber);
 
     if (dto.try) {
-      if (
-        !BoulderingRoundService.isRankingWithCountedTries(round.rankingType)
-      ) {
+      if (!round.isRankingWithCountedTries()) {
         throw new UnprocessableEntityException(
           "Can't add a try for this kind of round",
         );
@@ -68,23 +65,18 @@ export class BoulderingResultService {
     if (typeof dto.top === 'boolean') {
       result.top = dto.top;
 
-      if (BoulderingRoundService.isRankingWithCountedTries(round.rankingType)) {
+      if (round.isRankingWithCountedTries()) {
         result.topInTries = result.top ? result.tries : 0;
       }
 
-      if (
-        !result.zone &&
-        BoulderingRoundService.isRankingWithCountedZones(round.rankingType)
-      ) {
+      if (!result.zone && round.isRankingWithCountedZones()) {
         // When there is a top there is automatically a zone
         dto.zone = true;
       }
     }
 
     if (typeof dto.zone === 'boolean') {
-      if (
-        !BoulderingRoundService.isRankingWithCountedZones(round.rankingType)
-      ) {
+      if (!round.isRankingWithCountedZones()) {
         throw new UnprocessableEntityException(
           "Can't add a zone for this kind of round",
         );

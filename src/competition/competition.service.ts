@@ -1,11 +1,10 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
   NotImplementedException,
-  UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
@@ -87,6 +86,13 @@ export class CompetitionService {
     userId: typeof User.prototype.id,
   ): Promise<void> {
     const competition = await this.getOrFail(competitionId);
+
+    if (!competition.takesRegistrations()) {
+      throw new BadRequestException(
+        'Registrations for this competition are closed.',
+      );
+    }
+
     const user = await this.userService.getOrFail(userId);
 
     this.competitionRegistrationRepository.persistLater(
@@ -341,7 +347,7 @@ export class CompetitionService {
     );
 
     if (!climberRegistered) {
-      throw new UnprocessableEntityException('Climber not registered');
+      throw new ForbiddenException('Climber not registered');
     }
 
     const result = await this.boulderingRoundService.addResult(
@@ -372,13 +378,8 @@ export class CompetitionService {
     competition.rankings = Array.from(
       rankings,
       ([climberId, ranking]): Ranking => {
-        const climber = climbers.find((c) => c.id === climberId);
-
-        if (!climber) {
-          throw new InternalServerErrorException(
-            'Climber not found when computing competition rankings',
-          );
-        }
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const climber = climbers.find((c) => c.id === climberId)!;
 
         return {
           ranking,

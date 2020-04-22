@@ -3,7 +3,6 @@ import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';
 import { BoulderingResultDto } from '../../bouldering/dto/out/bouldering-result.dto';
 import { BoulderingResult } from '../../bouldering/result/bouldering-result.entity';
-import { BoulderingRoundService } from '../../bouldering/round/bouldering-round.service';
 
 @Injectable()
 export class BoulderingResultMapper extends BaseMapper<
@@ -19,29 +18,17 @@ export class BoulderingResultMapper extends BaseMapper<
       competitionId: (result) => result.round.competition.id,
       top: 'top',
       topInTries: (result) =>
-        BoulderingRoundService.isRankingWithCountedTries(
-          result.round.rankingType,
-        )
+        result.round.isRankingWithCountedTries()
           ? result.topInTries
           : undefined,
       zone: (result) =>
-        BoulderingRoundService.isRankingWithCountedZones(
-          result.round.rankingType,
-        )
-          ? result.zone
-          : undefined,
+        result.round.isRankingWithCountedZones() ? result.zone : undefined,
       zoneInTries: (result) =>
-        BoulderingRoundService.isRankingWithCountedZones(
-          result.round.rankingType,
-        )
+        result.round.isRankingWithCountedZones()
           ? result.zoneInTries
           : undefined,
       tries: (result) =>
-        BoulderingRoundService.isRankingWithCountedTries(
-          result.round.rankingType,
-        )
-          ? result.tries
-          : undefined,
+        result.round.isRankingWithCountedTries() ? result.tries : undefined,
     });
   }
 

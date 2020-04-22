@@ -21,6 +21,7 @@ import { Boulder } from '../src/bouldering/boulder/boulder.entity';
 import { Sex } from '../src/competition/types/sex.enum';
 import { CategoryName } from '../src/competition/types/category-name.enum';
 import { CompetitionType } from '../src/competition/types/competition-type.enum';
+import { givenCreateCompetitionDto } from './fixture/competition.fixture';
 
 // FIXME, cut this utils in multiple parts to remove ts-ignore comments
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
@@ -85,57 +86,13 @@ export default class TestUtils {
     };
   }
 
-  givenCompetitionData(
-    competitionData?: Partial<Competition>,
-  ): CreateCompetitionDTO {
-    const now = new Date();
-
-    const today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      0,
-      0,
-      0,
-      0,
-    );
-
-    const tomorrow = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      0,
-      0,
-      0,
-      0,
-    );
-
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    return {
-      address: competitionData?.address ?? uuid.v4(),
-      categories: competitionData?.categories ?? [
-        {
-          sex: Sex.Male,
-          name: CategoryName.Minime,
-        },
-      ],
-      city: competitionData?.city ?? uuid.v4(),
-      name: competitionData?.name ?? uuid.v4(),
-      postalCode: competitionData?.postalCode ?? uuid.v4(),
-      type: competitionData?.type ?? CompetitionType.Lead,
-      startDate: competitionData?.startDate ?? today,
-      endDate: competitionData?.endDate ?? tomorrow,
-    };
-  }
-
   async givenCompetition(
     user: User,
     competitionData?: Partial<Competition>,
   ): Promise<Competition> {
     // @ts-ignore
     return this.competitionService.create(
-      this.givenCompetitionData(competitionData),
+      givenCreateCompetitionDto(competitionData),
       user,
     );
   }

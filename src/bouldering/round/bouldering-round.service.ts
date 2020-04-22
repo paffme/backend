@@ -165,23 +165,10 @@ export class BoulderingRoundService {
     return result;
   }
 
-  static isRankingWithCountedTries(
-    rankingType: BoulderingRoundRankingType,
-  ): rankingType is
-    | BoulderingRoundRankingType.LIMITED_CONTEST
-    | BoulderingRoundRankingType.CIRCUIT {
-    return (
-      rankingType === BoulderingRoundRankingType.LIMITED_CONTEST ||
-      rankingType === BoulderingRoundRankingType.CIRCUIT
-    );
-  }
-
-  static isRankingWithCountedZones(rankingType: BoulderingRoundRankingType) {
-    return BoulderingRoundService.isRankingWithCountedTries(rankingType);
-  }
-
   async addClimber(round: BoulderingRound, climber: User): Promise<void> {
-    round.climbers.add(climber);
-    await this.boulderingRoundRepository.persistAndFlush(round);
+    if (round.takesNewClimbers()) {
+      round.climbers.add(climber);
+      await this.boulderingRoundRepository.persistAndFlush(round);
+    }
   }
 }

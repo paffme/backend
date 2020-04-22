@@ -12,6 +12,7 @@ import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { User } from '../../src/user/user.entity';
 import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
 import { UnprocessableEntityException } from '@nestjs/common';
+import { givenBoulderingRound } from '../fixture/bouldering-round.fixture';
 
 const boulderingResultRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -141,9 +142,9 @@ describe('Bouldering result service (unit)', () => {
     const boulder = {} as Boulder;
     const instance = {} as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-    } as BoulderingRound;
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -198,9 +199,9 @@ describe('Bouldering result service (unit)', () => {
       tries: 0,
     } as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
-    } as BoulderingRound;
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -257,9 +258,9 @@ describe('Bouldering result service (unit)', () => {
       tries: 0,
     } as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.CIRCUIT,
-    } as BoulderingRound;
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -311,9 +312,9 @@ describe('Bouldering result service (unit)', () => {
     const boulder = {} as Boulder;
     const instance = {} as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-    } as BoulderingRound;
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -337,9 +338,9 @@ describe('Bouldering result service (unit)', () => {
     const boulder = {} as Boulder;
     const instance = {} as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-    } as BoulderingRound;
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -370,9 +371,9 @@ describe('Bouldering result service (unit)', () => {
       zoneInTries: 5,
     } as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.CIRCUIT,
-    } as BoulderingRound;
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -413,9 +414,9 @@ describe('Bouldering result service (unit)', () => {
       zoneInTries: 5,
     } as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.CIRCUIT,
-    } as BoulderingRound;
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -456,9 +457,9 @@ describe('Bouldering result service (unit)', () => {
       zoneInTries: 0,
     } as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.CIRCUIT,
-    } as BoulderingRound;
+    });
 
     const user = {
       id: utils.getRandomId(),

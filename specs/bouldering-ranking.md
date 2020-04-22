@@ -30,9 +30,9 @@ Si, à l'issue d'une finale, les compétiteurs sont à égalité à la suite de 
 - [x] En prenant en compte leur classement du tour précédent ;
 
 Si après application de la rétroprocédure, l’égalité perdure pour des compétiteurs classés à la 1ère place, 2nde ou 3ème place, le classement relatif de ces concurrents sera déterminé :
-- [ ] En comparant le meilleur résultat obtenu par chacun des compétiteurs concernés, au regard du nombre de Top atteints au 1er essai, puis du nombre de Top atteints au 2nd essai, et ainsi de suite.
-- [ ] Si après application l’égalité persiste, on comparera le nombre de zones atteintes au 1er essai, puis le nombre de zones atteintes au 2nd essai, et ainsi de suite.
-- [ ] Si après application des deux items ci-dessus l’égalité persiste, les compétiteurs restent ex-aequo.
+- [x] En comparant le meilleur résultat obtenu par chacun des compétiteurs concernés, au regard du nombre de Top atteints au 1er essai, puis du nombre de Top atteints au 2nd essai, et ainsi de suite.
+- [x] Si après application l’égalité persiste, on comparera le nombre de zones atteintes au 1er essai, puis le nombre de zones atteintes au 2nd essai, et ainsi de suite.
+- [x] Si après application des deux items ci-dessus l’égalité persiste, les compétiteurs restent ex-aequo.
 
 Au-delà de la 3ème place si à la suite de la retro procédure les concurrents sont toujours à égalité :
 - [x] ils ne sont pas départagés et restent ex-aequos.

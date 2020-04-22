@@ -3,7 +3,11 @@ import { UserService } from '../../src/user/user.service';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { CompetitionService } from '../../src/competition/competition.service';
-import { NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Competition } from '../../src/competition/competition.entity';
 import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
 import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
@@ -22,6 +26,8 @@ const competitionRepositoryMock: RepositoryMock = {
 
 const competitionRegistrationRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
+  persistLater: jest.fn(),
+  flush: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
 };
@@ -34,6 +40,7 @@ const userServiceMock: ServiceMock = {
 const boulderingRoundServiceMock: ServiceMock = {
   createRound: jest.fn(),
   addResult: jest.fn(),
+  addClimber: jest.fn(),
 };
 
 const boulderingRankingServiceMock: ServiceMock = {
@@ -222,5 +229,85 @@ describe('Competition service (unit)', () => {
     expect(competitionRepositoryMock.findOne).toHaveBeenCalledWith(1, [
       'registrations',
     ]);
+  });
+
+  it('does not take a registration if the registrations are closed', () => {
+    const competition = {
+      takesRegistrations(): false {
+        return false;
+      },
+    };
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(competitionService.register(123, 456)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it('adds the climber into the first round after being registered', async () => {
+    const user = {};
+
+    const rounds = [
+      {
+        index: 1,
+      },
+      {
+        index: 0,
+      },
+    ];
+
+    const competition = {
+      takesRegistrations(): true {
+        return true;
+      },
+      boulderingRounds: {
+        async loadItems(): Promise<unknown[]> {
+          return rounds;
+        },
+      },
+      type: CompetitionType.Bouldering,
+    };
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.addClimber.mockImplementation(
+      async () => undefined,
+    );
+
+    userServiceMock.getOrFail.mockImplementation(async () => user);
+
+    await competitionService.register(123, 456);
+
+    expect(boulderingRoundServiceMock.addClimber).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundServiceMock.addClimber).toHaveBeenCalledWith(
+      rounds[1],
+      user,
+    );
+  });
+
+  it('does not add a bouldering result if the climber if not registered', () => {
+    competitionRepositoryMock.findOne.mockImplementation(async () => ({
+      registrations: {
+        getItems() {
+          return [];
+        },
+      },
+    }));
+
+    userServiceMock.getOrFail.mockImplementation(async () => {});
+
+    return expect(
+      competitionService.addBoulderingResult(
+        1,
+        2,
+        3,
+        {} as CreateBoulderingResultDto,
+      ),
+    ).rejects.toBeInstanceOf(ForbiddenException);
   });
 });
