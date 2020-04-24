@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
@@ -77,10 +78,17 @@ export class BoulderingRoundService {
       );
     }
 
-    const rounds = competition.boulderingRounds.getItems();
+    const rounds = competition.boulderingRounds
+      .getItems()
+      .filter(
+        (round) => round.category === dto.category && round.sex === dto.sex,
+      );
+
     const roundIndex = rounds.length === 0 ? 0 : dto.index ?? rounds.length;
 
     const round = new BoulderingRound(
+      dto.category,
+      dto.sex,
       dto.name,
       roundIndex,
       dto.quota,
@@ -146,11 +154,11 @@ export class BoulderingRoundService {
     ]);
 
     if (!round.climbers.contains(climber)) {
-      throw new UnprocessableEntityException('Climber not in round');
+      throw new BadRequestException('Climber not in round');
     }
 
     if (!round.boulders.contains(boulder)) {
-      throw new UnprocessableEntityException('Boulder not in round');
+      throw new BadRequestException('Boulder not in round');
     }
 
     const result = await this.boulderingResultService.addResult(
@@ -169,6 +177,8 @@ export class BoulderingRoundService {
     if (round.takesNewClimbers()) {
       round.climbers.add(climber);
       await this.boulderingRoundRepository.persistAndFlush(round);
+    } else {
+      throw new BadRequestException('This round cannot take new climbers');
     }
   }
 }

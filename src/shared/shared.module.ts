@@ -12,7 +12,7 @@ import { UserAuthorizationService } from './authorization/user.authorization.ser
 import { BoulderingRoundMapper } from './mappers/bouldering-round.mapper';
 import { BoulderingResultMapper } from './mappers/bouldering-result.mapper';
 import { BoulderMapper } from './mappers/boulder.mapper';
-import { RankingMapper } from './mappers/ranking.mapper';
+import { RankingsMapper } from './mappers/rankings-mapper.service';
 
 @Global()
 @Module({
@@ -26,7 +26,7 @@ import { RankingMapper } from './mappers/ranking.mapper';
     BoulderingRoundMapper,
     BoulderingResultMapper,
     BoulderMapper,
-    RankingMapper,
+    RankingsMapper,
     UserAuthorizationService,
   ],
   exports: [
@@ -38,7 +38,7 @@ import { RankingMapper } from './mappers/ranking.mapper';
     BoulderingRoundMapper,
     BoulderingResultMapper,
     BoulderMapper,
-    RankingMapper,
+    RankingsMapper,
     UserAuthorizationService,
   ],
   imports: [

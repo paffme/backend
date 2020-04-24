@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { CategoryName } from '../../../../shared/types/category-name.enum';
+import { Sex } from '../../../../shared/types/sex.enum';
 
 import {
   BoulderingRoundRankingType,
@@ -7,6 +9,18 @@ import {
 } from '../../../../bouldering/round/bouldering-round.entity';
 
 export class CreateBoulderingRoundDto {
+  @ApiProperty({
+    enum: CategoryName,
+  })
+  @IsEnum(CategoryName)
+  category!: CategoryName;
+
+  @ApiProperty({
+    enum: Sex,
+  })
+  @IsEnum(Sex)
+  sex!: Sex;
+
   @ApiProperty()
   @IsOptional()
   @IsInt()

@@ -1,8 +1,8 @@
 import { Competition } from '../../src/competition/competition.entity';
 import { CreateCompetitionDTO } from '../../src/competition/dto/in/body/create-competition.dto';
 import * as uuid from 'uuid';
-import { Sex } from '../../src/competition/types/sex.enum';
-import { CategoryName } from '../../src/competition/types/category-name.enum';
+import { Sex } from '../../src/shared/types/sex.enum';
+import { CategoryName } from '../../src/shared/types/category-name.enum';
 import { CompetitionType } from '../../src/competition/types/competition-type.enum';
 
 export function givenCreateCompetitionDto(

@@ -12,13 +12,12 @@ import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
 import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { CompetitionService } from '../../src/competition/competition.service';
+import { Sex } from '../../src/shared/types/sex.enum';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
 describe('User (e2e)', () => {
   let app: NestExpressApplication;
-  let userService: UserService;
-  let configService: ConfigurationService;
   let utils: TestUtils;
   let api: supertest.SuperTest<supertest.Test>;
 
@@ -31,11 +30,6 @@ describe('User (e2e)', () => {
 
     configure(app);
     await app.init();
-    userService = moduleFixture.get<UserService>(UserService);
-    configService = moduleFixture.get<ConfigurationService>(
-      ConfigurationService,
-    );
-
     api = supertest(app.getHttpServer());
 
     utils = new TestUtils(
@@ -55,6 +49,10 @@ describe('User (e2e)', () => {
 
   function checkUser(expectedUser: any, user: UserDto): void {
     expect(user.email).toEqual(expectedUser.email);
+    expect(user.sex).toEqual(expectedUser.sex);
+    expect(user.birthYear).toEqual(expectedUser.birthYear);
+    expect(user.firstName).toEqual(expectedUser.firstName);
+    expect(user.lastName).toEqual(expectedUser.lastName);
     expect((user as any).password).toBeUndefined();
     expect(user).toHaveProperty('id');
     expect(user).toHaveProperty('createdAt');
@@ -68,6 +66,8 @@ describe('User (e2e)', () => {
         lastName: uuid.v4().substr(0, 10),
         email: `${uuid.v4()}@${uuid.v4()}.fr`,
         password: uuid.v4().substr(0, 10),
+        sex: Sex.Female,
+        birthYear: 2000,
       };
 
       const { body } = await api.post('/api/users').send(user).expect(201);
@@ -107,6 +107,8 @@ describe('User (e2e)', () => {
         lastName: uuid.v4(),
         email: `${uuid.v4()}@${uuid.v4()}.fr`,
         password: uuid.v4().substr(0, 10),
+        birthYear: 1500,
+        sex: Sex.Female,
       };
 
       await api

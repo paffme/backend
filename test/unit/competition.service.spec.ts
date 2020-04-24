@@ -17,6 +17,9 @@ import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/crea
 import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
 import { CompetitionType } from '../../src/competition/types/competition-type.enum';
 import { BoulderingRankingService } from '../../src/bouldering/ranking/bouldering-ranking.service';
+import { Category } from '../../src/shared/types/category.interface';
+import { CategoryName } from '../../src/shared/types/category-name.enum';
+import { Sex } from '../../src/shared/types/sex.enum';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -175,6 +178,12 @@ describe('Competition service (unit)', () => {
   it('adds a bouldering result', async () => {
     const user = {
       id: utils.getRandomId(),
+      getCategory(): Category {
+        return {
+          name: CategoryName.Minime,
+          sex: Sex.Female,
+        };
+      },
     };
 
     const boulderingResult = {};
@@ -183,11 +192,15 @@ describe('Competition service (unit)', () => {
 
     const competition = {
       type: CompetitionType.Bouldering,
+      rankings: {},
       registrations: {
         getItems: jest.fn().mockImplementation(() => [{ climber: user }]),
       },
       boulderingRounds: {
         loadItems: jest.fn().mockImplementation(async () => boulderingRounds),
+      },
+      getSeason() {
+        return undefined;
       },
     };
 
@@ -256,6 +269,9 @@ describe('Competition service (unit)', () => {
       },
       {
         index: 0,
+        takesNewClimbers() {
+          return true;
+        },
       },
     ];
 
@@ -290,6 +306,45 @@ describe('Competition service (unit)', () => {
     );
   });
 
+  it('does not add the climber into the first round after being registered if the round do not takes new climbers', async () => {
+    const user = {};
+
+    const rounds = [
+      {
+        index: 0,
+        takesNewClimbers() {
+          return false;
+        },
+      },
+    ];
+
+    const competition = {
+      takesRegistrations(): true {
+        return true;
+      },
+      boulderingRounds: {
+        async loadItems(): Promise<unknown[]> {
+          return rounds;
+        },
+      },
+      type: CompetitionType.Bouldering,
+    };
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.addClimber.mockImplementation(
+      async () => undefined,
+    );
+
+    userServiceMock.getOrFail.mockImplementation(async () => user);
+
+    await competitionService.register(123, 456);
+
+    expect(boulderingRoundServiceMock.addClimber).toHaveBeenCalledTimes(0);
+  });
+
   it('does not add a bouldering result if the climber if not registered', () => {
     competitionRepositoryMock.findOne.mockImplementation(async () => ({
       registrations: {
@@ -299,7 +354,7 @@ describe('Competition service (unit)', () => {
       },
     }));
 
-    userServiceMock.getOrFail.mockImplementation(async () => {});
+    userServiceMock.getOrFail.mockImplementation(async () => ({}));
 
     return expect(
       competitionService.addBoulderingResult(

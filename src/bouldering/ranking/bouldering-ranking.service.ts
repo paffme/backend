@@ -28,6 +28,11 @@ export class BoulderingRankingService {
 
   getRankings(rounds: BoulderingRound[]): RankingsMap {
     const rankings: RankingsMap = new Map();
+
+    if (rounds.length === 0) {
+      return rankings;
+    }
+
     const sortedRoundsByReverseIndex = rounds.sort((a, b) => b.index - a.index);
     const climbers = sortedRoundsByReverseIndex[
       sortedRoundsByReverseIndex.length - 1

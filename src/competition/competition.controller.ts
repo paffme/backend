@@ -68,8 +68,8 @@ import { BoulderingRoundMapper } from '../shared/mappers/bouldering-round.mapper
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
 import { BoulderingResultMapper } from '../shared/mappers/bouldering-result.mapper';
 import { GetRankingsParamsDto } from './dto/in/params/get-rankings-params.dto';
-import { RankingDto } from './dto/out/ranking.dto';
-import { RankingMapper } from '../shared/mappers/ranking.mapper';
+import { RankingsDto } from './dto/out/rankings.dto';
+import { RankingsMapper } from '../shared/mappers/rankings-mapper.service';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -80,7 +80,7 @@ export class CompetitionController {
     private readonly userMapper: UserMapper,
     private readonly boulderingRoundMapper: BoulderingRoundMapper,
     private readonly boulderingResultMapper: BoulderingResultMapper,
-    private readonly rankingMapper: RankingMapper,
+    private readonly rankingMapper: RankingsMapper,
     private readonly mapper: CompetitionMapper,
   ) {}
 
@@ -469,15 +469,15 @@ export class CompetitionController {
   }
 
   @Get('/:competitionId/rankings')
-  @ApiOkResponse({ type: RankingDto, isArray: true })
+  @ApiOkResponse({ type: RankingsDto })
   @ApiOperation(GetOperationId(Competition.name, 'GetCompetitionRankings'))
   async getRankings(
     @Param() params: GetRankingsParamsDto,
-  ): Promise<RankingDto[]> {
+  ): Promise<RankingsDto> {
     const rankings = await this.competitionService.getRankings(
       params.competitionId,
     );
 
-    return this.rankingMapper.mapArray(rankings);
+    return this.rankingMapper.map(rankings);
   }
 }

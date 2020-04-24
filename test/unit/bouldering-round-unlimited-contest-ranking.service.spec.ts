@@ -1,6 +1,9 @@
 import { Test } from '@nestjs/testing';
 import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
-import { BoulderingRound, BoulderingRoundRankingType } from '../../src/bouldering/round/bouldering-round.entity';
+import {
+  BoulderingRound,
+  BoulderingRoundRankingType,
+} from '../../src/bouldering/round/bouldering-round.entity';
 import { InternalServerErrorException } from '@nestjs/common';
 import * as uuid from 'uuid';
 import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
@@ -8,6 +11,7 @@ import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import TestUtils from '../utils';
 import { User } from '../../src/user/user.entity';
 import { givenBoulderingRound } from '../fixture/bouldering-round.fixture';
+import { givenUser } from '../fixture/user.fixture';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -99,12 +103,6 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     };
 
     return round;
-  }
-
-  function givenUser(): User {
-    const user = new User(uuid.v4(), uuid.v4(), uuid.v4(), uuid.v4());
-    user.id = utils.getRandomId();
-    return user;
   }
 
   it('throws when getting rankings for an non unlimited contest round', () => {

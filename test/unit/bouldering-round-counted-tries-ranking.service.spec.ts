@@ -5,18 +5,17 @@ import {
   BoulderingRoundType,
 } from '../../src/bouldering/round/bouldering-round.entity';
 import { InternalServerErrorException } from '@nestjs/common';
-import * as uuid from 'uuid';
 import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import TestUtils from '../utils';
 import { User } from '../../src/user/user.entity';
 import { BoulderingRoundCountedRankingService } from '../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
 import { givenBoulderingRound } from '../fixture/bouldering-round.fixture';
+import { givenUser } from '../fixture/user.fixture';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 describe('Bouldering counted ranking service (unit)', () => {
-  let utils: TestUtils;
   let boulderingRoundCountedRankingService: BoulderingRoundCountedRankingService;
 
   beforeEach(async () => {
@@ -27,8 +26,6 @@ describe('Bouldering counted ranking service (unit)', () => {
     boulderingRoundCountedRankingService = module.get(
       BoulderingRoundCountedRankingService,
     );
-
-    utils = new TestUtils();
   });
 
   function givenBoulder(index: number): Boulder {
@@ -103,12 +100,6 @@ describe('Bouldering counted ranking service (unit)', () => {
     };
 
     return round;
-  }
-
-  function givenUser(id?: typeof User.prototype.id): User {
-    const user = new User(uuid.v4(), uuid.v4(), uuid.v4(), uuid.v4());
-    user.id = id ?? utils.getRandomId();
-    return user;
   }
 
   it('throws when getting rankings for an non counted round', () => {
@@ -767,11 +758,21 @@ describe('Bouldering counted ranking service (unit)', () => {
   });
 
   it('handles equality for the podium climbers in a final by using the number of tops in the first try, second try, etc... (1)', async () => {
-    const firstClimber = givenUser(0);
-    const secondClimber = givenUser(1);
-    const thirdClimber = givenUser(2);
-    const fourthClimber = givenUser(3);
-    const fifthClimber = givenUser(4);
+    const firstClimber = givenUser({
+      id: 0,
+    });
+    const secondClimber = givenUser({
+      id: 1,
+    });
+    const thirdClimber = givenUser({
+      id: 2,
+    });
+    const fourthClimber = givenUser({
+      id: 3,
+    });
+    const fifthClimber = givenUser({
+      id: 4,
+    });
 
     const boulders = [
       givenBoulder(0),
@@ -956,11 +957,21 @@ describe('Bouldering counted ranking service (unit)', () => {
   });
 
   it('handles equality for the podium climbers in a final by using the number of tops in the first try, second try, etc... (2)', async () => {
-    const firstClimber = givenUser(0);
-    const secondClimber = givenUser(1);
-    const thirdClimber = givenUser(2);
-    const fourthClimber = givenUser(3);
-    const fifthClimber = givenUser(4);
+    const firstClimber = givenUser({
+      id: 0,
+    });
+    const secondClimber = givenUser({
+      id: 1,
+    });
+    const thirdClimber = givenUser({
+      id: 2,
+    });
+    const fourthClimber = givenUser({
+      id: 3,
+    });
+    const fifthClimber = givenUser({
+      id: 4,
+    });
 
     const boulders = [
       givenBoulder(0),
@@ -1145,11 +1156,21 @@ describe('Bouldering counted ranking service (unit)', () => {
   });
 
   it('handles equality for the podium climbers in a final by using the number of zones in the first try, second try, etc... (1)', async () => {
-    const firstClimber = givenUser(0);
-    const secondClimber = givenUser(1);
-    const thirdClimber = givenUser(2);
-    const fourthClimber = givenUser(3);
-    const fifthClimber = givenUser(4);
+    const firstClimber = givenUser({
+      id: 0,
+    });
+    const secondClimber = givenUser({
+      id: 1,
+    });
+    const thirdClimber = givenUser({
+      id: 2,
+    });
+    const fourthClimber = givenUser({
+      id: 3,
+    });
+    const fifthClimber = givenUser({
+      id: 4,
+    });
 
     const boulders = [
       givenBoulder(0),
@@ -1334,11 +1355,21 @@ describe('Bouldering counted ranking service (unit)', () => {
   });
 
   it('handles equality for the podium climbers in a final by using the number of zones in the first try, second try, etc... (2)', async () => {
-    const firstClimber = givenUser(0);
-    const secondClimber = givenUser(1);
-    const thirdClimber = givenUser(2);
-    const fourthClimber = givenUser(3);
-    const fifthClimber = givenUser(4);
+    const firstClimber = givenUser({
+      id: 0,
+    });
+    const secondClimber = givenUser({
+      id: 1,
+    });
+    const thirdClimber = givenUser({
+      id: 2,
+    });
+    const fourthClimber = givenUser({
+      id: 3,
+    });
+    const fifthClimber = givenUser({
+      id: 4,
+    });
 
     const boulders = [
       givenBoulder(0),
@@ -1523,8 +1554,12 @@ describe('Bouldering counted ranking service (unit)', () => {
   });
 
   it('handles equality for the podium climbers and let them ex-aequo if they cannot be separated', async () => {
-    const firstClimber = givenUser(0);
-    const secondClimber = givenUser(1);
+    const firstClimber = givenUser({
+      id: 0,
+    });
+    const secondClimber = givenUser({
+      id: 1,
+    });
 
     const boulders = [givenBoulder(0)];
 

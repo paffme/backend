@@ -12,6 +12,9 @@ export class UserMapper extends BaseMapper<UserDto, User> {
       email: 'email',
       firstName: 'firstName',
       lastName: 'lastName',
+      birthYear: 'birthYear',
+      club: 'club',
+      sex: 'sex',
       createdAt: 'createdAt',
       updatedAt: 'updatedAt',
     });

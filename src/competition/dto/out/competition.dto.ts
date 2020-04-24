@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { BaseDtoWithID } from '../../../shared/base.dto';
-import { Sex } from '../../types/sex.enum';
-import { CategoryName } from '../../types/category-name.enum';
+import { Sex } from '../../../shared/types/sex.enum';
+import { CategoryName } from '../../../shared/types/category-name.enum';
 import { CompetitionType } from '../../types/competition-type.enum';
 
 class CategoryDto {

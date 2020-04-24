@@ -18,6 +18,8 @@ export class BoulderingRoundMapper extends BaseMapper<
       quota: 'quota',
       type: 'type',
       competitionId: 'competition.id',
+      category: 'category',
+      sex: 'sex',
       boulders: (round) => boulderMapper.mapArray(round.boulders.getItems()),
     });
   }

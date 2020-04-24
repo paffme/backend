@@ -11,24 +11,24 @@ import { BaseEntity } from '../shared/base.entity';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
 import { BoulderingRound } from '../bouldering/round/bouldering-round.entity';
-import { Sex } from './types/sex.enum';
-import { CategoryName } from './types/category-name.enum';
+import { Sex } from '../shared/types/sex.enum';
+import { CategoryName } from '../shared/types/category-name.enum';
 import { CompetitionType } from './types/competition-type.enum';
+import { Category } from '../shared/types/category.interface';
 
-export interface Category {
-  sex: Sex;
-  name: CategoryName;
-}
-
-export interface Ranking {
-  ranking: number;
-  climber: {
-    id: typeof User.prototype.id;
-    firstName: typeof User.prototype.firstName;
-    lastName: typeof User.prototype.lastName;
-    club: typeof User.prototype.club;
+export type Rankings = {
+  [key in CategoryName]?: {
+    [sex in Sex]?: {
+      ranking: number;
+      climber: {
+        id: typeof User.prototype.id;
+        firstName: typeof User.prototype.firstName;
+        lastName: typeof User.prototype.lastName;
+        club: typeof User.prototype.club;
+      };
+    }[];
   };
-}
+};
 
 export enum CompetitionState {
   PENDING = 'PENDING',
@@ -80,11 +80,14 @@ export class Competition extends BaseEntity {
       if the ranking algorithm change
   */
   @Property()
-  rankings: Ranking[] = [];
+  rankings: Rankings = {};
 
   @OneToMany(
     () => CompetitionRegistration,
     (registration) => registration.competition,
+    {
+      orphanRemoval: true,
+    },
   )
   registrations = new Collection<CompetitionRegistration>(this);
 
@@ -131,6 +134,14 @@ export class Competition extends BaseEntity {
       this.state === CompetitionState.PENDING ||
       this.state === CompetitionState.ONGOING
     );
+  }
+
+  getSeason(): number {
+    if (this.startDate.getMonth() >= 8) {
+      return this.startDate.getFullYear();
+    }
+
+    return this.startDate.getFullYear() - 1;
   }
 
   constructor(

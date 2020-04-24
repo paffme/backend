@@ -238,10 +238,7 @@ export class BoulderingRoundCountedRankingService
   ): Map<typeof User.prototype.id, number[]> {
     return climbersIds.reduce<Map<typeof User.prototype.id, number[]>>(
       (map, climberId) => {
-        if (results.has(climberId)) {
-          map.set(climberId, results.get(climberId)!.topsInTries);
-        }
-
+        map.set(climberId, results.get(climberId)!.topsInTries);
         return map;
       },
       new Map(),
@@ -254,10 +251,7 @@ export class BoulderingRoundCountedRankingService
   ): Map<typeof User.prototype.id, number[]> {
     return climbersIds.reduce<Map<typeof User.prototype.id, number[]>>(
       (map, climberId) => {
-        if (results.has(climberId)) {
-          map.set(climberId, results.get(climberId)!.zonesInTries);
-        }
-
+        map.set(climberId, results.get(climberId)!.zonesInTries);
         return map;
       },
       new Map(),

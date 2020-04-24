@@ -1,4 +1,3 @@
-import TestUtils from '../utils';
 import { Test } from '@nestjs/testing';
 import { Competition } from '../../src/competition/competition.entity';
 import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
@@ -21,6 +20,8 @@ import {
 } from '@nestjs/common';
 import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
 import { BoulderingRoundCountedRankingService } from '../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
+import { Sex } from '../../src/shared/types/sex.enum';
+import { CategoryName } from '../../src/shared/types/category-name.enum';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -45,7 +46,6 @@ const boulderServiceMock: ServiceMock = {
 
 describe('Bouldering round service (unit)', () => {
   let boulderingRoundService: BoulderingRoundService;
-  let utils: TestUtils;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -83,7 +83,6 @@ describe('Bouldering round service (unit)', () => {
     }).compile();
 
     boulderingRoundService = module.get(BoulderingRoundService);
-    utils = new TestUtils();
   });
 
   afterEach(() => {
@@ -124,6 +123,8 @@ describe('Bouldering round service (unit)', () => {
       name: 'SuperRound',
       boulders: 4,
       index: 0,
+      sex: Sex.Female,
+      category: CategoryName.Minime,
     };
 
     return expect(
@@ -141,6 +142,8 @@ describe('Bouldering round service (unit)', () => {
       name: 'SuperRound',
       boulders: 4,
       index: 0,
+      sex: Sex.Female,
+      category: CategoryName.Minime,
     };
 
     return expect(

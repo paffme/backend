@@ -17,8 +17,10 @@ import { User } from '../../src/user/user.entity';
 import { TokenResponseDto } from '../../src/user/dto/out/token-response.dto';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { Competition } from '../../src/competition/competition.entity';
-import { RankingDto } from '../../src/competition/dto/out/ranking.dto';
+import { RankingsDto } from '../../src/competition/dto/out/rankings.dto';
 import { CompetitionType } from '../../src/competition/types/competition-type.enum';
+import { Sex } from '../../src/shared/types/sex.enum';
+import { CategoryName } from '../../src/shared/types/category-name.enum';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -64,7 +66,10 @@ describe('Bouldering (e2e)', () => {
     round: BoulderingRound;
   }> {
     const { user: organizer } = await utils.givenUser();
-    const { user: climber } = await utils.givenUser();
+    const { user: climber } = await utils.givenUser({
+      sex: Sex.Female,
+      birthYear: 2000,
+    });
 
     const {
       user: judge,
@@ -74,7 +79,9 @@ describe('Bouldering (e2e)', () => {
     const judgeAuth = await utils.login(judgeCredentials);
     const competition = await utils.givenCompetition(organizer, {
       type: CompetitionType.Bouldering,
+      startDate: new Date(2014, 10, 1),
     });
+
     await utils.registerUserInCompetition(climber, competition);
     await utils.addJudgeInCompetition(judge, competition);
 
@@ -82,6 +89,8 @@ describe('Bouldering (e2e)', () => {
       rankingType,
       type: BoulderingRoundType.QUALIFIER,
       boulders: 1,
+      sex: Sex.Female,
+      category: CategoryName.Minime,
     });
 
     const boulder = round.boulders.getItems()[0];
@@ -113,6 +122,8 @@ describe('Bouldering (e2e)', () => {
         quota: 0,
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
         type: BoulderingRoundType.QUALIFIER,
+        sex: Sex.Female,
+        category: CategoryName.Minime,
       };
 
       const { body } = await api
@@ -128,6 +139,8 @@ describe('Bouldering (e2e)', () => {
       expect(body.boulders).toHaveLength(dto.boulders);
       expect(body.index).toEqual(dto.index);
       expect(body.competitionId).toEqual(competition.id);
+      expect(body.sex).toEqual(Sex.Female);
+      expect(body.category).toEqual(CategoryName.Minime);
 
       for (let i = 0; i < dto.boulders; i++) {
         expect(body.boulders[i].index).toEqual(i);
@@ -365,14 +378,18 @@ describe('Bouldering (e2e)', () => {
         .get(`/api/competitions/${competition.id}/rankings`)
         .expect(200);
 
-      const body: RankingDto[] = res.body;
+      const body: RankingsDto = res.body;
+      const category = climber.getCategory(competition.getSeason());
 
-      expect(body).toHaveLength(1);
-      expect(body[0].ranking).toEqual(1);
-      expect(body[0].climber.id).toEqual(climber.id);
-      expect(body[0].climber.club).toEqual(null);
-      expect(body[0].climber.firstName).toEqual(climber.firstName);
-      expect(body[0].climber.lastName).toEqual(climber.lastName);
+      expect(body).toHaveProperty(category.name);
+      expect(body[category.name]).toHaveProperty(category.sex);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const r = body[category.name]![category.sex]![0];
+      expect(r.ranking).toEqual(1);
+      expect(r.climber.id).toEqual(climber.id);
+      expect(r.climber.club).toEqual(null);
+      expect(r.climber.firstName).toEqual(climber.firstName);
+      expect(r.climber.lastName).toEqual(climber.lastName);
     });
   });
 });

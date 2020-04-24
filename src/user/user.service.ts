@@ -96,6 +96,8 @@ export class UserService {
     const newUser = new User(
       dto.firstName,
       dto.lastName,
+      dto.birthYear,
+      dto.sex,
       email,
       hashedPassword,
     );

@@ -11,7 +11,7 @@ import { EntityRepository } from 'mikro-orm';
 import {
   Competition,
   CompetitionRelation,
-  Ranking,
+  Rankings,
   UserCompetitionRelation,
 } from './competition.entity';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
@@ -27,6 +27,7 @@ import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.
 import { Boulder } from '../bouldering/boulder/boulder.entity';
 import { BoulderingRankingService } from '../bouldering/ranking/bouldering-ranking.service';
 import { CompetitionType } from './types/competition-type.enum';
+import { Category } from '../shared/types/category.interface';
 
 @Injectable()
 export class CompetitionService {
@@ -103,7 +104,7 @@ export class CompetitionService {
       const rounds = await competition.boulderingRounds.loadItems();
       const firstRound = rounds.find((r) => r.index === 0);
 
-      if (firstRound) {
+      if (firstRound && firstRound.takesNewClimbers()) {
         await this.boulderingRoundService.addClimber(firstRound, user);
       }
     }
@@ -357,27 +358,50 @@ export class CompetitionService {
       dto,
     );
 
-    await this.updateRankings(competition);
+    await this.updateRankingsForCategory(
+      competition,
+      user.getCategory(competition.getSeason()),
+    );
 
     return result;
   }
 
-  private async updateRankings(competition: Competition): Promise<void> {
+  private async updateRankingsForCategory(
+    competition: Competition,
+    category: Category,
+  ): Promise<void> {
     let rankings: Map<typeof User.prototype.id, number>;
 
     if (competition.type === CompetitionType.Bouldering) {
-      rankings = this.boulderingRankingService.getRankings(
-        await competition.boulderingRounds.loadItems(),
+      const rounds = await competition.boulderingRounds.loadItems();
+      const categoryRounds = rounds.filter(
+        (r) => r.category === category.name && r.sex === category.sex,
       );
+
+      rankings = this.boulderingRankingService.getRankings(categoryRounds);
     } else {
       throw new NotImplementedException();
     }
 
-    const climbers = competition.registrations.getItems().map((r) => r.climber);
+    const season = competition.getSeason();
+    const climbers = competition.registrations
+      .getItems()
+      .filter((r) => {
+        const climberCategory = r.climber.getCategory(season);
 
-    competition.rankings = Array.from(
+        return (
+          climberCategory.sex === category.sex &&
+          climberCategory.name === category.name
+        );
+      })
+      .map((r) => r.climber);
+
+    const rankingsByCategory = (competition.rankings[category.name] =
+      competition.rankings[category.name] ?? {});
+
+    rankingsByCategory[category.sex] = Array.from(
       rankings,
-      ([climberId, ranking]): Ranking => {
+      ([climberId, ranking]) => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const climber = climbers.find((c) => c.id === climberId)!;
 
@@ -398,7 +422,7 @@ export class CompetitionService {
 
   async getRankings(
     competitionId: typeof Competition.prototype.id,
-  ): Promise<Ranking[]> {
+  ): Promise<Rankings> {
     const competition = await this.getOrFail(competitionId);
     return competition.rankings;
   }

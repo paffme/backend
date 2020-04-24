@@ -5,6 +5,7 @@ import {
   ManyToMany,
   ManyToOne,
   OneToMany,
+  PrimaryKey,
   Property,
 } from 'mikro-orm';
 
@@ -14,6 +15,8 @@ import { User } from '../../user/user.entity';
 import { BoulderingResult } from '../result/bouldering-result.entity';
 import { BaseEntity } from '../../shared/base.entity';
 import { Boulder } from '../boulder/boulder.entity';
+import { CategoryName } from '../../shared/types/category-name.enum';
+import { Sex } from '../../shared/types/sex.enum';
 
 export enum BoulderingRoundRankingType {
   CIRCUIT = 'CIRCUIT',
@@ -77,6 +80,12 @@ export enum BoulderingRoundState {
 @Entity()
 export class BoulderingRound extends BaseEntity
   implements BaseRound<BoulderingResult> {
+  @Enum(() => CategoryName)
+  category: CategoryName;
+
+  @Enum(() => Sex)
+  sex: Sex;
+
   @Property()
   name: string;
 
@@ -92,7 +101,9 @@ export class BoulderingRound extends BaseEntity
   @Property()
   quota: number;
 
-  @OneToMany(() => Boulder, (boulder) => boulder.round)
+  @OneToMany(() => Boulder, (boulder) => boulder.round, {
+    orphanRemoval: true,
+  })
   boulders: Collection<Boulder> = new Collection<Boulder>(this);
 
   @ManyToOne()
@@ -111,6 +122,9 @@ export class BoulderingRound extends BaseEntity
   @OneToMany(
     () => BoulderingResult,
     (boulderingResult) => boulderingResult.round,
+    {
+      orphanRemoval: true,
+    },
   )
   results: Collection<BoulderingResult> = new Collection<BoulderingResult>(
     this,
@@ -146,6 +160,8 @@ export class BoulderingRound extends BaseEntity
   }
 
   constructor(
+    category: CategoryName,
+    sex: Sex,
     name: string,
     index: number,
     quota: number,
@@ -154,6 +170,8 @@ export class BoulderingRound extends BaseEntity
     competition: Competition,
   ) {
     super();
+    this.category = category;
+    this.sex = sex;
     this.name = name;
     this.index = index;
     this.quota = quota;
