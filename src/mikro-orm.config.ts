@@ -8,6 +8,7 @@ import { Timestamp } from './shared/entity/timestamp.entity';
 import { BoulderingRound } from './bouldering/round/bouldering-round.entity';
 import { BoulderingResult } from './bouldering/result/bouldering-result.entity';
 import { Boulder } from './bouldering/boulder/boulder.entity';
+import { BoulderingGroup } from './bouldering/group/bouldering-group.entity';
 const configService = new ConfigurationService();
 
 const config: Options = {
@@ -26,6 +27,7 @@ const config: Options = {
     BoulderingRound,
     BoulderingResult,
     Boulder,
+    BoulderingGroup,
   ],
   entitiesDirsTs: ['src'],
 };

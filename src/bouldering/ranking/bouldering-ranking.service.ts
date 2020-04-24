@@ -18,29 +18,36 @@ export class BoulderingRankingService {
     // find is not available with type checking
     // because of a lack of support in union types within Typescript
     // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-3.html#caveats
-    const index = round.rankings!.rankings.findIndex(
+    const index = round.rankings!.groups[0].rankings.findIndex(
       (r: Pick<BaseBoulderingRoundRanking, 'climberId'>) =>
         r.climberId === climberId,
     );
 
-    return round.rankings!.rankings[index].ranking;
+    return round.rankings!.groups[0].rankings[index].ranking;
   }
 
   getRankings(rounds: BoulderingRound[]): RankingsMap {
     const rankings: RankingsMap = new Map();
 
     if (rounds.length === 0) {
-      return rankings;
+      return new Map();
     }
 
     const sortedRoundsByReverseIndex = rounds.sort((a, b) => b.index - a.index);
+
     const climbers = sortedRoundsByReverseIndex[
       sortedRoundsByReverseIndex.length - 1
-    ].climbers.count();
+    ].groups
+      .getItems()
+      .reduce((count, g) => count + g.climbers.count(), 0);
 
     for (const round of sortedRoundsByReverseIndex) {
       if (!round.rankings) {
         continue;
+      }
+
+      if (round.groups.count() > 1) {
+        break;
       }
 
       // Handle all ex-aequos from the previous round
@@ -78,12 +85,14 @@ export class BoulderingRankingService {
       }
 
       // Add climber ranking if not yet inserted
-      for (const { climberId, ranking } of round.rankings.rankings) {
-        if (rankings.has(climberId)) {
-          continue;
-        }
+      for (const group of round.rankings.groups) {
+        for (const { climberId, ranking } of group.rankings) {
+          if (rankings.has(climberId)) {
+            continue;
+          }
 
-        rankings.set(climberId, ranking);
+          rankings.set(climberId, ranking);
+        }
       }
     }
 

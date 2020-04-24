@@ -9,11 +9,13 @@ import { Boulder } from './boulder/boulder.entity';
 import { BoulderingRoundUnlimitedContestRankingService } from './round/ranking/bouldering-round-unlimited-contest-ranking.service';
 import { BoulderingRoundCountedRankingService } from './round/ranking/bouldering-round-counted-ranking.service';
 import { BoulderingRankingService } from './ranking/bouldering-ranking.service';
+import { BoulderingGroup } from './group/bouldering-group.entity';
+import { BoulderingGroupService } from './group/bouldering-group.service';
 
 @Module({
   imports: [
     MikroOrmModule.forFeature({
-      entities: [BoulderingResult, BoulderingRound, Boulder],
+      entities: [BoulderingResult, BoulderingRound, Boulder, BoulderingGroup],
     }),
   ],
   controllers: [],
@@ -24,6 +26,7 @@ import { BoulderingRankingService } from './ranking/bouldering-ranking.service';
     BoulderingRoundUnlimitedContestRankingService,
     BoulderingRoundCountedRankingService,
     BoulderingRankingService,
+    BoulderingGroupService,
   ],
   exports: [
     BoulderingRoundService,

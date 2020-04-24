@@ -16,17 +16,21 @@ import { CategoryName } from '../shared/types/category-name.enum';
 import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
 
+interface ClimberRankingInfo {
+  id: typeof User.prototype.id;
+  firstName: typeof User.prototype.firstName;
+  lastName: typeof User.prototype.lastName;
+  club: typeof User.prototype.club;
+}
+
+interface ClimberRanking {
+  ranking: number;
+  climber: ClimberRankingInfo;
+}
+
 export type Rankings = {
-  [key in CategoryName]?: {
-    [sex in Sex]?: {
-      ranking: number;
-      climber: {
-        id: typeof User.prototype.id;
-        firstName: typeof User.prototype.firstName;
-        lastName: typeof User.prototype.lastName;
-        club: typeof User.prototype.club;
-      };
-    }[];
+  [category in CategoryName]?: {
+    [sex in Sex]?: ClimberRanking[];
   };
 };
 

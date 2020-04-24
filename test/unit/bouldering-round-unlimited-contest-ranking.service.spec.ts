@@ -1,17 +1,15 @@
 import { Test } from '@nestjs/testing';
 import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
 import {
-  BoulderingRound,
   BoulderingRoundRankingType,
+  BoulderingRoundType,
 } from '../../src/bouldering/round/bouldering-round.entity';
 import { InternalServerErrorException } from '@nestjs/common';
-import * as uuid from 'uuid';
-import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
-import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import TestUtils from '../utils';
-import { User } from '../../src/user/user.entity';
 import { givenBoulderingRound } from '../fixture/bouldering-round.fixture';
 import { givenUser } from '../fixture/user.fixture';
+import { givenBoulder } from '../fixture/boulder.fixture';
+import { givenResult } from '../fixture/bouldering-result.fixture';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -31,86 +29,16 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     utils = new TestUtils();
   });
 
-  function givenBoulder(index: number): Boulder {
-    return new Boulder((undefined as unknown) as BoulderingRound, index);
-  }
-
-  function givenResult(
-    climber: User,
-    boulder: Boulder,
-    data?: Partial<BoulderingResult>,
-  ): BoulderingResult {
-    const result = new BoulderingResult(
-      climber,
-      (undefined as unknown) as BoulderingRound,
-      boulder,
-    );
-
-    result.top = data?.top ?? false;
-    result.topInTries = data?.topInTries ?? 0;
-    result.zone = data?.zone ?? false;
-    result.zoneInTries = data?.zoneInTries ?? 0;
-    result.tries = data?.tries ?? 0;
-
-    return result;
-  }
-
-  function givenRound(
-    boulders: Boulder[],
-    results: BoulderingResult[],
-    data?: Partial<
-      Pick<
-        BoulderingRound,
-        | 'id'
-        | 'name'
-        | 'index'
-        | 'quota'
-        | 'rankingType'
-        | 'type'
-        | 'competition'
-      >
-    >,
-  ): BoulderingRound {
-    const round = givenBoulderingRound({
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      ...data,
-    });
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    round.results = {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-      // @ts-ignore
-      init(): Promise<void> {
-        return Promise.resolve();
-      },
-      getItems(): BoulderingResult[] {
-        return results;
-      },
-    };
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    round.boulders = {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-      // @ts-ignore
-      init(): Promise<void> {
-        return Promise.resolve();
-      },
-      count(): number {
-        return boulders.length;
-      },
-    };
-
-    return round;
-  }
-
   it('throws when getting rankings for an non unlimited contest round', () => {
     return expect(
       boulderingUnlimitedContestRankingService.getRankings(
-        givenRound([], [], {
-          rankingType: BoulderingRoundRankingType.CIRCUIT,
-        }),
+        givenBoulderingRound(
+          {
+            rankingType: BoulderingRoundRankingType.CIRCUIT,
+          },
+          [],
+          [],
+        ),
       ),
     ).rejects.toBeInstanceOf(InternalServerErrorException);
   });
@@ -136,13 +64,22 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
       }),
     ];
 
-    const round = givenRound(boulders, results);
+    const round = givenBoulderingRound(
+      {
+        type: BoulderingRoundType.QUALIFIER,
+        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      },
+      boulders,
+      results,
+    );
 
     const {
-      rankings,
-      bouldersPoints,
+      groups,
       type,
     } = await boulderingUnlimitedContestRankingService.getRankings(round);
+
+    expect(groups).toHaveLength(1);
+    const { rankings, bouldersPoints } = groups[0];
 
     expect(rankings).toHaveLength(2);
     expect(bouldersPoints).toHaveLength(2);
@@ -193,12 +130,21 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
       }),
     ];
 
-    const round = givenRound(boulders, results);
+    const round = givenBoulderingRound(
+      {
+        type: BoulderingRoundType.QUALIFIER,
+        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      },
+      boulders,
+      results,
+    );
 
     const {
-      rankings,
-      bouldersPoints,
+      groups,
     } = await boulderingUnlimitedContestRankingService.getRankings(round);
+
+    expect(groups).toHaveLength(1);
+    const { rankings, bouldersPoints } = groups[0];
 
     expect(rankings).toHaveLength(2);
     expect(bouldersPoints).toHaveLength(1);
@@ -236,12 +182,21 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     const boulders = [givenBoulder(0)];
     const results = [givenResult(firstClimber, boulders[0])];
 
-    const round = givenRound(boulders, results);
+    const round = givenBoulderingRound(
+      {
+        type: BoulderingRoundType.QUALIFIER,
+        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      },
+      boulders,
+      results,
+    );
 
     const {
-      rankings,
-      bouldersPoints,
+      groups,
     } = await boulderingUnlimitedContestRankingService.getRankings(round);
+
+    expect(groups).toHaveLength(1);
+    const { rankings, bouldersPoints } = groups[0];
 
     expect(rankings).toHaveLength(1);
     expect(bouldersPoints).toHaveLength(1);
@@ -278,12 +233,21 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
       }),
     ];
 
-    const round = givenRound(boulders, results);
+    const round = givenBoulderingRound(
+      {
+        type: BoulderingRoundType.QUALIFIER,
+        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      },
+      boulders,
+      results,
+    );
 
     const {
-      rankings,
-      bouldersPoints,
+      groups,
     } = await boulderingUnlimitedContestRankingService.getRankings(round);
+
+    expect(groups).toHaveLength(1);
+    const { rankings, bouldersPoints } = groups[0];
 
     expect(rankings).toHaveLength(3);
     expect(bouldersPoints).toHaveLength(1);

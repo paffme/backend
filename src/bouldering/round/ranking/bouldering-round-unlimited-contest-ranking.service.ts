@@ -11,6 +11,7 @@ import { User } from '../../../user/user.entity';
 import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { BoulderingRoundRankingService } from './bouldering-round-ranking.service';
 import { RankingsMap } from '../../types/rankings-map';
+import { BoulderingGroup } from '../../group/bouldering-group.entity';
 
 type AggregatedBoulderingUnlimitedResults = Pick<
   BoulderingRoundUnlimitedContestRanking,
@@ -128,43 +129,82 @@ export class BoulderingRoundUnlimitedContestRankingService
       throw new InternalServerErrorException('Wrong ranking type');
     }
 
-    await Promise.all([round.results.init(), round.boulders.init()]);
-    const results = round.results.getItems();
-    const boulders = round.boulders.count();
+    // Compute each group ranking
+    const groupsRankings = new Map<
+      typeof BoulderingGroup.prototype.id,
+      RankingsMap
+    >();
 
-    // First compute each boulder points
-    const bouldersPoints = this.getBouldersPoints(results, boulders);
+    const groupsResults = new Map<
+      typeof BoulderingGroup.prototype.id,
+      AggregatedClimbersResultsMap
+    >();
 
-    // Group results by climber and aggregate results
-    const climberResults = this.groupResultsByClimber(
-      results,
-      bouldersPoints,
-      boulders,
-    );
+    const groupsBouldersPoint = new Map<
+      typeof BoulderingGroup.prototype.id,
+      number[]
+    >();
 
-    // Then handle rankings
-    const entries = Array.from(climberResults);
-    const rankings = this.computeRankings(entries);
+    for (const group of round.groups.getItems()) {
+      const boulders = group.boulders.count();
+      const results = group.results.getItems();
+
+      // First compute each boulder points
+      const bouldersPoints = this.getBouldersPoints(results, boulders);
+
+      // Group results by climber and aggregate results
+      const climberResults = this.groupResultsByClimber(
+        results,
+        bouldersPoints,
+        boulders,
+      );
+
+      const entries = Array.from(climberResults);
+      const climbersIdsInGroup = group.climbers.getItems().map((c) => c.id);
+
+      const groupResults = entries.filter(([climberId]) =>
+        climbersIdsInGroup.includes(climberId),
+      );
+
+      const groupRankings = this.computeRankings(groupResults);
+
+      groupsBouldersPoint.set(group.id, bouldersPoints);
+      groupsResults.set(group.id, new Map(groupResults));
+      groupsRankings.set(group.id, groupRankings);
+    }
 
     // Gather all information
     return {
       type: this.rankingType,
-      bouldersPoints,
-      rankings: entries.map(
-        ([
-          climberId,
-          aggregatedResults,
-        ]): BoulderingRoundUnlimitedContestRanking => ({
-          nbTops: aggregatedResults.tops.reduce(
-            (tops, top) => (top ? tops + 1 : tops),
-            0,
-          ),
+      groups: Array.from(groupsRankings, ([groupId, groupRankings]) => {
+        const rankings = Array.from(
+          groupRankings,
+          ([climberId, ranking]): BoulderingRoundUnlimitedContestRanking => {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const climberResults = groupsResults.get(groupId)!.get(climberId)!;
+
+            const nbTops = climberResults.tops.reduce(
+              (tops, top) => (top ? tops + 1 : tops),
+              0,
+            );
+
+            return {
+              nbTops,
+              climberId,
+              ranking,
+              points: climberResults.points,
+              tops: climberResults.tops,
+            };
+          },
+        );
+
+        return {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          ranking: rankings.get(climberId)!,
-          ...aggregatedResults,
-          climberId,
-        }),
-      ),
+          bouldersPoints: groupsBouldersPoint.get(groupId)!,
+          rankings,
+          id: groupId,
+        };
+      }),
     };
   }
 }

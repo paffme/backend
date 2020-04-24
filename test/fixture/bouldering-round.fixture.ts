@@ -7,9 +7,15 @@ import * as uuid from 'uuid';
 import { Competition } from '../../src/competition/competition.entity';
 import { CategoryName } from '../../src/shared/types/category-name.enum';
 import { Sex } from '../../src/shared/types/sex.enum';
+import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
+import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
+import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.entity';
+import { User } from '../../src/user/user.entity';
 
 export function givenBoulderingRound(
   data?: Partial<BoulderingRound>,
+  boulders?: Boulder[],
+  results?: BoulderingResult[],
 ): BoulderingRound {
   const round = new BoulderingRound(
     data?.category ?? CategoryName.Minime,
@@ -23,6 +29,49 @@ export function givenBoulderingRound(
   );
 
   round.state = data?.state ?? round.state;
+
+  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+  // @ts-ignore
+  round.groups = {
+    getItems(): BoulderingGroup[] {
+      return [
+        {
+          id: 0,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+          // @ts-ignore
+          results: {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
+            init(): Promise<void> {
+              return Promise.resolve();
+            },
+            getItems(): BoulderingResult[] {
+              return results ?? [];
+            },
+          },
+          boulders: {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
+            init(): Promise<void> {
+              return Promise.resolve();
+            },
+            count(): number {
+              return boulders?.length ?? 0;
+            },
+          },
+          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+          // @ts-ignore
+          climbers: {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
+            getItems(): User[] {
+              return results ? [...new Set(results.map((r) => r.climber))] : [];
+            },
+          },
+        },
+      ];
+    },
+  };
 
   return round;
 }

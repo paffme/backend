@@ -3,14 +3,14 @@ import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';
 import { BoulderingRoundDto } from '../../bouldering/dto/out/bouldering-round.dto';
 import { BoulderingRound } from '../../bouldering/round/bouldering-round.entity';
-import { BoulderMapper } from './boulder.mapper';
+import { BoulderingGroupMapper } from './bouldering-group.mapper';
 
 @Injectable()
 export class BoulderingRoundMapper extends BaseMapper<
   BoulderingRoundDto,
   BoulderingRound
 > {
-  constructor(boulderMapper: BoulderMapper) {
+  constructor(groupMapper: BoulderingGroupMapper) {
     super({
       id: 'id',
       name: 'name',
@@ -20,7 +20,7 @@ export class BoulderingRoundMapper extends BaseMapper<
       competitionId: 'competition.id',
       category: 'category',
       sex: 'sex',
-      boulders: (round) => boulderMapper.mapArray(round.boulders.getItems()),
+      groups: (round) => groupMapper.mapArray(round.groups.getItems()),
     });
   }
 

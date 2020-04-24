@@ -14,6 +14,7 @@ import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { User } from '../../../user/user.entity';
 import { getExAequoClimbers, getPodium } from '../../ranking/ranking.utils';
 import { RankingsMap } from '../../types/rankings-map';
+import { BoulderingGroup } from '../../group/bouldering-group.entity';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -387,33 +388,60 @@ export class BoulderingRoundCountedRankingService
       throw new InternalServerErrorException('Wrong ranking type');
     }
 
-    await Promise.all([round.results.init(), round.boulders.init()]);
-    const results = round.results.getItems();
-    const boulders = round.boulders.count();
+    // Compute each group ranking
+    const groupsRankings = new Map<
+      typeof BoulderingGroup.prototype.id,
+      RankingsMap
+    >();
 
-    // Group results by climber and aggregate results
-    const climberResults = this.groupResultsByClimber(results, boulders);
+    const groupsResults = new Map<
+      typeof BoulderingGroup.prototype.id,
+      AggregatedClimbersResultsMap
+    >();
 
-    // Then handle rankings
-    const entries = Array.from(climberResults);
-    const rankings = this.computeRankings(entries);
+    for (const group of round.groups.getItems()) {
+      const boulders = group.boulders.count();
+      const results = group.results.getItems();
 
-    // Handle equality in the podium for the final
-    if (round.type === BoulderingRoundType.FINAL) {
-      this.handlePodiumExAequos(rankings, climberResults);
+      // Group results by climber and aggregate results
+      const climberResults = this.groupResultsByClimber(results, boulders);
+      const entries = Array.from(climberResults);
+
+      const climbersIdsInGroup = group.climbers.getItems().map((c) => c.id);
+
+      const groupResults = entries.filter(([climberId]) =>
+        climbersIdsInGroup.includes(climberId),
+      );
+
+      const groupRankings = this.computeRankings(groupResults);
+
+      // Handle equality in the podium for the final
+      if (round.type === BoulderingRoundType.FINAL) {
+        this.handlePodiumExAequos(groupRankings, climberResults);
+      }
+
+      groupsResults.set(group.id, new Map(groupResults));
+      groupsRankings.set(group.id, groupRankings);
     }
 
     // Gather all information
     return {
       type: round.rankingType,
-      rankings: entries.map(
-        ([climberId, aggregatedResults]): BoulderingRoundCountedRanking => ({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          ranking: rankings.get(climberId)!,
-          ...aggregatedResults,
-          climberId,
-        }),
-      ),
+      groups: Array.from(groupsRankings, ([groupId, groupRankings]) => {
+        const rankings = Array.from(
+          groupRankings,
+          ([climberId, ranking]): BoulderingRoundCountedRanking => ({
+            ...groupsResults.get(groupId)!.get(climberId)!,
+            climberId,
+            ranking,
+          }),
+        );
+
+        return {
+          id: groupId,
+          rankings,
+        };
+      }),
     };
   }
 }

@@ -33,9 +33,13 @@ import { BoulderingRankingService } from '../../src/bouldering/ranking/boulderin
 import { CategoryName } from '../../src/shared/types/category-name.enum';
 import { Sex } from '../../src/shared/types/sex.enum';
 import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
+import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.entity';
+import { BoulderingGroupService } from '../../src/bouldering/group/bouldering-group.service';
+import { CreateCompetitionDTO } from '../../src/competition/dto/in/body/create-competition.dto';
 
 describe('Bouldering round service (integration)', () => {
   let boulderingRoundService: BoulderingRoundService;
+  let boulderingGroupService: BoulderingGroupService;
   let boulderService: BoulderService;
   let utils: TestUtils;
 
@@ -50,6 +54,7 @@ describe('Bouldering round service (integration)', () => {
         BoulderingRoundUnlimitedContestRankingService,
         BoulderingRoundCountedRankingService,
         BoulderingRankingService,
+        BoulderingGroupService,
       ],
       imports: [
         MikroOrmModule.forRoot(config),
@@ -61,6 +66,7 @@ describe('Bouldering round service (integration)', () => {
             BoulderingRound,
             BoulderingResult,
             Boulder,
+            BoulderingGroup,
           ],
         }),
         SharedModule,
@@ -68,20 +74,24 @@ describe('Bouldering round service (integration)', () => {
     }).compile();
 
     boulderingRoundService = module.get(BoulderingRoundService);
+    boulderingGroupService = module.get(BoulderingGroupService);
     boulderService = module.get(BoulderService);
 
     utils = new TestUtils(
       module.get(UserService),
       module.get(CompetitionService),
+      module.get('MikroORM'),
     );
   });
 
   async function givenBoulderingRound(
     partialDto?: Partial<CreateBoulderingRoundDto & BoulderingRound>,
+    competitionData?: Partial<CreateCompetitionDTO>,
   ): Promise<BoulderingRound> {
     const { user: organizer } = await utils.givenUser();
 
     const competition = await utils.givenCompetition(organizer, {
+      ...competitionData,
       type: CompetitionType.Bouldering,
     });
 
@@ -99,6 +109,13 @@ describe('Bouldering round service (integration)', () => {
     const round = await boulderingRoundService.createRound(competition, dto);
     round.state = partialDto?.state ?? round.state;
     return round;
+  }
+
+  function givenBoulderingGroup(
+    name: string,
+    round: BoulderingRound,
+  ): Promise<BoulderingGroup> {
+    return boulderingGroupService.create(name, round);
   }
 
   it('should create a round', async () => {
@@ -192,10 +209,14 @@ describe('Bouldering round service (integration)', () => {
 
   it('adds the registered climbers if the round if the first one', async () => {
     const { user: organizer } = await utils.givenUser();
-    const { user: climber } = await utils.givenUser();
+    const { user: climber } = await utils.givenUser({
+      sex: Sex.Female,
+      birthYear: 2006,
+    });
 
     const competition = await utils.givenCompetition(organizer, {
       type: CompetitionType.Bouldering,
+      startDate: new Date(2019, 10, 1),
     });
 
     await utils.registerUserInCompetition(climber, competition);
@@ -210,7 +231,7 @@ describe('Bouldering round service (integration)', () => {
       sex: Sex.Female,
     });
 
-    const climbers = round.climbers.getItems();
+    const climbers = round.groups[0].climbers.getItems();
 
     expect(climbers).toHaveLength(1);
     expect(climbers[0]).toBe(climber);
@@ -250,25 +271,45 @@ describe('Bouldering round service (integration)', () => {
   });
 
   it('adds a climber when is in pending state', async () => {
-    const round = await givenBoulderingRound({
-      state: BoulderingRoundState.PENDING,
+    const round = await givenBoulderingRound(
+      {
+        state: BoulderingRoundState.PENDING,
+        sex: Sex.Female,
+        category: CategoryName.Minime,
+      },
+      {
+        startDate: new Date(2019, 10, 1),
+      },
+    );
+
+    const { user: climber } = await utils.givenUser({
+      sex: Sex.Female,
+      birthYear: 2006,
     });
 
-    const { user: climber } = await utils.givenUser();
-
-    await boulderingRoundService.addClimber(round, climber);
-    expect(round.climbers.contains(climber)).toEqual(true);
+    await boulderingRoundService.addClimbers(round, climber);
+    expect(round.groups[0].climbers.contains(climber)).toEqual(true);
   });
 
   it('adds a climber when is in ongoing state', async () => {
-    const round = await givenBoulderingRound({
-      state: BoulderingRoundState.ONGOING,
+    const round = await givenBoulderingRound(
+      {
+        state: BoulderingRoundState.ONGOING,
+        sex: Sex.Female,
+        category: CategoryName.Minime,
+      },
+      {
+        startDate: new Date(2019, 10, 1),
+      },
+    );
+
+    const { user: climber } = await utils.givenUser({
+      sex: Sex.Female,
+      birthYear: 2006,
     });
 
-    const { user: climber } = await utils.givenUser();
-
-    await boulderingRoundService.addClimber(round, climber);
-    expect(round.climbers.contains(climber)).toEqual(true);
+    await boulderingRoundService.addClimbers(round, climber);
+    expect(round.groups[0].climbers.contains(climber)).toEqual(true);
   });
 
   it('does not add a climber when the state is ended', async () => {
@@ -279,19 +320,32 @@ describe('Bouldering round service (integration)', () => {
     const { user: climber } = await utils.givenUser();
 
     return expect(
-      boulderingRoundService.addClimber(round, climber),
+      boulderingRoundService.addClimbers(round, climber),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('adds a result', async () => {
-    const { user: climber } = await utils.givenUser();
-    const round = await givenBoulderingRound();
-    await boulderingRoundService.addClimber(round, climber);
+    const { user: climber } = await utils.givenUser({
+      sex: Sex.Female,
+      birthYear: 2006,
+    });
+
+    const round = await givenBoulderingRound(
+      {
+        sex: Sex.Female,
+        category: CategoryName.Minime,
+      },
+      {
+        startDate: new Date(2019, 10, 1),
+      },
+    );
+
+    await boulderingRoundService.addClimbers(round, climber);
     const dto = {} as CreateBoulderingResultDto;
 
     const result = await boulderingRoundService.addResult(
       round.id,
-      round.boulders.getItems()[0].id,
+      round.groups[0].boulders.getItems()[0].id,
       climber,
       dto,
     );
@@ -299,22 +353,33 @@ describe('Bouldering round service (integration)', () => {
     expect(result).toBeTruthy();
     expect(result).toHaveProperty('id');
     expect(result.climber).toBe(climber);
-    expect(result.round).toBe(round);
-    expect(result.boulder).toBe(round.boulders.getItems()[0]);
+    expect(result.group.round).toBe(round);
+    expect(result.boulder).toBe(round.groups[0].boulders.getItems()[0]);
   });
 
   it('updates the rankings after adding a result', async () => {
-    const { user: climber } = await utils.givenUser();
-    const round = await givenBoulderingRound({
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+    const { user: climber } = await utils.givenUser({
+      sex: Sex.Female,
+      birthYear: 2006,
     });
 
-    await boulderingRoundService.addClimber(round, climber);
+    const round = await givenBoulderingRound(
+      {
+        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        sex: Sex.Female,
+        category: CategoryName.Minime,
+      },
+      {
+        startDate: new Date(2019, 10, 1),
+      },
+    );
+
+    await boulderingRoundService.addClimbers(round, climber);
     const dto = {} as CreateBoulderingResultDto;
 
     await boulderingRoundService.addResult(
       round.id,
-      round.boulders.getItems()[0].id,
+      round.groups[0].boulders.getItems()[0].id,
       climber,
       dto,
     );
@@ -323,21 +388,25 @@ describe('Bouldering round service (integration)', () => {
 
     expect(rankings).toBeTruthy();
     expect(rankings.type).toEqual(BoulderingRoundRankingType.UNLIMITED_CONTEST);
-    expect(rankings.bouldersPoints).toHaveLength(round.boulders.count());
+    expect(rankings.groups[0].bouldersPoints).toHaveLength(
+      round.groups[0].boulders.count(),
+    );
 
-    for (let i = 0; i < round.boulders.count(); i++) {
-      expect(rankings.bouldersPoints[i]).toEqual(1000);
+    for (let i = 0; i < round.groups[0].boulders.count(); i++) {
+      expect(rankings.groups[0].bouldersPoints[i]).toEqual(1000);
     }
 
-    expect(rankings.rankings).toHaveLength(1);
-    expect(rankings.rankings[0].ranking).toEqual(1);
-    expect(rankings.rankings[0].nbTops).toEqual(0);
-    expect(rankings.rankings[0].points).toEqual(0);
-    expect(rankings.rankings[0].climberId).toEqual(climber.id);
-    expect(rankings.rankings[0].tops).toHaveLength(round.boulders.count());
+    expect(rankings.groups[0].rankings).toHaveLength(1);
+    expect(rankings.groups[0].rankings[0].ranking).toEqual(1);
+    expect(rankings.groups[0].rankings[0].nbTops).toEqual(0);
+    expect(rankings.groups[0].rankings[0].points).toEqual(0);
+    expect(rankings.groups[0].rankings[0].climberId).toEqual(climber.id);
+    expect(rankings.groups[0].rankings[0].tops).toHaveLength(
+      round.groups[0].boulders.count(),
+    );
 
-    for (let i = 0; i < round.boulders.count(); i++) {
-      expect(rankings.rankings[0].tops[i]).toEqual(false);
+    for (let i = 0; i < round.groups[0].boulders.count(); i++) {
+      expect(rankings.groups[0].rankings[0].tops[i]).toEqual(false);
     }
   });
 
@@ -352,30 +421,47 @@ describe('Bouldering round service (integration)', () => {
     return expect(
       boulderingRoundService.addResult(
         round.id,
-        round.boulders.getItems()[0].id,
+        round.groups[0].boulders.getItems()[0].id,
         climber,
         dto,
       ),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('does not add a result if the climber boulder is not in the round', async () => {
-    const { user: climber } = await utils.givenUser();
-
-    const round = await givenBoulderingRound({
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+  it('does not add a result if the boulder is not in the group of a round', async () => {
+    const { user: climber } = await utils.givenUser({
+      sex: Sex.Female,
+      birthYear: 2006,
     });
+
+    const round = await givenBoulderingRound(
+      {
+        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        sex: Sex.Female,
+        category: CategoryName.Minime,
+      },
+      {
+        startDate: new Date(2019, 10, 1),
+      },
+    );
+
+    const group = round.groups.getItems()[0];
+    const [boulder] = await boulderService.createMany(group, 1);
+    const dto = {} as CreateBoulderingResultDto;
 
     const anotherRound = await givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
     });
 
-    const [boulder] = await boulderService.createMany(anotherRound, 1);
-    await boulderingRoundService.addClimber(round, climber);
-    const dto = {} as CreateBoulderingResultDto;
+    await boulderingRoundService.addClimbers(anotherRound, climber);
 
     return expect(
-      boulderingRoundService.addResult(round.id, boulder.id, climber, dto),
+      boulderingRoundService.addResult(
+        anotherRound.id,
+        boulder.id,
+        climber,
+        dto,
+      ),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
@@ -393,19 +479,36 @@ describe('Bouldering round service (integration)', () => {
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('throws not found when adding a result to an unknown round', async () => {
+  it('throws not found when adding a result to an unknown group', async () => {
     const { user: climber } = await utils.givenUser();
 
     const round = await givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
     });
 
-    const [boulder] = await boulderService.createMany(round, 1);
-
+    const group = await givenBoulderingGroup('0', round);
+    const [boulder] = await boulderService.createMany(group, 1);
     const dto = {} as CreateBoulderingResultDto;
 
     return expect(
       boulderingRoundService.addResult(9999999, boulder.id, climber, dto),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('throws when trying to add a climber in a round without the same category', async () => {
+    const { user: climber } = await utils.givenUser({
+      birthYear: 2000,
+      sex: Sex.Female,
+    });
+
+    const round = await givenBoulderingRound({
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      category: CategoryName.Senior,
+      sex: Sex.Male,
+    });
+
+    return expect(
+      boulderingRoundService.addClimbers(round, climber),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 });

@@ -101,11 +101,21 @@ export class CompetitionService {
     );
 
     if (competition.type === CompetitionType.Bouldering) {
+      const season = competition.getSeason();
       const rounds = await competition.boulderingRounds.loadItems();
-      const firstRound = rounds.find((r) => r.index === 0);
+
+      const firstRound = rounds.find((r) => {
+        const climberCategory = user.getCategory(season);
+
+        return (
+          r.index === 0 &&
+          r.category === climberCategory.name &&
+          r.sex === climberCategory.sex
+        );
+      });
 
       if (firstRound && firstRound.takesNewClimbers()) {
-        await this.boulderingRoundService.addClimber(firstRound, user);
+        await this.boulderingRoundService.addClimbers(firstRound, user);
       }
     }
 

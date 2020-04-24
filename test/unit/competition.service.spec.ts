@@ -43,7 +43,7 @@ const userServiceMock: ServiceMock = {
 const boulderingRoundServiceMock: ServiceMock = {
   createRound: jest.fn(),
   addResult: jest.fn(),
-  addClimber: jest.fn(),
+  addClimbers: jest.fn(),
 };
 
 const boulderingRankingServiceMock: ServiceMock = {
@@ -261,14 +261,25 @@ describe('Competition service (unit)', () => {
   });
 
   it('adds the climber into the first round after being registered', async () => {
-    const user = {};
+    const user = {
+      getCategory(): Category {
+        return {
+          name: CategoryName.Minime,
+          sex: Sex.Female,
+        };
+      },
+    };
 
     const rounds = [
       {
         index: 1,
+        category: CategoryName.Minime,
+        sex: Sex.Female,
       },
       {
         index: 0,
+        category: CategoryName.Minime,
+        sex: Sex.Female,
         takesNewClimbers() {
           return true;
         },
@@ -276,6 +287,9 @@ describe('Competition service (unit)', () => {
     ];
 
     const competition = {
+      getSeason() {
+        return 2020;
+      },
       takesRegistrations(): true {
         return true;
       },
@@ -291,7 +305,7 @@ describe('Competition service (unit)', () => {
       async () => competition,
     );
 
-    boulderingRoundServiceMock.addClimber.mockImplementation(
+    boulderingRoundServiceMock.addClimbers.mockImplementation(
       async () => undefined,
     );
 
@@ -299,19 +313,28 @@ describe('Competition service (unit)', () => {
 
     await competitionService.register(123, 456);
 
-    expect(boulderingRoundServiceMock.addClimber).toHaveBeenCalledTimes(1);
-    expect(boulderingRoundServiceMock.addClimber).toHaveBeenCalledWith(
+    expect(boulderingRoundServiceMock.addClimbers).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundServiceMock.addClimbers).toHaveBeenCalledWith(
       rounds[1],
       user,
     );
   });
 
   it('does not add the climber into the first round after being registered if the round do not takes new climbers', async () => {
-    const user = {};
+    const user = {
+      getCategory(): Category {
+        return {
+          name: CategoryName.Minime,
+          sex: Sex.Female,
+        };
+      },
+    };
 
     const rounds = [
       {
         index: 0,
+        category: CategoryName.Minime,
+        sex: Sex.Female,
         takesNewClimbers() {
           return false;
         },
@@ -319,6 +342,9 @@ describe('Competition service (unit)', () => {
     ];
 
     const competition = {
+      getSeason() {
+        return 2020;
+      },
       takesRegistrations(): true {
         return true;
       },
@@ -334,7 +360,7 @@ describe('Competition service (unit)', () => {
       async () => competition,
     );
 
-    boulderingRoundServiceMock.addClimber.mockImplementation(
+    boulderingRoundServiceMock.addClimbers.mockImplementation(
       async () => undefined,
     );
 
@@ -342,7 +368,7 @@ describe('Competition service (unit)', () => {
 
     await competitionService.register(123, 456);
 
-    expect(boulderingRoundServiceMock.addClimber).toHaveBeenCalledTimes(0);
+    expect(boulderingRoundServiceMock.addClimbers).toHaveBeenCalledTimes(0);
   });
 
   it('does not add a bouldering result if the climber if not registered', () => {

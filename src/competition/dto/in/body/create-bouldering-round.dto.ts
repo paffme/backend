@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsOptional, IsString, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 import { CategoryName } from '../../../../shared/types/category-name.enum';
 import { Sex } from '../../../../shared/types/sex.enum';
 
@@ -52,4 +52,13 @@ export class CreateBoulderingRoundDto {
   })
   @IsEnum(BoulderingRoundType)
   type!: BoulderingRoundType;
+
+  @ApiPropertyOptional({
+    default: 1,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(2)
+  groups?: number;
 }

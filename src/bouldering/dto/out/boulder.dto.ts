@@ -5,10 +5,10 @@ export class BoulderDto {
   @ApiProperty({
     type: Number,
   })
-  id!: typeof Boulder.prototype.id;
+  readonly id!: typeof Boulder.prototype.id;
 
   @ApiProperty({
     type: Number,
   })
-  index!: typeof Boulder.prototype.index;
+  readonly index!: typeof Boulder.prototype.index;
 }

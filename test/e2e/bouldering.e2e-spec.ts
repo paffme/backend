@@ -93,7 +93,7 @@ describe('Bouldering (e2e)', () => {
       category: CategoryName.Minime,
     });
 
-    const boulder = round.boulders.getItems()[0];
+    const boulder = round.groups.getItems()[0].boulders.getItems()[0];
     utils.clearORM();
 
     return {
@@ -136,15 +136,22 @@ describe('Bouldering (e2e)', () => {
       expect(body.name).toEqual(dto.name);
       expect(body.type).toEqual(dto.type);
       expect(body.quota).toEqual(dto.quota);
-      expect(body.boulders).toHaveLength(dto.boulders);
       expect(body.index).toEqual(dto.index);
       expect(body.competitionId).toEqual(competition.id);
       expect(body.sex).toEqual(Sex.Female);
       expect(body.category).toEqual(CategoryName.Minime);
+      expect(body.groups).toHaveLength(1);
+
+      const group = body.groups[0];
+      expect(group).toHaveProperty('id');
+      expect(group.name).toEqual('0');
+      expect(group.roundId).toEqual(body.id);
+      expect(group.climbers).toHaveLength(0);
+      expect(group.boulders).toHaveLength(dto.boulders);
 
       for (let i = 0; i < dto.boulders; i++) {
-        expect(body.boulders[i].index).toEqual(i);
-        expect(body.boulders[i]).toHaveProperty('id');
+        expect(group.boulders[i].index).toEqual(i);
+        expect(group.boulders[i]).toHaveProperty('id');
       }
     });
   });

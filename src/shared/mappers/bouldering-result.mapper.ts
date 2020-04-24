@@ -14,21 +14,25 @@ export class BoulderingResultMapper extends BaseMapper<
       id: 'id',
       boulderId: (result) => result.boulder.id,
       climberId: (result) => result.climber.id,
-      roundId: (result) => result.round.id,
-      competitionId: (result) => result.round.competition.id,
+      roundId: (result) => result.group.round.id,
+      competitionId: (result) => result.group.round.competition.id,
       top: 'top',
       topInTries: (result) =>
-        result.round.isRankingWithCountedTries()
+        result.group.round.isRankingWithCountedTries()
           ? result.topInTries
           : undefined,
       zone: (result) =>
-        result.round.isRankingWithCountedZones() ? result.zone : undefined,
+        result.group.round.isRankingWithCountedZones()
+          ? result.zone
+          : undefined,
       zoneInTries: (result) =>
-        result.round.isRankingWithCountedZones()
+        result.group.round.isRankingWithCountedZones()
           ? result.zoneInTries
           : undefined,
       tries: (result) =>
-        result.round.isRankingWithCountedTries() ? result.tries : undefined,
+        result.group.round.isRankingWithCountedTries()
+          ? result.tries
+          : undefined,
     });
   }
 

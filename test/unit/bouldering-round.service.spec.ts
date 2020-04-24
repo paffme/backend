@@ -22,6 +22,8 @@ import { BoulderingRoundUnlimitedContestRankingService } from '../../src/boulder
 import { BoulderingRoundCountedRankingService } from '../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
 import { Sex } from '../../src/shared/types/sex.enum';
 import { CategoryName } from '../../src/shared/types/category-name.enum';
+import { BoulderingGroupService } from '../../src/bouldering/group/bouldering-group.service';
+import { BoulderingGroupMapper } from '../../src/shared/mappers/bouldering-group.mapper';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -31,6 +33,7 @@ const boulderingRoundRepositoryMock: RepositoryMock = {
 };
 
 const boulderingResultServiceMock: ServiceMock = {};
+const boulderingGroupServiceMock: ServiceMock = {};
 
 const boulderingUnlimitedContestRankingServiceMock: ServiceMock = {
   getRankings: jest.fn(),
@@ -72,12 +75,20 @@ describe('Bouldering round service (unit)', () => {
           useFactory: () => boulderingRoundCountedRankingServiceMock,
         },
         {
+          provide: BoulderingGroupService,
+          useFactory: () => boulderingGroupServiceMock,
+        },
+        {
           provide: BoulderingRoundMapper,
           useClass: BoulderingRoundMapper,
         },
         {
           provide: BoulderMapper,
           useClass: BoulderMapper,
+        },
+        {
+          provide: BoulderingGroupMapper,
+          useClass: BoulderingGroupMapper,
         },
       ],
     }).compile();
@@ -257,5 +268,33 @@ describe('Bouldering round service (unit)', () => {
     expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledWith(
       round,
     );
+  });
+
+  it('throws when adding a round with multiple groups when it is not a circuit', async () => {
+    const competition = {} as Competition;
+
+    const dto = {
+      type: BoulderingRoundType.QUALIFIER,
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      groups: 2,
+    } as CreateBoulderingRoundDto;
+
+    return expect(
+      boulderingRoundService.createRound(competition, dto),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('throws when adding a round with multiple groups when it is not a qualifier', async () => {
+    const competition = {} as Competition;
+
+    const dto = {
+      type: BoulderingRoundType.FINAL,
+      rankingType: BoulderingRoundRankingType.CIRCUIT,
+      groups: 2,
+    } as CreateBoulderingRoundDto;
+
+    return expect(
+      boulderingRoundService.createRound(competition, dto),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 });

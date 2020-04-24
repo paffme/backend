@@ -7,7 +7,6 @@ import { UserDto } from '../../src/user/dto/out/user.dto';
 import { configure } from '../../src/app.configuration';
 import TestUtils from '../utils';
 import { UserService } from '../../src/user/user.service';
-import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
 import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
 import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
 import { NestExpressApplication } from '@nestjs/platform-express';

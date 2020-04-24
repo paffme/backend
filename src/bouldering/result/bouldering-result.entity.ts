@@ -4,16 +4,17 @@ import { BoulderingRound } from '../round/bouldering-round.entity';
 import { User } from '../../user/user.entity';
 import { BaseEntity } from '../../shared/base.entity';
 import { Boulder } from '../boulder/boulder.entity';
+import { BoulderingGroup } from '../group/bouldering-group.entity';
 
 @Entity()
 // TODO : Refactor into multiple class to handle multiple bouldering result types when discriminator is available in MikroORM
 export class BoulderingResult extends BaseEntity
-  implements BaseResult<BoulderingResult> {
+  implements BaseResult<BoulderingRound> {
   @ManyToOne()
   climber: User;
 
   @ManyToOne()
-  round: BoulderingRound;
+  group: BoulderingGroup;
 
   @ManyToOne()
   boulder: Boulder;
@@ -33,10 +34,10 @@ export class BoulderingResult extends BaseEntity
   @Property()
   tries = 0;
 
-  constructor(climber: User, round: BoulderingRound, boulder: Boulder) {
+  constructor(climber: User, group: BoulderingGroup, boulder: Boulder) {
     super();
     this.climber = climber;
-    this.round = round;
+    this.group = group;
     this.boulder = boulder;
   }
 }

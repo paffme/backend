@@ -3,46 +3,46 @@ import {
   BoulderingRound,
   BoulderingRoundRankingType,
 } from '../../round/bouldering-round.entity';
-import { BoulderDto } from './boulder.dto';
 import { Competition } from '../../../competition/competition.entity';
 import { Sex } from '../../../shared/types/sex.enum';
 import { CategoryName } from '../../../shared/types/category-name.enum';
+import { BoulderingGroupDto } from './bouldering-group.dto';
 
 export class BoulderingRoundDto {
   @ApiProperty({
     type: Number,
   })
-  id!: typeof BoulderingRound.prototype.id;
+  readonly id!: typeof BoulderingRound.prototype.id;
 
   @ApiProperty({
     type: Number,
   })
-  competitionId!: typeof Competition.prototype.id;
+  readonly competitionId!: typeof Competition.prototype.id;
 
   @ApiProperty({
     type: Number,
   })
-  name!: typeof BoulderingRound.prototype.name;
+  readonly name!: typeof BoulderingRound.prototype.name;
 
   @ApiProperty({
     type: Number,
   })
-  index!: typeof BoulderingRound.prototype.index;
+  readonly index!: typeof BoulderingRound.prototype.index;
 
   @ApiProperty({
     type: Number,
   })
-  quota!: typeof BoulderingRound.prototype.quota;
+  readonly quota!: typeof BoulderingRound.prototype.quota;
 
   @ApiProperty({ enum: BoulderingRoundRankingType })
-  type!: typeof BoulderingRound.prototype.type;
+  readonly type!: typeof BoulderingRound.prototype.type;
 
-  @ApiProperty({ isArray: true, type: BoulderDto })
-  boulders!: BoulderDto[];
+  @ApiProperty({ isArray: true, type: BoulderingGroupDto })
+  readonly groups!: BoulderingGroupDto[];
 
   @ApiProperty({ enum: Sex })
-  sex!: Sex;
+  readonly sex!: Sex;
 
   @ApiProperty({ enum: CategoryName })
-  category!: CategoryName;
+  readonly category!: CategoryName;
 }

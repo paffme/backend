@@ -15,6 +15,7 @@ import { ConfigurationService } from '../../src/shared/configuration/configurati
 import { JwtService } from '@nestjs/jwt';
 import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
 import * as uuid from 'uuid';
+import { Sex } from '../../src/shared/types/sex.enum';
 
 const userRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -84,6 +85,8 @@ describe('User service (unit)', () => {
         lastName: uuid.v4(),
         email: 'super@email.com',
         password: String(Math.random()),
+        birthYear: 2000,
+        sex: Sex.Female,
       }),
     ).rejects.toBeInstanceOf(ConflictException);
   });

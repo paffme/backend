@@ -23,6 +23,7 @@ import { BoulderService } from '../boulder/boulder.service';
 import { BoulderingRoundUnlimitedContestRankingService } from './ranking/bouldering-round-unlimited-contest-ranking.service';
 import { BoulderingRoundRankingService } from './ranking/bouldering-round-ranking.service';
 import { BoulderingRoundCountedRankingService } from './ranking/bouldering-round-counted-ranking.service';
+import { BoulderingGroupService } from '../group/bouldering-group.service';
 
 @Injectable()
 export class BoulderingRoundService {
@@ -46,6 +47,7 @@ export class BoulderingRoundService {
     private readonly boulderService: BoulderService,
     private readonly boulderingUnlimitedContestRankingService: BoulderingRoundUnlimitedContestRankingService,
     private readonly boulderingRoundCountedTriesRankingService: BoulderingRoundCountedRankingService,
+    private readonly boulderingGroupService: BoulderingGroupService,
   ) {}
 
   async getOrFail(
@@ -78,6 +80,22 @@ export class BoulderingRoundService {
       );
     }
 
+    const groups = dto.groups ?? 1;
+
+    if (groups > 1) {
+      if (dto.type !== BoulderingRoundType.QUALIFIER) {
+        throw new UnprocessableEntityException(
+          'No more than one group for a non qualifier round',
+        );
+      }
+
+      if (dto.rankingType !== BoulderingRoundRankingType.CIRCUIT) {
+        throw new UnprocessableEntityException(
+          'No more than one group for a non circuit round',
+        );
+      }
+    }
+
     const rounds = competition.boulderingRounds
       .getItems()
       .filter(
@@ -97,11 +115,17 @@ export class BoulderingRoundService {
       competition,
     );
 
+    // Create groups
+    for (let i = 0; i < groups; i++) {
+      const group = await this.boulderingGroupService.create(`${i}`, round);
+      await this.boulderService.createMany(group, dto.boulders);
+    }
+
     // Add registrations if this is the first round
     if (round.index === 0) {
       const registrations = competition.registrations.getItems();
       const climbersRegistered = registrations.map((r) => r.climber);
-      round.climbers.add(...climbersRegistered);
+      await this.addClimbers(round, ...climbersRegistered);
     }
 
     if (rounds.length > 0) {
@@ -121,15 +145,13 @@ export class BoulderingRoundService {
           r.index++;
           // Remove climbers in this round because when we add a round before it
           // then it has no sense to already have climbers in this round
-          r.climbers.removeAll();
+          r.groups.removeAll();
           this.boulderingRoundRepository.persistLater(r);
         }
       }
     }
 
-    this.boulderingRoundRepository.persistLater(round);
-    await this.boulderService.createMany(round, dto.boulders);
-    await this.boulderingRoundRepository.flush();
+    await this.boulderingRoundRepository.persistAndFlush(round);
 
     return round;
   }
@@ -149,20 +171,28 @@ export class BoulderingRoundService {
     dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResult> {
     const [round, boulder] = await Promise.all([
-      this.getOrFail(roundId, ['climbers', 'boulders']),
+      this.getOrFail(roundId, [
+        'groups',
+        'groups.climbers',
+        'groups.boulders',
+        'groups.results',
+      ]),
       this.boulderService.getOrFail(boulderId),
     ]);
 
-    if (!round.climbers.contains(climber)) {
+    const groups = round.groups.getItems();
+    const group = groups.find((g) => g.climbers.contains(climber));
+
+    if (!group) {
       throw new BadRequestException('Climber not in round');
     }
 
-    if (!round.boulders.contains(boulder)) {
+    if (!group.boulders.contains(boulder)) {
       throw new BadRequestException('Boulder not in round');
     }
 
     const result = await this.boulderingResultService.addResult(
-      round,
+      group,
       boulder,
       climber,
       dto,
@@ -173,9 +203,32 @@ export class BoulderingRoundService {
     return result;
   }
 
-  async addClimber(round: BoulderingRound, climber: User): Promise<void> {
+  async addClimbers(
+    round: BoulderingRound,
+    ...climbers: User[]
+  ): Promise<void> {
     if (round.takesNewClimbers()) {
-      round.climbers.add(climber);
+      const season = round.competition.getSeason();
+      const groups = round.groups.getItems();
+      let currentGroupIndex = 0;
+
+      for (let i = 0; i < climbers.length; i++) {
+        const climber = climbers[i];
+        const climberCategory = climber.getCategory(season);
+
+        if (
+          round.category === climberCategory.name &&
+          round.sex === climberCategory.sex
+        ) {
+          groups[currentGroupIndex].climbers.add(climber);
+          currentGroupIndex = (currentGroupIndex + 1) % groups.length;
+        } else {
+          throw new UnprocessableEntityException(
+            'This round is not handling this category',
+          );
+        }
+      }
+
       await this.boulderingRoundRepository.persistAndFlush(round);
     } else {
       throw new BadRequestException('This round cannot take new climbers');
