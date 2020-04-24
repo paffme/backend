@@ -1,36 +1,15 @@
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import {
-  CallHandler,
-  ExecutionContext,
-  NestInterceptor,
-  ValidationPipe,
-} from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { CustomValidationError } from './shared/errors/custom-validation.error';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
-import { Observable } from 'rxjs';
-import { join } from 'path';
 import * as packageJson from '../package.json';
 import { NestExpressApplication } from '@nestjs/platform-express';
-
-class ExposeHeadersInterceptor implements NestInterceptor {
-  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const response = context.switchToHttp().getResponse();
-    response.set('Access-Control-Expose-Headers', 'Content-Range,Accept-Range');
-    return next.handle();
-  }
-}
 
 export function configure(app: NestExpressApplication): void {
   const hostDomain = AppModule.isDev
     ? `https://${AppModule.host}:${AppModule.port}`
     : AppModule.host;
-
-  if (AppModule.isDev) {
-    app.useStaticAssets(join(__dirname, '../static'));
-  } else {
-    app.useStaticAssets(join(__dirname, '../../static'));
-  }
 
   const swaggerOptions = new DocumentBuilder()
     .setTitle(packageJson.name)
@@ -62,13 +41,5 @@ export function configure(app: NestExpressApplication): void {
     }),
   );
 
-  app.useGlobalInterceptors(new ExposeHeadersInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
-
-  app.enableCors({
-    credentials: true,
-    origin(requestOrigin: string, cb: (arg1: null, arg2: boolean) => void) {
-      cb(null, true);
-    },
-  });
 }
