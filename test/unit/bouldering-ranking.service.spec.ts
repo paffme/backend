@@ -137,7 +137,7 @@ describe('Bouldering round service (unit)', () => {
     expect(rankings.get(4)).toEqual(4);
   });
 
-  it('returns a ranking with multiple rounds with ex-aequos', () => {
+  it('returns a ranking with multiple rounds with ex-aequos (1)', () => {
     const rounds: BoulderingRound[] = [
       ({
         type: BoulderingRoundType.QUALIFIER,
@@ -237,6 +237,122 @@ describe('Bouldering round service (unit)', () => {
               zonesInTries: [1, 1, 1, 1],
               ranking: 1,
               climberId: 3,
+            },
+          ],
+        },
+      } as unknown) as BoulderingRound,
+    ];
+
+    const rankings = boulderingRankingService.getRankings(rounds);
+
+    expect(rankings).toBeInstanceOf(Map);
+    expect(rankings.size).toEqual(4);
+    expect(rankings.get(1)).toEqual(3);
+    expect(rankings.get(2)).toEqual(1);
+    expect(rankings.get(3)).toEqual(2);
+    expect(rankings.get(4)).toEqual(4);
+  });
+
+  it('returns a ranking with multiple rounds with ex-aequos (2)', () => {
+    const rounds: BoulderingRound[] = [
+      ({
+        type: BoulderingRoundType.QUALIFIER,
+        index: 0,
+        quota: 3,
+        climbers: {
+          count: () => 4,
+        },
+        rankings: {
+          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+          bouldersPoints: [50, 50, 50, 50],
+          rankings: [
+            {
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climberId: 1,
+            },
+            {
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climberId: 2,
+            },
+            {
+              tops: [true, true, false, false],
+              nbTops: 2,
+              points: 100,
+              ranking: 3,
+              climberId: 3,
+            },
+            {
+              tops: [true, false, false, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 4,
+              climberId: 4,
+            },
+          ],
+        },
+      } as unknown) as BoulderingRound,
+      ({
+        type: BoulderingRoundType.SEMI_FINAL,
+        index: 1,
+        quota: 2,
+        rankings: {
+          type: BoulderingRoundRankingType.CIRCUIT,
+          rankings: [
+            {
+              tops: [false, false, false, false],
+              topsInTries: [0, 0, 0, 4],
+              zones: [false, false, false, true],
+              zonesInTries: [0, 0, 0, 1],
+              ranking: 3,
+              climberId: 1,
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 2, 3, 4],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climberId: 2,
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 2, 3, 4],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climberId: 3,
+            },
+          ],
+        },
+      } as unknown) as BoulderingRound,
+      ({
+        type: BoulderingRoundType.FINAL,
+        index: 2,
+        quota: 0,
+        rankings: {
+          type: BoulderingRoundRankingType.CIRCUIT,
+          rankings: [
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climberId: 3,
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climberId: 2,
             },
           ],
         },
@@ -569,5 +685,118 @@ describe('Bouldering round service (unit)', () => {
     expect(rankings.get(3)).toEqual(2);
     expect(rankings.get(4)).toEqual(2);
     expect(rankings.get(5)).toEqual(5);
+  });
+
+  it('returns an empty with no round', () => {
+    const rounds: BoulderingRound[] = [];
+    const rankings = boulderingRankingService.getRankings(rounds);
+    expect(rankings).toBeInstanceOf(Map);
+    expect(rankings.size).toEqual(0);
+  });
+
+  it('ignores a round if it has no rankings', () => {
+    const rounds: BoulderingRound[] = [
+      ({
+        type: BoulderingRoundType.QUALIFIER,
+        index: 0,
+        quota: 3,
+        climbers: {
+          count: () => 3,
+        },
+        rankings: {
+          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+          bouldersPoints: [50, 50, 50, 50],
+          rankings: [
+            {
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climberId: 1,
+            },
+          ],
+        },
+      } as unknown) as BoulderingRound,
+      ({
+        type: BoulderingRoundType.FINAL,
+        index: 1,
+        climbers: {
+          count: () => 0,
+        },
+      } as unknown) as BoulderingRound,
+    ];
+
+    const rankings = boulderingRankingService.getRankings(rounds);
+
+    expect(rankings).toBeInstanceOf(Map);
+    expect(rankings.size).toEqual(1);
+    expect(rankings.get(1)).toEqual(1);
+  });
+
+  it('should get results when the rankings does not change between rounds', async () => {
+    const rounds: BoulderingRound[] = [
+      ({
+        type: BoulderingRoundType.QUALIFIER,
+        index: 0,
+        climbers: {
+          count: () => 2,
+        },
+        rankings: {
+          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+          bouldersPoints: [50, 50, 50, 50],
+          rankings: [
+            {
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climberId: 1,
+            },
+            {
+              tops: [true, true, true, false],
+              nbTops: 3,
+              points: 150,
+              ranking: 2,
+              climberId: 2,
+            },
+          ],
+        },
+      } as unknown) as BoulderingRound,
+      ({
+        type: BoulderingRoundType.FINAL,
+        index: 1,
+        climbers: {
+          count: () => 2,
+        },
+        rankings: {
+          type: BoulderingRoundRankingType.CIRCUIT,
+          rankings: [
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 2, 3, 4],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climberId: 1,
+            },
+            {
+              tops: [true, true, true, false],
+              topsInTries: [1, 2, 3, 0],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 2,
+              climberId: 2,
+            },
+          ],
+        },
+      } as unknown) as BoulderingRound,
+    ];
+
+    const rankings = boulderingRankingService.getRankings(rounds);
+
+    expect(rankings).toBeInstanceOf(Map);
+    expect(rankings.size).toEqual(2);
+    expect(rankings.get(1)).toEqual(1);
+    expect(rankings.get(2)).toEqual(2);
   });
 });
