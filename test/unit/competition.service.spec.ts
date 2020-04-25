@@ -21,6 +21,7 @@ import { Category } from '../../src/shared/types/category.interface';
 import { CategoryName } from '../../src/shared/types/category-name.enum';
 import { Sex } from '../../src/shared/types/sex.enum';
 import { givenCategory } from '../fixture/category.fixture';
+import { UpdateCompetitionByIdDto } from '../../src/competition/dto/in/body/update-competition-by-id.dto';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -385,5 +386,40 @@ describe('Competition service (unit)', () => {
         {} as CreateBoulderingResultDto,
       ),
     ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('updates a competition by id', async () => {
+    const competition = {
+      city: 'old city',
+    };
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    competitionRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    const dto: UpdateCompetitionByIdDto = {
+      city: 'new city',
+    };
+
+    const result = await competitionService.updateById(123, dto);
+
+    expect(result.city).toEqual(dto.city);
+    expect(competition.city).toEqual(dto.city);
+    expect(competitionRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(1);
+    expect(competitionRepositoryMock.persistAndFlush).toHaveBeenCalledWith(
+      competition,
+    );
+  });
+
+  it('throws 404 when updating an unknown competition', () => {
+    competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
+
+    return expect(
+      competitionService.updateById(123, {}),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

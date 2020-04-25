@@ -5,6 +5,7 @@ import {
   Get,
   HttpCode,
   Param,
+  Patch,
   Post,
   Put,
   UnprocessableEntityException,
@@ -70,6 +71,9 @@ import { BoulderingResultMapper } from '../shared/mappers/bouldering-result.mapp
 import { GetRankingsParamsDto } from './dto/in/params/get-rankings-params.dto';
 import { RankingsDto } from './dto/out/rankings.dto';
 import { RankingsMapper } from '../shared/mappers/rankings-mapper.service';
+import { GetCompetitionByIdParams } from './dto/in/params/get-competition-by-id.params';
+import { UpdateCompetitionByIdParams } from './dto/in/params/update-competition-by-id.params';
+import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -104,6 +108,37 @@ export class CompetitionController {
     @GetUser() owner: User,
   ): Promise<CompetitionDto> {
     const competition = await this.competitionService.create(dto, owner);
+    return this.mapper.map(competition);
+  }
+
+  @Get('/:competitionId')
+  @ApiOkResponse({ type: CompetitionDto })
+  @ApiOperation(GetOperationId(Competition.name, 'GetCompetitionById'))
+  async getById(
+    @Param() params: GetCompetitionByIdParams,
+  ): Promise<CompetitionDto> {
+    const competition = await this.competitionService.getOrFail(
+      params.competitionId,
+    );
+
+    return this.mapper.map(competition);
+  }
+
+  @Patch('/:competitionId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, OrganizerAuthorizationGuard)
+  @ApiOkResponse({ type: CompetitionDto })
+  @ApiOperation(GetOperationId(Competition.name, 'UpdateCompetitionById'))
+  async updateById(
+    @Param() params: UpdateCompetitionByIdParams,
+    @Body() dto: UpdateCompetitionByIdDto,
+  ): Promise<CompetitionDto> {
+    const competition = await this.competitionService.updateById(
+      params.competitionId,
+      dto,
+    );
+
     return this.mapper.map(competition);
   }
 
