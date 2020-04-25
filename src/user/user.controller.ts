@@ -51,6 +51,8 @@ import { AllowedAppRoles } from '../shared/decorators/allowed-app-roles.decorato
 import { OptionalJwtAuthenticationGuard } from '../shared/guards/optional-jwt-authentication.guard';
 import { UserAuthorizationGuard } from '../shared/authorization/user.authorization.guard';
 import { UserMapper } from '../shared/mappers/user.mapper';
+import { UserCompetitionRolesDto } from './dto/out/user-competition-roles.dto';
+import { GetUserCompetitionRolesParamsDto } from './dto/in/params/get-user-competition-roles-params.dto';
 
 @Controller('users')
 @ApiTags(User.name)
@@ -237,5 +239,42 @@ export class UserController {
     );
 
     return this.competitionMapper.mapArray(organizations);
+  }
+
+  @Get('/:userId/competition-roles')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
+  @ApiOkResponse({ type: UserCompetitionRolesDto })
+  @ApiOperation(GetOperationId(User.name, 'GetUserCompetitionsRoles'))
+  async getUserCompetitionRoles(
+    @Param() params: GetUserCompetitionRolesParamsDto,
+  ): Promise<UserCompetitionRolesDto> {
+    const [
+      organizations,
+      juryPresidencies,
+      judgements,
+      chiefRouteSettings,
+      routeSettings,
+      technicalDelegations,
+    ] = await Promise.all([
+      this.userService.getOrganizations(params.userId),
+      this.userService.getJuryPresidencies(params.userId),
+      this.userService.getJudgements(params.userId),
+      this.userService.getChiefRouteSettings(params.userId),
+      this.userService.getRouteSettings(params.userId),
+      this.userService.getTechnicalDelegations(params.userId),
+    ]);
+
+    return {
+      organizations: this.competitionMapper.mapArray(organizations),
+      juryPresidencies: this.competitionMapper.mapArray(juryPresidencies),
+      judgements: this.competitionMapper.mapArray(judgements),
+      chiefRouteSettings: this.competitionMapper.mapArray(chiefRouteSettings),
+      routeSettings: this.competitionMapper.mapArray(routeSettings),
+      technicalDelegations: this.competitionMapper.mapArray(
+        technicalDelegations,
+      ),
+    };
   }
 }
