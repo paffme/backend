@@ -72,7 +72,7 @@ import { GetRankingsParamsDto } from './dto/in/params/get-rankings-params.dto';
 import { RankingsDto } from './dto/out/rankings.dto';
 import { RankingsMapper } from '../shared/mappers/rankings-mapper.service';
 import { GetCompetitionByIdParams } from './dto/in/params/get-competition-by-id.params';
-import { UpdateCompetitionByIdParams } from './dto/in/params/update-competition-by-id.params';
+import { UpdateCompetitionByIdParamsDto } from './dto/in/params/update-competition-by-id-params.dto';
 import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
 
 @Controller('competitions')
@@ -131,7 +131,7 @@ export class CompetitionController {
   @ApiOkResponse({ type: CompetitionDto })
   @ApiOperation(GetOperationId(Competition.name, 'UpdateCompetitionById'))
   async updateById(
-    @Param() params: UpdateCompetitionByIdParams,
+    @Param() params: UpdateCompetitionByIdParamsDto,
     @Body() dto: UpdateCompetitionByIdDto,
   ): Promise<CompetitionDto> {
     const competition = await this.competitionService.updateById(

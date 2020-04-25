@@ -3,7 +3,7 @@ import { Type } from 'class-transformer';
 import { IsInt } from 'class-validator';
 import { Competition } from '../../../competition.entity';
 
-export class UpdateCompetitionByIdParams {
+export class UpdateCompetitionByIdParamsDto {
   @ApiProperty({ type: Number })
   @Type(() => Number)
   @IsInt()
