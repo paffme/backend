@@ -11,42 +11,33 @@ import { BaseEntity } from '../shared/base.entity';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
 import { BoulderingRound } from '../bouldering/round/bouldering-round.entity';
+import { Sex } from '../shared/types/sex.enum';
+import { CategoryName } from '../shared/types/category-name.enum';
+import { CompetitionType } from './types/competition-type.enum';
+import { Category } from '../shared/types/category.interface';
 
-export enum CompetitionType {
-  Bouldering = 'bouldering',
-  Lead = 'lead',
-  Speed = 'speed',
+interface ClimberRankingInfo {
+  id: typeof User.prototype.id;
+  firstName: typeof User.prototype.firstName;
+  lastName: typeof User.prototype.lastName;
+  club: typeof User.prototype.club;
 }
 
-export enum Sex {
-  Male = 'male',
-  Female = 'female',
-}
-
-export enum CategoryName {
-  Microbe = 'microbe',
-  Poussin = 'poussin',
-  Benjamin = 'benjamin',
-  Minime = 'minime',
-  Cadet = 'cadet',
-  Junior = 'junior',
-  Senior = 'senior',
-  Veteran = 'veteran',
-}
-
-export interface Category {
-  sex: Sex;
-  name: CategoryName;
-}
-
-interface Ranking {
+interface ClimberRanking {
   ranking: number;
-  climber: {
-    id: typeof User.prototype.id;
-    firstName: typeof User.prototype.firstName;
-    lastName: typeof User.prototype.lastName;
-    club: typeof User.prototype.club;
+  climber: ClimberRankingInfo;
+}
+
+export type Rankings = {
+  [category in CategoryName]?: {
+    [sex in Sex]?: ClimberRanking[];
   };
+};
+
+export enum CompetitionState {
+  PENDING = 'PENDING',
+  ONGOING = 'ONGOING',
+  ENDED = 'ENDED',
 }
 
 @Entity()
@@ -55,7 +46,10 @@ export class Competition extends BaseEntity {
   @Property()
   name: string;
 
-  @Enum()
+  @Enum(() => CompetitionState)
+  state: CompetitionState;
+
+  @Enum(() => CompetitionType)
   type: CompetitionType;
 
   @Property()
@@ -90,11 +84,14 @@ export class Competition extends BaseEntity {
       if the ranking algorithm change
   */
   @Property()
-  rankings: Ranking[] = [];
+  rankings: Rankings = {};
 
   @OneToMany(
     () => CompetitionRegistration,
     (registration) => registration.competition,
+    {
+      orphanRemoval: true,
+    },
   )
   registrations = new Collection<CompetitionRegistration>(this);
 
@@ -136,6 +133,21 @@ export class Competition extends BaseEntity {
   })
   organizers = new Collection<User>(this);
 
+  takesRegistrations(): boolean {
+    return (
+      this.state === CompetitionState.PENDING ||
+      this.state === CompetitionState.ONGOING
+    );
+  }
+
+  getSeason(): number {
+    if (this.startDate.getMonth() >= 8) {
+      return this.startDate.getFullYear();
+    }
+
+    return this.startDate.getFullYear() - 1;
+  }
+
   constructor(
     name: string,
     type: CompetitionType,
@@ -145,6 +157,7 @@ export class Competition extends BaseEntity {
     city: string,
     postalCode: string,
     categories: Category[],
+    state: CompetitionState = CompetitionState.PENDING,
   ) {
     super();
     this.name = name;
@@ -155,6 +168,7 @@ export class Competition extends BaseEntity {
     this.city = city;
     this.postalCode = postalCode;
     this.categories = categories;
+    this.state = state;
   }
 }
 

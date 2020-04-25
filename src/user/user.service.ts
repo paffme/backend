@@ -1,8 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  HttpException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -91,9 +89,16 @@ export class UserService {
       throw new ConflictException('email already used');
     }
 
-    const newUser = new User();
-    newUser.password = await this.hashPassword(password);
-    newUser.email = email.trim();
+    const hashedPassword = await this.hashPassword(password);
+
+    const newUser = new User(
+      dto.firstName,
+      dto.lastName,
+      dto.birthYear,
+      dto.sex,
+      email,
+      hashedPassword,
+    );
 
     await this.userRepository.persistAndFlush(newUser);
     return newUser;

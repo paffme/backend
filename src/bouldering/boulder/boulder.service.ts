@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { Boulder } from './boulder.entity';
-import { BoulderingRound } from '../round/bouldering-round.entity';
+import { BoulderingGroup } from '../group/bouldering-group.entity';
 
 @Injectable()
 export class BoulderService {
@@ -21,11 +21,11 @@ export class BoulderService {
     return boulder;
   }
 
-  async createMany(round: BoulderingRound, amount: number): Promise<Boulder[]> {
+  async createMany(group: BoulderingGroup, amount: number): Promise<Boulder[]> {
     const boulders: Boulder[] = [];
 
     for (let i = 0; i < amount; i++) {
-      const boulder = new Boulder(round, i);
+      const boulder = new Boulder(group, i);
       this.boulderRepository.persistLater(boulder);
       boulders.push(boulder);
     }

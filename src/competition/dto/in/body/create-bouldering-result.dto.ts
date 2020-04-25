@@ -3,7 +3,9 @@ import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
 import { User } from '../../../../user/user.entity';
 
 export class CreateBoulderingResultDto {
-  @ApiProperty()
+  @ApiProperty({
+    type: Number,
+  })
   @IsInt()
   @Min(0)
   climberId!: typeof User.prototype.id;

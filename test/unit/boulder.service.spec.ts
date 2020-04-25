@@ -4,7 +4,7 @@ import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { Test } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
-import { BoulderingRound } from '../../src/bouldering/round/bouldering-round.entity';
+import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.entity';
 
 const boulderRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -22,7 +22,7 @@ describe('Boulder service (unit)', () => {
         BoulderService,
         {
           provide: getRepositoryToken(Boulder),
-          useFactory: () => boulderRepositoryMock,
+          useFactory: (): typeof boulderRepositoryMock => boulderRepositoryMock,
         },
       ],
     }).compile();
@@ -57,8 +57,8 @@ describe('Boulder service (unit)', () => {
     boulderRepositoryMock.persistLater.mockImplementation(() => undefined);
     boulderRepositoryMock.flush.mockImplementation(async () => undefined);
 
-    const round = {} as BoulderingRound;
-    const boulders = await boulderService.createMany(round, 5);
+    const group = {} as BoulderingGroup;
+    const boulders = await boulderService.createMany(group, 5);
 
     expect(boulders).toHaveLength(5);
     expect(boulderRepositoryMock.persistLater).toHaveBeenCalledTimes(5);

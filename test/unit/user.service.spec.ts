@@ -14,6 +14,8 @@ import { AuthenticationService } from '../../src/shared/authentication/authentic
 import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
 import { JwtService } from '@nestjs/jwt';
 import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
+import * as uuid from 'uuid';
+import { Sex } from '../../src/shared/types/sex.enum';
 
 const userRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -34,11 +36,11 @@ describe('User service (unit)', () => {
         JwtService,
         {
           provide: getRepositoryToken(User),
-          useFactory: () => userRepositoryMock,
+          useFactory: (): typeof userRepositoryMock => userRepositoryMock,
         },
         {
           provide: JWT_MODULE_OPTIONS,
-          useFactory: () => ({}),
+          useFactory: (): {} => ({}),
         },
       ],
     }).compile();
@@ -79,8 +81,12 @@ describe('User service (unit)', () => {
 
     return expect(
       userService.register({
+        firstName: uuid.v4(),
+        lastName: uuid.v4(),
         email: 'super@email.com',
         password: String(Math.random()),
+        birthYear: 2000,
+        sex: Sex.Female,
       }),
     ).rejects.toBeInstanceOf(ConflictException);
   });

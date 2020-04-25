@@ -1,11 +1,27 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Category, CompetitionType } from '../../../competition.entity';
+import { Sex } from '../../../../shared/types/sex.enum';
+import { CategoryName } from '../../../../shared/types/category-name.enum';
+import { CompetitionType } from '../../../types/competition-type.enum';
+
+class CategoryDto {
+  @ApiProperty({
+    enum: Sex,
+  })
+  sex!: Sex;
+
+  @ApiProperty({
+    enum: CategoryName,
+  })
+  name!: CategoryName;
+}
 
 export class CreateCompetitionDTO {
   @ApiProperty()
   name!: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    enum: CompetitionType,
+  })
   type!: CompetitionType;
 
   @ApiProperty()
@@ -23,6 +39,9 @@ export class CreateCompetitionDTO {
   @ApiProperty()
   postalCode!: string;
 
-  @ApiProperty()
-  categories!: Category[];
+  @ApiProperty({
+    type: CategoryDto,
+    isArray: true,
+  })
+  categories!: CategoryDto[];
 }

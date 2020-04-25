@@ -8,6 +8,7 @@ import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
 import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
 import { UserService } from '../../src/user/user.service';
 import { CompetitionService } from '../../src/competition/competition.service';
+import { givenCreateCompetitionDto } from '../fixture/competition.fixture';
 
 describe('Competition (e2e)', () => {
   let app: NestExpressApplication;
@@ -45,15 +46,8 @@ describe('Competition (e2e)', () => {
     it('retrieves competitions', async function () {
       const { user } = await utils.givenUser();
       const competition = await utils.givenCompetition(user);
-
-      return api
-        .get('/api/competitions')
-        .expect(200)
-        .then((res) => {
-          expect(res.body.map((c: CompetitionDto) => c.id)).toContain(
-            competition.id,
-          );
-        });
+      const { body } = await api.get('/api/competitions').expect(200);
+      expect(body.map((c: CompetitionDto) => c.id)).toContain(competition.id);
     });
   });
 
@@ -61,19 +55,18 @@ describe('Competition (e2e)', () => {
     it('creates a competition', async function () {
       const { credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
-      const competition = utils.givenCompetitionData();
+      const competition = givenCreateCompetitionDto();
 
-      return api
+      const { body } = await api
         .post('/api/competitions')
         .set('Authorization', `Bearer ${auth.token}`)
         .send(competition)
-        .expect(201)
-        .then((res) => {
-          expect(res.body.name).toEqual(competition.name);
-          expect(res.body).toHaveProperty('id');
-          expect(res.body).toHaveProperty('createdAt');
-          expect(res.body).toHaveProperty('updatedAt');
-        });
+        .expect(201);
+
+      expect(body.name).toEqual(competition.name);
+      expect(body).toHaveProperty('id');
+      expect(body).toHaveProperty('createdAt');
+      expect(body).toHaveProperty('updatedAt');
     });
   });
 
@@ -123,7 +116,7 @@ describe('Competition (e2e)', () => {
         expect(registration).toBeTruthy();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to get registrations', async () => {
         await api
           .put('/api/competitions/999999/registrations/888888')
           .expect(401);
@@ -186,7 +179,7 @@ describe('Competition (e2e)', () => {
         expect(registration).toBeUndefined();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to delete registrations', async () => {
         await api
           .delete('/api/competitions/999999/registrations/888888')
           .expect(401);
@@ -274,7 +267,7 @@ describe('Competition (e2e)', () => {
         expect(juryPresident).toBeTruthy();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to add jury president', async () => {
         await api
           .put('/api/competitions/999999/jury-presidents/888888')
           .expect(401);
@@ -316,7 +309,7 @@ describe('Competition (e2e)', () => {
         expect(juryPresident).toBeUndefined();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to delete a jury president', async () => {
         await api
           .delete('/api/competitions/999999/jury-presidents/888888')
           .expect(401);
@@ -359,7 +352,7 @@ describe('Competition (e2e)', () => {
         expect(judge).toBeTruthy();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to add a judge', async () => {
         await api.put('/api/competitions/999999/judges/888888').expect(401);
       });
 
@@ -412,7 +405,7 @@ describe('Competition (e2e)', () => {
         expect(judge).toBeUndefined();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to get judges', async () => {
         await api.delete('/api/competitions/999999/judges/888888').expect(401);
       });
 
@@ -456,7 +449,7 @@ describe('Competition (e2e)', () => {
         expect(chiefRouteSetter).toBeTruthy();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to add a chief route setter', async () => {
         await api
           .put('/api/competitions/999999/chief-route-setters/888888')
           .expect(401);
@@ -522,7 +515,7 @@ describe('Competition (e2e)', () => {
         expect(chiefRouteSetter).toBeUndefined();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to delete a chief route setter', async () => {
         await api
           .delete('/api/competitions/999999/chief-route-setters/888888')
           .expect(401);
@@ -565,7 +558,7 @@ describe('Competition (e2e)', () => {
         expect(routeSetter).toBeTruthy();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to add a route setter', async () => {
         await api
           .put('/api/competitions/999999/route-setters/888888')
           .expect(401);
@@ -626,7 +619,7 @@ describe('Competition (e2e)', () => {
         expect(routeSetter).toBeUndefined();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to delete a route setter', async () => {
         await api
           .delete('/api/competitions/999999/route-setters/888888')
           .expect(401);
@@ -677,7 +670,7 @@ describe('Competition (e2e)', () => {
         expect(technicalDelegate).toBeTruthy();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to add a technical delegate', async () => {
         await api
           .put('/api/competitions/999999/technical-delegates/888888')
           .expect(401);
@@ -747,7 +740,7 @@ describe('Competition (e2e)', () => {
         expect(technicalDelegate).toBeUndefined();
       });
 
-      it('returns 401 when unauthenticated user do not own the accessed user', async () => {
+      it('returns 401 when unauthenticated user do not own the accessed user to delete a technical delegate', async () => {
         await api
           .delete('/api/competitions/999999/technical-delegates/888888')
           .expect(401);

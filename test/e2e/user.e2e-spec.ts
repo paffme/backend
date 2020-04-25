@@ -7,16 +7,16 @@ import { UserDto } from '../../src/user/dto/out/user.dto';
 import { configure } from '../../src/app.configuration';
 import TestUtils from '../utils';
 import { UserService } from '../../src/user/user.service';
-import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
 import { CompetitionDto } from '../../src/competition/dto/out/competition.dto';
 import { CompetitionRegistrationDto } from '../../src/competition/dto/out/competition-registration.dto';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { CompetitionService } from '../../src/competition/competition.service';
+import { Sex } from '../../src/shared/types/sex.enum';
+
+/* eslint-disable sonarjs/no-duplicate-string */
 
 describe('User (e2e)', () => {
   let app: NestExpressApplication;
-  let userService: UserService;
-  let configService: ConfigurationService;
   let utils: TestUtils;
   let api: supertest.SuperTest<supertest.Test>;
 
@@ -29,11 +29,6 @@ describe('User (e2e)', () => {
 
     configure(app);
     await app.init();
-    userService = moduleFixture.get<UserService>(UserService);
-    configService = moduleFixture.get<ConfigurationService>(
-      ConfigurationService,
-    );
-
     api = supertest(app.getHttpServer());
 
     utils = new TestUtils(
@@ -51,8 +46,12 @@ describe('User (e2e)', () => {
     await app.close();
   });
 
-  function checkUser(expectedUser: any, user: UserDto): void {
+  function checkUser(expectedUser: RegisterDto, user: UserDto): void {
     expect(user.email).toEqual(expectedUser.email);
+    expect(user.sex).toEqual(expectedUser.sex);
+    expect(user.birthYear).toEqual(expectedUser.birthYear);
+    expect(user.firstName).toEqual(expectedUser.firstName);
+    expect(user.lastName).toEqual(expectedUser.lastName);
     expect((user as any).password).toBeUndefined();
     expect(user).toHaveProperty('id');
     expect(user).toHaveProperty('createdAt');
@@ -60,41 +59,42 @@ describe('User (e2e)', () => {
   }
 
   describe('POST /users', () => {
-    it('creates a user', () => {
+    it('creates a user', async () => {
       const user: RegisterDto = {
+        firstName: uuid.v4().substr(0, 10),
+        lastName: uuid.v4().substr(0, 10),
         email: `${uuid.v4()}@${uuid.v4()}.fr`,
         password: uuid.v4().substr(0, 10),
+        sex: Sex.Female,
+        birthYear: 2000,
       };
 
-      return api
-        .post('/api/users')
-        .send(user)
-        .expect(201)
-        .then((res) => {
-          checkUser(user, res.body);
-        });
+      const { body } = await api.post('/api/users').send(user).expect(201);
+      checkUser(user, body);
     });
 
-    it('validates user creation', () => {
+    it('validates user creation', async () => {
       const user = {
         email: uuid.v4(),
         password: 444,
       };
 
-      return api
-        .post('/api/users')
-        .send(user)
-        .expect(422)
-        .then((res) => {
-          expect(res.body.statusCode).toEqual(422);
-          expect(res.body.error).toEqual('Validation Error');
-          expect(res.body.message).toEqual('Validation Error');
-          expect(Array.isArray(res.body.errors)).toBeTruthy();
-          expect(res.body.errors[0].property).toEqual('email');
-          expect(res.body.errors[0].constraints.isEmail).toBeTruthy();
-          expect(res.body.errors[1].property).toEqual('password');
-          expect(res.body.errors[1].constraints.length).toBeTruthy();
-        });
+      const { body } = await api.post('/api/users').send(user).expect(422);
+
+      expect(body.statusCode).toEqual(422);
+      expect(body.error).toEqual('Validation Error');
+      expect(body.message).toEqual('Validation Error');
+      expect(Array.isArray(body.errors)).toBeTruthy();
+      expect(body.errors[0].property).toEqual('email');
+      expect(body.errors[0].constraints.isEmail).toBeTruthy();
+      expect(body.errors[1].property).toEqual('password');
+      expect(body.errors[1].constraints.length).toBeTruthy();
+      expect(body.errors[2].property).toEqual('firstName');
+      expect(body.errors[2].constraints.length).toBeTruthy();
+      expect(body.errors[2].constraints.isString).toBeTruthy();
+      expect(body.errors[3].property).toEqual('lastName');
+      expect(body.errors[3].constraints.length).toBeTruthy();
+      expect(body.errors[3].constraints.isString).toBeTruthy();
     });
 
     it('returns 403 for authenticated user trying to create a user', async () => {
@@ -102,8 +102,12 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       const secondUser: RegisterDto = {
+        firstName: uuid.v4(),
+        lastName: uuid.v4(),
         email: `${uuid.v4()}@${uuid.v4()}.fr`,
         password: uuid.v4().substr(0, 10),
+        birthYear: 1500,
+        sex: Sex.Female,
       };
 
       await api
@@ -118,37 +122,35 @@ describe('User (e2e)', () => {
     it('creates a JWT', async () => {
       const { credentials, user } = await utils.givenUser();
 
-      await api
+      const { body } = await api
         .post('/api/users/token')
         .send({
           email: credentials.email,
           password: credentials.password,
         })
-        .expect(201)
-        .then((res) => {
-          expect(res.body).toHaveProperty('token');
-          expect(res.body).toHaveProperty('userId');
-          expect(res.body.userId).toEqual(user.id);
-          expect(res.body).toHaveProperty('expiresIn');
-          expect(res.body).toHaveProperty('createdAt');
-        });
+        .expect(201);
+
+      expect(body).toHaveProperty('token');
+      expect(body).toHaveProperty('userId');
+      expect(body.userId).toEqual(user.id);
+      expect(body).toHaveProperty('expiresIn');
+      expect(body).toHaveProperty('createdAt');
     });
 
     it('creates a JWT for an already authenticated user', async () => {
       const { user, credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
 
-      await api
+      const { body } = await api
         .post('/api/users/token')
         .set('Authorization', 'Bearer ' + auth.token)
         .send({
           email: credentials.email,
           password: credentials.password,
         })
-        .expect(201)
-        .then((res) => {
-          expect(res.body.userId).toEqual(user.id);
-        });
+        .expect(201);
+
+      expect(body.userId).toEqual(user.id);
     });
   });
 
@@ -157,13 +159,12 @@ describe('User (e2e)', () => {
       const { user, credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
 
-      await api
+      const { body } = await api
         .get('/api/users/' + auth.userId)
         .set('Authorization', 'Bearer ' + auth.token)
-        .expect(200)
-        .then((res) => {
-          checkUser(user, res.body);
-        });
+        .expect(200);
+
+      checkUser(user, body);
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
@@ -185,13 +186,12 @@ describe('User (e2e)', () => {
       const { credentials } = await utils.givenAdminUser();
       const auth = await utils.login(credentials);
 
-      await api
+      const { body } = await api
         .get('/api/users/' + user.id)
         .set('Authorization', 'Bearer ' + auth.token)
-        .expect(200)
-        .then((res) => {
-          checkUser(user, res.body);
-        });
+        .expect(200);
+
+      checkUser(user, body);
     });
   });
 
@@ -237,22 +237,21 @@ describe('User (e2e)', () => {
       const { user, credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
 
-      await api
+      const { body } = await api
         .patch('/api/users/' + auth.userId)
         .set('Authorization', 'Bearer ' + auth.token)
         .send({
           email: 'new@email.fr',
         })
-        .expect(200)
-        .then((res) => {
-          checkUser(
-            {
-              ...user,
-              email: 'new@email.fr',
-            },
-            res.body,
-          );
-        });
+        .expect(200);
+
+      checkUser(
+        {
+          ...user,
+          email: 'new@email.fr',
+        },
+        body,
+      );
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
@@ -274,22 +273,21 @@ describe('User (e2e)', () => {
       const { credentials } = await utils.givenAdminUser();
       const auth = await utils.login(credentials);
 
-      await api
+      const { body } = await api
         .patch('/api/users/' + user.id)
         .set('Authorization', 'Bearer ' + auth.token)
         .send({
           email: 'new@email.fr',
         })
-        .expect(200)
-        .then((res) => {
-          checkUser(
-            {
-              ...user,
-              email: 'new@email.fr',
-            },
-            res.body,
-          );
-        });
+        .expect(200);
+
+      checkUser(
+        {
+          ...user,
+          email: 'new@email.fr',
+        },
+        body,
+      );
     });
   });
 

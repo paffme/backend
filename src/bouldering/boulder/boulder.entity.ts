@@ -1,18 +1,18 @@
 import { BaseEntity } from '../../shared/base.entity';
 import { Entity, ManyToOne, Property } from 'mikro-orm';
-import { BoulderingRound } from '../round/bouldering-round.entity';
+import { BoulderingGroup } from '../group/bouldering-group.entity';
 
 @Entity()
 export class Boulder extends BaseEntity {
   @ManyToOne()
-  round: BoulderingRound;
+  group: BoulderingGroup;
 
   @Property()
   index: number;
 
-  constructor(round: BoulderingRound, index: number) {
+  constructor(group: BoulderingGroup, index: number) {
     super();
-    this.round = round;
+    this.group = group;
     this.index = index;
   }
 }

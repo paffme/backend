@@ -1,33 +1,46 @@
-import { IsEmail } from 'class-validator';
-import { Collection, Entity, ManyToMany, OneToMany, Property } from 'mikro-orm';
+import {
+  Collection,
+  Entity,
+  Enum,
+  ManyToMany,
+  OneToMany,
+  Property,
+} from 'mikro-orm';
+
 import { SystemRole } from './user-role.enum';
 import { BaseEntity } from '../shared/base.entity';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { Competition } from '../competition/competition.entity';
+import { CategoryName } from '../shared/types/category-name.enum';
+import { Sex } from '../shared/types/sex.enum';
+import { InternalServerErrorException } from '@nestjs/common';
+import { Category } from '../shared/types/category.interface';
 
 @Entity()
 export class User extends BaseEntity {
   @Property({ hidden: true })
-  @IsEmail()
-  email!: string;
+  email: string;
 
   @Property()
-  firstName?: string;
+  firstName: string;
 
   @Property()
-  lastName?: string;
+  lastName: string;
+
+  @Property()
+  birthYear: number;
+
+  @Enum(() => Sex)
+  sex: Sex;
 
   @Property()
   club?: string;
 
-  @Property({
-    type: String,
-    hidden: true,
-  })
+  @Enum(() => SystemRole)
   systemRole: SystemRole = SystemRole.User;
 
   @Property({ hidden: true, length: 512 })
-  password!: string;
+  password: string;
 
   @OneToMany(() => CompetitionRegistration, (item) => item.climber)
   registrations: Collection<CompetitionRegistration> = new Collection<
@@ -58,6 +71,53 @@ export class User extends BaseEntity {
 
   @ManyToMany(() => Competition, (competition) => competition.organizers)
   organizations: Collection<Competition> = new Collection<Competition>(this);
+
+  getCategory(season: number): Category {
+    const delta = season - this.birthYear;
+    let categoryName: CategoryName;
+
+    if (delta >= 40) {
+      categoryName = CategoryName.Veteran;
+    } else if (delta >= 19) {
+      categoryName = CategoryName.Senior;
+    } else if (delta >= 17) {
+      categoryName = CategoryName.Junior;
+    } else if (delta >= 15) {
+      categoryName = CategoryName.Cadet;
+    } else if (delta >= 13) {
+      categoryName = CategoryName.Minime;
+    } else if (delta >= 11) {
+      categoryName = CategoryName.Benjamin;
+    } else if (delta >= 9) {
+      categoryName = CategoryName.Poussin;
+    } else if (delta >= 7) {
+      categoryName = CategoryName.Microbe;
+    } else {
+      throw new InternalServerErrorException('Unhandled category');
+    }
+
+    return {
+      name: categoryName,
+      sex: this.sex,
+    };
+  }
+
+  constructor(
+    firstName: string,
+    lastName: string,
+    birthYear: number,
+    sex: Sex,
+    email: string,
+    password: string,
+  ) {
+    super();
+    this.firstName = firstName;
+    this.lastName = lastName;
+    this.birthYear = birthYear;
+    this.sex = sex;
+    this.email = email.trim();
+    this.password = password;
+  }
 }
 
 export type UserRelation =

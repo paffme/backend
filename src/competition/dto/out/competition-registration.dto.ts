@@ -4,9 +4,13 @@ import { Competition } from '../../competition.entity';
 import { BaseDto } from '../../../shared/base.dto';
 
 export class CompetitionRegistrationDto extends BaseDto {
-  @ApiProperty()
+  @ApiProperty({
+    type: Number,
+  })
   userId!: typeof User.prototype.id;
 
-  @ApiProperty()
+  @ApiProperty({
+    type: Number,
+  })
   competitionId!: typeof Competition.prototype.id;
 }

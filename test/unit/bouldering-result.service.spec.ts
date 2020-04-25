@@ -4,14 +4,14 @@ import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { BoulderingResultService } from '../../src/bouldering/result/bouldering-result.service';
 import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
 import { RepositoryMock } from './mocks/types';
-import {
-  BoulderingRound,
-  BoulderingRoundRankingType,
-} from '../../src/bouldering/round/bouldering-round.entity';
+import { BoulderingRoundRankingType } from '../../src/bouldering/round/bouldering-round.entity';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { User } from '../../src/user/user.entity';
 import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
 import { UnprocessableEntityException } from '@nestjs/common';
+import { givenBoulderingRound } from '../fixture/bouldering-round.fixture';
+import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.entity';
+import { givenBoulderingGroup } from '../fixture/bouldering-group.fixture';
 
 const boulderingResultRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -29,7 +29,8 @@ describe('Bouldering result service (unit)', () => {
         BoulderingResultService,
         {
           provide: getRepositoryToken(BoulderingResult),
-          useFactory: () => boulderingResultRepositoryMock,
+          useFactory: (): typeof boulderingResultRepositoryMock =>
+            boulderingResultRepositoryMock,
         },
       ],
     }).compile();
@@ -43,7 +44,7 @@ describe('Bouldering result service (unit)', () => {
   });
 
   it('creates a new instance', () => {
-    const round = {} as BoulderingRound;
+    const group = {} as BoulderingGroup;
     const boulder = {} as Boulder;
     const user = {} as User;
 
@@ -52,13 +53,13 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const instance = boulderingResultService.createNewInstance(
-      round,
+      group,
       boulder,
       user,
     );
 
     expect(instance.climber).toBe(user);
-    expect(instance.round).toBe(round);
+    expect(instance.group).toBe(group);
     expect(instance.boulder).toBe(boulder);
     expect(instance.boulder).toBe(boulder);
 
@@ -72,7 +73,7 @@ describe('Bouldering result service (unit)', () => {
   });
 
   it('getOrCreateNewInstance gets a new instance', async () => {
-    const round = {} as BoulderingRound;
+    const group = {} as BoulderingGroup;
     const boulder = {} as Boulder;
     const user = {} as User;
 
@@ -85,7 +86,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const instance = await boulderingResultService.getOrCreateNewInstance(
-      round,
+      group,
       boulder,
       user,
     );
@@ -93,7 +94,7 @@ describe('Bouldering result service (unit)', () => {
     expect(boulderingResultRepositoryMock.findOne).toHaveBeenCalledTimes(1);
     expect(boulderingResultRepositoryMock.findOne).toHaveBeenCalledWith({
       climber: user,
-      round,
+      group,
       boulder,
     });
 
@@ -107,7 +108,7 @@ describe('Bouldering result service (unit)', () => {
   });
 
   it('getOrCreateNewInstance gets a already existing instance', async () => {
-    const round = {} as BoulderingRound;
+    const group = {} as BoulderingGroup;
     const boulder = {} as Boulder;
     const user = {} as User;
 
@@ -118,7 +119,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const res = await boulderingResultService.getOrCreateNewInstance(
-      round,
+      group,
       boulder,
       user,
     );
@@ -128,7 +129,7 @@ describe('Bouldering result service (unit)', () => {
 
     expect(boulderingResultRepositoryMock.findOne).toHaveBeenCalledWith({
       climber: user,
-      round,
+      group,
       boulder,
     });
 
@@ -141,9 +142,13 @@ describe('Bouldering result service (unit)', () => {
     const boulder = {} as Boulder;
     const instance = {} as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-    } as BoulderingRound;
+    });
+
+    const group = givenBoulderingGroup({
+      round,
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -159,7 +164,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const res = await boulderingResultService.addResult(
-      round,
+      group,
       boulder,
       user,
       dto,
@@ -176,7 +181,7 @@ describe('Bouldering result service (unit)', () => {
 
     expect(boulderingResultRepositoryMock.findOne).toHaveBeenCalledWith({
       climber: user,
-      round,
+      group,
       boulder,
     });
 
@@ -198,9 +203,13 @@ describe('Bouldering result service (unit)', () => {
       tries: 0,
     } as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
-    } as BoulderingRound;
+    });
+
+    const group = givenBoulderingGroup({
+      round,
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -218,7 +227,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const res = await boulderingResultService.addResult(
-      round,
+      group,
       boulder,
       user,
       dto,
@@ -235,7 +244,7 @@ describe('Bouldering result service (unit)', () => {
 
     expect(boulderingResultRepositoryMock.findOne).toHaveBeenCalledWith({
       climber: user,
-      round,
+      group,
       boulder,
     });
 
@@ -257,9 +266,13 @@ describe('Bouldering result service (unit)', () => {
       tries: 0,
     } as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.CIRCUIT,
-    } as BoulderingRound;
+    });
+
+    const group = givenBoulderingGroup({
+      round,
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -277,7 +290,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const res = await boulderingResultService.addResult(
-      round,
+      group,
       boulder,
       user,
       dto,
@@ -294,7 +307,7 @@ describe('Bouldering result service (unit)', () => {
 
     expect(boulderingResultRepositoryMock.findOne).toHaveBeenCalledWith({
       climber: user,
-      round,
+      group,
       boulder,
     });
 
@@ -311,9 +324,13 @@ describe('Bouldering result service (unit)', () => {
     const boulder = {} as Boulder;
     const instance = {} as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-    } as BoulderingRound;
+    });
+
+    const group = givenBoulderingGroup({
+      round,
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -329,7 +346,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     return expect(
-      boulderingResultService.addResult(round, boulder, user, dto),
+      boulderingResultService.addResult(group, boulder, user, dto),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
@@ -337,9 +354,13 @@ describe('Bouldering result service (unit)', () => {
     const boulder = {} as Boulder;
     const instance = {} as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-    } as BoulderingRound;
+    });
+
+    const group = givenBoulderingGroup({
+      round,
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -355,7 +376,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     return expect(
-      boulderingResultService.addResult(round, boulder, user, dto),
+      boulderingResultService.addResult(group, boulder, user, dto),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
@@ -370,9 +391,13 @@ describe('Bouldering result service (unit)', () => {
       zoneInTries: 5,
     } as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.CIRCUIT,
-    } as BoulderingRound;
+    });
+
+    const group = givenBoulderingGroup({
+      round,
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -388,7 +413,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const res = await boulderingResultService.addResult(
-      round,
+      group,
       boulder,
       user,
       dto,
@@ -413,9 +438,13 @@ describe('Bouldering result service (unit)', () => {
       zoneInTries: 5,
     } as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.CIRCUIT,
-    } as BoulderingRound;
+    });
+
+    const group = givenBoulderingGroup({
+      round,
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -431,7 +460,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const res = await boulderingResultService.addResult(
-      round,
+      group,
       boulder,
       user,
       dto,
@@ -456,9 +485,13 @@ describe('Bouldering result service (unit)', () => {
       zoneInTries: 0,
     } as BoulderingResult;
 
-    const round = {
+    const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.CIRCUIT,
-    } as BoulderingRound;
+    });
+
+    const group = givenBoulderingGroup({
+      round,
+    });
 
     const user = {
       id: utils.getRandomId(),
@@ -474,7 +507,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const res = await boulderingResultService.addResult(
-      round,
+      group,
       boulder,
       user,
       dto,

@@ -2,18 +2,10 @@ import { RegisterDto } from '../src/user/dto/in/body/register.dto';
 import * as uuid from 'uuid';
 import { TokenResponseDto } from '../src/user/dto/out/token-response.dto';
 import { CredentialsDto } from '../src/user/dto/in/body/credentials.dto';
-import { CreateCompetitionDTO } from '../src/competition/dto/in/body/create-competition.dto';
 import { MikroORM } from 'mikro-orm';
 import { User } from '../src/user/user.entity';
 import { SystemRole } from '../src/user/user-role.enum';
-
-import {
-  CategoryName,
-  Competition,
-  CompetitionType,
-  Sex,
-} from '../src/competition/competition.entity';
-
+import { Competition } from '../src/competition/competition.entity';
 import { UserService } from '../src/user/user.service';
 import { CompetitionService } from '../src/competition/competition.service';
 import { CompetitionRegistration } from '../src/shared/entity/competition-registration.entity';
@@ -23,6 +15,11 @@ import {
   BoulderingRoundRankingType,
   BoulderingRoundType,
 } from '../src/bouldering/round/bouldering-round.entity';
+import { CreateBoulderingResultDto } from '../src/competition/dto/in/body/create-bouldering-result.dto';
+import { Boulder } from '../src/bouldering/boulder/boulder.entity';
+import { givenCreateCompetitionDto } from './fixture/competition.fixture';
+import { Sex } from '../src/shared/types/sex.enum';
+import { CategoryName } from '../src/shared/types/category-name.enum';
 
 // FIXME, cut this utils in multiple parts to remove ts-ignore comments
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
@@ -42,13 +39,19 @@ export default class TestUtils {
     this.orm.em.clear();
   }
 
-  async givenUser(): Promise<{
+  async givenUser(
+    data?: Partial<RegisterDto>,
+  ): Promise<{
     user: User;
     credentials: CredentialsDto;
   }> {
     const registerDto: RegisterDto = {
-      email: `${uuid.v4()}@${uuid.v4()}.fr`,
-      password: uuid.v4().substr(0, 10),
+      firstName: data?.firstName ?? uuid.v4(),
+      lastName: data?.lastName ?? uuid.v4(),
+      email: data?.email ?? `${uuid.v4()}@${uuid.v4()}.fr`,
+      password: data?.password ?? uuid.v4().substr(0, 10),
+      birthYear: data?.birthYear ?? 2000,
+      sex: data?.sex ?? Sex.Female,
     };
 
     return {
@@ -63,8 +66,12 @@ export default class TestUtils {
     credentials: CredentialsDto;
   }> {
     const registerDto: RegisterDto = {
+      firstName: uuid.v4(),
+      lastName: uuid.v4(),
       email: `${uuid.v4()}@${uuid.v4()}.fr`,
       password: uuid.v4().substr(0, 10),
+      birthYear: 2000,
+      sex: Sex.Female,
     };
 
     // @ts-ignore
@@ -83,51 +90,15 @@ export default class TestUtils {
     };
   }
 
-  givenCompetitionData(): CreateCompetitionDTO {
-    const now = new Date();
-
-    const today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      0,
-      0,
-      0,
-      0,
-    );
-
-    const tomorrow = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      0,
-      0,
-      0,
-      0,
-    );
-
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    return {
-      address: uuid.v4(),
-      categories: [
-        {
-          sex: Sex.Male,
-          name: CategoryName.Minime,
-        },
-      ],
-      city: uuid.v4(),
-      name: uuid.v4(),
-      postalCode: uuid.v4(),
-      type: CompetitionType.Lead,
-      startDate: today,
-      endDate: tomorrow,
-    };
-  }
-
-  async givenCompetition(user: User): Promise<Competition> {
+  async givenCompetition(
+    user: User,
+    competitionData?: Partial<Competition>,
+  ): Promise<Competition> {
     // @ts-ignore
-    return this.competitionService.create(this.givenCompetitionData(), user);
+    return this.competitionService.create(
+      givenCreateCompetitionDto(competitionData),
+      user,
+    );
   }
 
   login(credentials: CredentialsDto): Promise<TokenResponseDto> {
@@ -243,9 +214,34 @@ export default class TestUtils {
       rankingType:
         partialDto?.rankingType ?? BoulderingRoundRankingType.CIRCUIT,
       type: partialDto?.type ?? BoulderingRoundType.QUALIFIER,
+      category: partialDto?.category ?? CategoryName.Minime,
+      sex: partialDto?.sex ?? Sex.Female,
     };
 
     // @ts-ignore
     return this.competitionService.addBoulderingRound(competition.id, dto);
+  }
+
+  addBoulderingResult(
+    competition: Competition,
+    round: BoulderingRound,
+    boulder: Boulder,
+    climber: User,
+    partialDto?: Partial<CreateBoulderingResultDto>,
+  ): Promise<unknown> {
+    const dto: CreateBoulderingResultDto = {
+      climberId: climber.id,
+      top: partialDto?.top ?? false,
+      zone: partialDto?.zone ?? false,
+      try: partialDto?.try ?? true,
+    };
+
+    // @ts-ignore
+    return this.competitionService.addBoulderingResult(
+      competition.id,
+      round.id,
+      boulder.id,
+      dto,
+    );
   }
 }

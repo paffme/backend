@@ -6,33 +6,53 @@ import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { Competition } from '../../../competition/competition.entity';
 
 export class BoulderingResultDto {
-  @ApiProperty()
-  id!: typeof BoulderingResult.prototype.id;
+  @ApiProperty({
+    type: Number,
+  })
+  readonly id!: typeof BoulderingResult.prototype.id;
 
-  @ApiProperty()
-  climberId!: typeof User.prototype.id;
+  @ApiProperty({
+    type: Number,
+  })
+  readonly climberId!: typeof User.prototype.id;
 
-  @ApiProperty()
-  competitionId!: typeof Competition.prototype.id;
+  @ApiProperty({
+    type: Number,
+  })
+  readonly competitionId!: typeof Competition.prototype.id;
 
-  @ApiProperty()
-  roundId!: typeof BoulderingRound.prototype.id;
+  @ApiProperty({
+    type: Number,
+  })
+  readonly roundId!: typeof BoulderingRound.prototype.id;
 
-  @ApiProperty()
-  boulderId!: typeof Boulder.prototype.id;
+  @ApiProperty({
+    type: Number,
+  })
+  readonly boulderId!: typeof Boulder.prototype.id;
 
-  @ApiProperty()
-  top!: typeof BoulderingResult.prototype.top;
+  @ApiProperty({
+    type: Boolean,
+  })
+  readonly top!: typeof BoulderingResult.prototype.top;
 
-  @ApiPropertyOptional()
-  topInTries?: typeof BoulderingResult.prototype.topInTries;
+  @ApiPropertyOptional({
+    type: Number,
+  })
+  readonly topInTries?: typeof BoulderingResult.prototype.topInTries;
 
-  @ApiPropertyOptional()
-  zone?: typeof BoulderingResult.prototype.zone;
+  @ApiPropertyOptional({
+    type: Boolean,
+  })
+  readonly zone?: typeof BoulderingResult.prototype.zone;
 
-  @ApiPropertyOptional()
-  zoneInTries?: typeof BoulderingResult.prototype.zoneInTries;
+  @ApiPropertyOptional({
+    type: Number,
+  })
+  readonly zoneInTries?: typeof BoulderingResult.prototype.zoneInTries;
 
-  @ApiPropertyOptional()
-  tries?: typeof BoulderingResult.prototype.tries;
+  @ApiPropertyOptional({
+    type: Number,
+  })
+  readonly tries?: typeof BoulderingResult.prototype.tries;
 }

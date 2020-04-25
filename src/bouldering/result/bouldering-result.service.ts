@@ -1,12 +1,11 @@
 import { Injectable, UnprocessableEntityException } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
-import { BoulderingRound } from '../round/bouldering-round.entity';
 import { BoulderingResult } from './bouldering-result.entity';
 import { CreateBoulderingResultDto } from '../../competition/dto/in/body/create-bouldering-result.dto';
 import { User } from '../../user/user.entity';
 import { Boulder } from '../boulder/boulder.entity';
-import { BoulderingRoundService } from '../round/bouldering-round.service';
+import { BoulderingGroup } from '../group/bouldering-group.entity';
 
 @Injectable()
 export class BoulderingResultService {
@@ -18,45 +17,44 @@ export class BoulderingResultService {
   ) {}
 
   createNewInstance(
-    round: BoulderingRound,
+    group: BoulderingGroup,
     boulder: Boulder,
     climber: User,
   ): BoulderingResult {
-    const result = new BoulderingResult(climber, round, boulder);
+    const result = new BoulderingResult(climber, group, boulder);
     this.boulderingResultRepository.persistLater(result);
     return result;
   }
 
   async getOrCreateNewInstance(
-    round: BoulderingRound,
+    group: BoulderingGroup,
     boulder: Boulder,
     climber: User,
   ): Promise<BoulderingResult> {
     const result = await this.boulderingResultRepository.findOne({
       climber,
       boulder,
-      round,
+      group,
     });
 
     if (!result) {
-      return this.createNewInstance(round, boulder, climber);
+      return this.createNewInstance(group, boulder, climber);
     }
 
     return result;
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   async addResult(
-    round: BoulderingRound,
+    group: BoulderingGroup,
     boulder: Boulder,
     climber: User,
     dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResult> {
-    const result = await this.getOrCreateNewInstance(round, boulder, climber);
+    const result = await this.getOrCreateNewInstance(group, boulder, climber);
 
     if (dto.try) {
-      if (
-        !BoulderingRoundService.isRankingWithCountedTries(round.rankingType)
-      ) {
+      if (!group.round.isRankingWithCountedTries()) {
         throw new UnprocessableEntityException(
           "Can't add a try for this kind of round",
         );
@@ -68,23 +66,18 @@ export class BoulderingResultService {
     if (typeof dto.top === 'boolean') {
       result.top = dto.top;
 
-      if (BoulderingRoundService.isRankingWithCountedTries(round.rankingType)) {
+      if (group.round.isRankingWithCountedTries()) {
         result.topInTries = result.top ? result.tries : 0;
       }
 
-      if (
-        !result.zone &&
-        BoulderingRoundService.isRankingWithCountedZones(round.rankingType)
-      ) {
+      if (!result.zone && group.round.isRankingWithCountedZones()) {
         // When there is a top there is automatically a zone
         dto.zone = true;
       }
     }
 
     if (typeof dto.zone === 'boolean') {
-      if (
-        !BoulderingRoundService.isRankingWithCountedZones(round.rankingType)
-      ) {
+      if (!group.round.isRankingWithCountedZones()) {
         throw new UnprocessableEntityException(
           "Can't add a zone for this kind of round",
         );

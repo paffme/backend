@@ -1,14 +1,17 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   NotFoundException,
+  NotImplementedException,
 } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import {
   Competition,
   CompetitionRelation,
+  Rankings,
   UserCompetitionRelation,
 } from './competition.entity';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
@@ -16,13 +19,15 @@ import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
 import { UserService } from '../user/user.service';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
-import { BoulderingRoundDto } from '../bouldering/dto/out/bouldering-round.dto';
 import { BoulderingRoundService } from '../bouldering/round/bouldering-round.service';
 import { BoulderingRound } from '../bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
 import { BoulderingResult } from '../bouldering/result/bouldering-result.entity';
 import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
 import { Boulder } from '../bouldering/boulder/boulder.entity';
+import { BoulderingRankingService } from '../bouldering/ranking/bouldering-ranking.service';
+import { CompetitionType } from './types/competition-type.enum';
+import { Category } from '../shared/types/category.interface';
 
 @Injectable()
 export class CompetitionService {
@@ -36,19 +41,8 @@ export class CompetitionService {
     mapper: CompetitionMapper,
     private readonly userService: UserService,
     private readonly boulderingRoundService: BoulderingRoundService,
+    private readonly boulderingRankingService: BoulderingRankingService,
   ) {}
-
-  async existsOrFail(
-    competitionId: typeof Competition.prototype.id,
-  ): Promise<void> {
-    const count = await this.competitionRepository.count({
-      id: competitionId,
-    });
-
-    if (count !== 1) {
-      throw new NotFoundException('Competition not found');
-    }
-  }
 
   async getOrFail(
     competitionId: typeof Competition.prototype.id,
@@ -93,11 +87,39 @@ export class CompetitionService {
     userId: typeof User.prototype.id,
   ): Promise<void> {
     const competition = await this.getOrFail(competitionId);
+
+    if (!competition.takesRegistrations()) {
+      throw new BadRequestException(
+        'Registrations for this competition are closed.',
+      );
+    }
+
     const user = await this.userService.getOrFail(userId);
 
-    await this.competitionRegistrationRepository.persistAndFlush(
+    this.competitionRegistrationRepository.persistLater(
       new CompetitionRegistration(competition, user),
     );
+
+    if (competition.type === CompetitionType.Bouldering) {
+      const season = competition.getSeason();
+      const rounds = await competition.boulderingRounds.loadItems();
+
+      const firstRound = rounds.find((r) => {
+        const climberCategory = user.getCategory(season);
+
+        return (
+          r.index === 0 &&
+          r.category === climberCategory.name &&
+          r.sex === climberCategory.sex
+        );
+      });
+
+      if (firstRound && firstRound.takesNewClimbers()) {
+        await this.boulderingRoundService.addClimbers(firstRound, user);
+      }
+    }
+
+    await this.competitionRegistrationRepository.flush();
   }
 
   async getRegistrations(
@@ -313,6 +335,7 @@ export class CompetitionService {
   ): Promise<BoulderingRound> {
     const competition = await this.getOrFail(competitionId, [
       'boulderingRounds',
+      'registrations',
     ]);
 
     return this.boulderingRoundService.createRound(competition, dto);
@@ -324,11 +347,94 @@ export class CompetitionService {
     boulderId: typeof Boulder.prototype.id,
     dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResult> {
-    const [, user] = await Promise.all([
-      this.existsOrFail(competitionId),
+    const [competition, user] = await Promise.all([
+      this.getOrFail(competitionId, ['registrations']),
       this.userService.getOrFail(dto.climberId),
     ]);
 
-    return this.boulderingRoundService.addResult(roundId, boulderId, user, dto);
+    const registrations = competition.registrations.getItems();
+    const climberRegistered = registrations.find(
+      (r) => r.climber.id === user.id,
+    );
+
+    if (!climberRegistered) {
+      throw new ForbiddenException('Climber not registered');
+    }
+
+    const result = await this.boulderingRoundService.addResult(
+      roundId,
+      boulderId,
+      user,
+      dto,
+    );
+
+    await this.updateRankingsForCategory(
+      competition,
+      user.getCategory(competition.getSeason()),
+    );
+
+    return result;
+  }
+
+  private async updateRankingsForCategory(
+    competition: Competition,
+    category: Category,
+  ): Promise<void> {
+    let rankings: Map<typeof User.prototype.id, number>;
+
+    if (competition.type === CompetitionType.Bouldering) {
+      const rounds = await competition.boulderingRounds.loadItems();
+      const categoryRounds = rounds.filter(
+        (r) => r.category === category.name && r.sex === category.sex,
+      );
+
+      rankings = this.boulderingRankingService.getRankings(categoryRounds);
+    } else {
+      throw new NotImplementedException();
+    }
+
+    const season = competition.getSeason();
+
+    const climbers = competition.registrations
+      .getItems()
+      .filter((r) => {
+        const climberCategory = r.climber.getCategory(season);
+
+        return (
+          climberCategory.sex === category.sex &&
+          climberCategory.name === category.name
+        );
+      })
+      .map((r) => r.climber);
+
+    const rankingsByCategory = (competition.rankings[category.name] =
+      competition.rankings[category.name] ?? {});
+
+    rankingsByCategory[category.sex] = Array.from(
+      rankings,
+      ([climberId, ranking]) => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const climber = climbers.find((c) => c.id === climberId)!;
+
+        return {
+          ranking,
+          climber: {
+            id: climberId,
+            firstName: climber.firstName,
+            lastName: climber.lastName,
+            club: climber.club,
+          },
+        };
+      },
+    );
+
+    await this.competitionRepository.persistAndFlush(competition);
+  }
+
+  async getRankings(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<Rankings> {
+    const competition = await this.getOrFail(competitionId);
+    return competition.rankings;
   }
 }

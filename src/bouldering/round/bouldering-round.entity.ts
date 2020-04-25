@@ -2,7 +2,6 @@ import {
   Collection,
   Entity,
   Enum,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   Property,
@@ -11,9 +10,10 @@ import {
 import { Competition } from '../../competition/competition.entity';
 import { BaseRound } from '../../competition/base-round';
 import { User } from '../../user/user.entity';
-import { BoulderingResult } from '../result/bouldering-result.entity';
 import { BaseEntity } from '../../shared/base.entity';
-import { Boulder } from '../boulder/boulder.entity';
+import { CategoryName } from '../../shared/types/category-name.enum';
+import { Sex } from '../../shared/types/sex.enum';
+import { BoulderingGroup } from '../group/bouldering-group.entity';
 
 export enum BoulderingRoundRankingType {
   CIRCUIT = 'CIRCUIT',
@@ -25,6 +25,11 @@ export enum BoulderingRoundType {
   QUALIFIER = 'QUALIFIER',
   SEMI_FINAL = 'SEMI_FINAL',
   FINAL = 'FINAL',
+}
+
+interface BaseGroup<RankingType> {
+  id: number;
+  rankings: RankingType[];
 }
 
 export interface BaseBoulderingRoundRanking {
@@ -42,12 +47,12 @@ export interface BoulderingRoundCountedRanking
 
 export interface BoulderingRoundCircuitRankings {
   type: BoulderingRoundRankingType.CIRCUIT;
-  rankings: BoulderingRoundCountedRanking[];
+  groups: BaseGroup<BoulderingRoundCountedRanking>[];
 }
 
 export interface BoulderingRoundLimitedContestRankings {
   type: BoulderingRoundRankingType.LIMITED_CONTEST;
-  rankings: BoulderingRoundCountedRanking[];
+  groups: BaseGroup<BoulderingRoundCountedRanking>[];
 }
 
 export interface BoulderingRoundUnlimitedContestRanking
@@ -57,10 +62,16 @@ export interface BoulderingRoundUnlimitedContestRanking
   points: number;
 }
 
+interface BoulderingRoundUnlimitedContestGroup<RankingType>
+  extends BaseGroup<RankingType> {
+  bouldersPoints: number[];
+}
+
 export interface BoulderingRoundUnlimitedContestRankings {
   type: BoulderingRoundRankingType.UNLIMITED_CONTEST;
-  rankings: BoulderingRoundUnlimitedContestRanking[];
-  bouldersPoints: number[];
+  groups: BoulderingRoundUnlimitedContestGroup<
+    BoulderingRoundUnlimitedContestRanking
+  >[];
 }
 
 export type BoulderingRoundRankings =
@@ -68,11 +79,26 @@ export type BoulderingRoundRankings =
   | BoulderingRoundLimitedContestRankings
   | BoulderingRoundUnlimitedContestRankings;
 
+export enum BoulderingRoundState {
+  PENDING = 'PENDING',
+  ONGOING = 'ONGOING',
+  ENDED = 'ENDED',
+}
+
 @Entity()
 export class BoulderingRound extends BaseEntity
-  implements BaseRound<BoulderingResult> {
+  implements BaseRound<BoulderingGroup> {
+  @Enum(() => CategoryName)
+  category: CategoryName;
+
+  @Enum(() => Sex)
+  sex: Sex;
+
   @Property()
   name: string;
+
+  @Enum(() => BoulderingRoundState)
+  state: BoulderingRoundState = BoulderingRoundState.PENDING;
 
   @Property()
   index: number;
@@ -83,29 +109,19 @@ export class BoulderingRound extends BaseEntity
   @Property()
   quota: number;
 
-  @OneToMany(() => Boulder, (boulder) => boulder.round)
-  boulders: Collection<Boulder> = new Collection<Boulder>(this);
-
   @ManyToOne()
   competition: Competition;
 
-  @Enum()
+  @Enum(() => BoulderingRoundRankingType)
   rankingType: BoulderingRoundRankingType;
 
-  @Enum()
+  @Enum(() => BoulderingRoundType)
   type: BoulderingRoundType;
 
-  @ManyToMany(() => User)
-  climbers: Collection<User> = new Collection<User>(this);
-
-  // This will store all results for all the user in this round
-  @OneToMany(
-    () => BoulderingResult,
-    (boulderingResult) => boulderingResult.round,
-  )
-  results: Collection<BoulderingResult> = new Collection<BoulderingResult>(
-    this,
-  );
+  @OneToMany(() => BoulderingGroup, (group) => group.round, {
+    orphanRemoval: true,
+  })
+  groups: Collection<BoulderingGroup> = new Collection<BoulderingGroup>(this);
 
   /*
     This will store the round rankings based on results.
@@ -118,7 +134,27 @@ export class BoulderingRound extends BaseEntity
   @Property()
   rankings?: BoulderingRoundRankings;
 
+  takesNewClimbers(): boolean {
+    return (
+      this.state === BoulderingRoundState.PENDING ||
+      this.state === BoulderingRoundState.ONGOING
+    );
+  }
+
+  isRankingWithCountedTries(): boolean {
+    return (
+      this.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST ||
+      this.rankingType === BoulderingRoundRankingType.CIRCUIT
+    );
+  }
+
+  isRankingWithCountedZones(): boolean {
+    return this.isRankingWithCountedTries();
+  }
+
   constructor(
+    category: CategoryName,
+    sex: Sex,
     name: string,
     index: number,
     quota: number,
@@ -127,6 +163,8 @@ export class BoulderingRound extends BaseEntity
     competition: Competition,
   ) {
     super();
+    this.category = category;
+    this.sex = sex;
     this.name = name;
     this.index = index;
     this.quota = quota;
@@ -135,3 +173,10 @@ export class BoulderingRound extends BaseEntity
     this.competition = competition;
   }
 }
+
+type Relation = 'groups' | 'competition';
+type DeepRelation = 'groups.climbers' | 'groups.boulders' | 'groups.results';
+export type BoulderingRoundRelation = Relation | DeepRelation;
+
+// This is just for static validation
+type BoulderingRoundRelationValidation = Pick<BoulderingRound, Relation>;

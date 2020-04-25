@@ -20,6 +20,7 @@ import {
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiTags,
 } from '@nestjs/swagger';
 import { GetOperationId } from '../shared/utils/get-operation-id.helper';
 import { CompetitionService } from './competition.service';
@@ -66,8 +67,12 @@ import { JudgeAuthorizationGuard } from './authorization/judge.authorization.gua
 import { BoulderingRoundMapper } from '../shared/mappers/bouldering-round.mapper';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
 import { BoulderingResultMapper } from '../shared/mappers/bouldering-result.mapper';
+import { GetRankingsParamsDto } from './dto/in/params/get-rankings-params.dto';
+import { RankingsDto } from './dto/out/rankings.dto';
+import { RankingsMapper } from '../shared/mappers/rankings-mapper.service';
 
 @Controller('competitions')
+@ApiTags('Competition')
 export class CompetitionController {
   constructor(
     private readonly competitionService: CompetitionService,
@@ -75,6 +80,7 @@ export class CompetitionController {
     private readonly userMapper: UserMapper,
     private readonly boulderingRoundMapper: BoulderingRoundMapper,
     private readonly boulderingResultMapper: BoulderingResultMapper,
+    private readonly rankingMapper: RankingsMapper,
     private readonly mapper: CompetitionMapper,
   ) {}
 
@@ -412,7 +418,9 @@ export class CompetitionController {
     AuthenticationGuard,
     JuryPresidentAuthorizationGuard,
   )
-  @ApiCreatedResponse()
+  @ApiCreatedResponse({
+    type: BoulderingRoundDto,
+  })
   @ApiOperation(GetOperationId(Competition.name, 'AddRound'))
   async addBoulderingRound(
     @Param() params: AddRoundParamsDto,
@@ -432,7 +440,9 @@ export class CompetitionController {
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), AuthenticationGuard, JudgeAuthorizationGuard)
-  @ApiCreatedResponse()
+  @ApiCreatedResponse({
+    type: BoulderingResultDto,
+  })
   @ApiOperation(GetOperationId(Competition.name, 'AddBoulderingResult'))
   async addResult(
     @Param() params: AddBoulderingResultParamsDto,
@@ -456,5 +466,18 @@ export class CompetitionController {
     );
 
     return this.boulderingResultMapper.map(result);
+  }
+
+  @Get('/:competitionId/rankings')
+  @ApiOkResponse({ type: RankingsDto })
+  @ApiOperation(GetOperationId(Competition.name, 'GetCompetitionRankings'))
+  async getRankings(
+    @Param() params: GetRankingsParamsDto,
+  ): Promise<RankingsDto> {
+    const rankings = await this.competitionService.getRankings(
+      params.competitionId,
+    );
+
+    return this.rankingMapper.map(rankings);
   }
 }

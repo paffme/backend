@@ -1,4 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
+
+export class ApiStatus {
+  @ApiProperty()
+  startedAt!: Date;
+
+  @ApiProperty()
+  uptime!: number;
+}
 
 @Injectable()
 export class AppService {
@@ -8,7 +17,7 @@ export class AppService {
     this.startedAt = new Date();
   }
 
-  root(): any {
+  root(): ApiStatus {
     return {
       startedAt: this.startedAt,
       uptime: process.uptime(),

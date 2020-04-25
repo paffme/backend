@@ -17,6 +17,10 @@ import { User } from '../../src/user/user.entity';
 import { TokenResponseDto } from '../../src/user/dto/out/token-response.dto';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { Competition } from '../../src/competition/competition.entity';
+import { RankingsDto } from '../../src/competition/dto/out/rankings.dto';
+import { CompetitionType } from '../../src/competition/types/competition-type.enum';
+import { Sex } from '../../src/shared/types/sex.enum';
+import { CategoryName } from '../../src/shared/types/category-name.enum';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -50,6 +54,59 @@ describe('Bouldering (e2e)', () => {
     await app.close();
   });
 
+  async function givenReadyCompetition(
+    rankingType: BoulderingRoundRankingType,
+  ): Promise<{
+    competition: Competition;
+    organizer: User;
+    climber: User;
+    judge: User;
+    judgeAuth: TokenResponseDto;
+    boulder: Boulder;
+    round: BoulderingRound;
+  }> {
+    const { user: organizer } = await utils.givenUser();
+    const { user: climber } = await utils.givenUser({
+      sex: Sex.Female,
+      birthYear: 2000,
+    });
+
+    const {
+      user: judge,
+      credentials: judgeCredentials,
+    } = await utils.givenUser();
+
+    const judgeAuth = await utils.login(judgeCredentials);
+    const competition = await utils.givenCompetition(organizer, {
+      type: CompetitionType.Bouldering,
+      startDate: new Date(2014, 10, 1),
+    });
+
+    await utils.registerUserInCompetition(climber, competition);
+    await utils.addJudgeInCompetition(judge, competition);
+
+    const round = await utils.addBoulderingRound(competition, {
+      rankingType,
+      type: BoulderingRoundType.QUALIFIER,
+      boulders: 1,
+      sex: Sex.Female,
+      category: CategoryName.Minime,
+    });
+
+    const boulder = round.groups.getItems()[0].boulders.getItems()[0];
+    utils.clearORM();
+
+    return {
+      competition,
+      organizer,
+      climber,
+      judge,
+      judgeAuth,
+      boulder,
+      round,
+    };
+  }
+
   describe('POST /competitions/{competitionId}/bouldering-rounds', () => {
     it('adds a bouldering round', async function () {
       const { user, credentials } = await utils.givenUser();
@@ -65,6 +122,8 @@ describe('Bouldering (e2e)', () => {
         quota: 0,
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
         type: BoulderingRoundType.QUALIFIER,
+        sex: Sex.Female,
+        category: CategoryName.Minime,
       };
 
       const { body } = await api
@@ -77,61 +136,27 @@ describe('Bouldering (e2e)', () => {
       expect(body.name).toEqual(dto.name);
       expect(body.type).toEqual(dto.type);
       expect(body.quota).toEqual(dto.quota);
-      expect(body.boulders).toHaveLength(dto.boulders);
       expect(body.index).toEqual(dto.index);
       expect(body.competitionId).toEqual(competition.id);
+      expect(body.sex).toEqual(Sex.Female);
+      expect(body.category).toEqual(CategoryName.Minime);
+      expect(body.groups).toHaveLength(1);
+
+      const group = body.groups[0];
+      expect(group).toHaveProperty('id');
+      expect(group.name).toEqual('0');
+      expect(group.roundId).toEqual(body.id);
+      expect(group.climbers).toHaveLength(0);
+      expect(group.boulders).toHaveLength(dto.boulders);
 
       for (let i = 0; i < dto.boulders; i++) {
-        expect(body.boulders[i].index).toEqual(i);
-        expect(body.boulders[i]).toHaveProperty('id');
+        expect(group.boulders[i].index).toEqual(i);
+        expect(group.boulders[i]).toHaveProperty('id');
       }
     });
   });
 
-  describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/boulders/:boulderId/results/{userId}', () => {
-    async function givenReadyCompetition(
-      rankingType: BoulderingRoundRankingType,
-    ): Promise<{
-      competition: Competition;
-      organizer: User;
-      climber: User;
-      judge: User;
-      judgeAuth: TokenResponseDto;
-      boulder: Boulder;
-      round: BoulderingRound;
-    }> {
-      const { user: organizer } = await utils.givenUser();
-      const { user: climber } = await utils.givenUser();
-
-      const {
-        user: judge,
-        credentials: judgeCredentials,
-      } = await utils.givenUser();
-
-      const judgeAuth = await utils.login(judgeCredentials);
-      const competition = await utils.givenCompetition(organizer);
-      await utils.addJudgeInCompetition(judge, competition);
-
-      const round = await utils.addBoulderingRound(competition, {
-        rankingType,
-        type: BoulderingRoundType.QUALIFIER,
-        boulders: 1,
-      });
-
-      const boulder = round.boulders.getItems()[0];
-      utils.clearORM();
-
-      return {
-        competition,
-        organizer,
-        climber,
-        judge,
-        judgeAuth,
-        boulder,
-        round,
-      };
-    }
-
+  describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/boulders/:boulderId/results', () => {
     it('adds a bouldering result for an unlimited contest', async function () {
       const {
         climber,
@@ -342,6 +367,36 @@ describe('Bouldering (e2e)', () => {
         )
         .send(dto)
         .expect(401);
+    });
+  });
+
+  describe('GET /api/competitions/{competitionId}/rankings', () => {
+    it('gets the competition ranking', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      await utils.addBoulderingResult(competition, round, boulder, climber);
+
+      const res = await api
+        .get(`/api/competitions/${competition.id}/rankings`)
+        .expect(200);
+
+      const body: RankingsDto = res.body;
+      const category = climber.getCategory(competition.getSeason());
+
+      expect(body).toHaveProperty(category.name);
+      expect(body[category.name]).toHaveProperty(category.sex);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const r = body[category.name]![category.sex]![0];
+      expect(r.ranking).toEqual(1);
+      expect(r.climber.id).toEqual(climber.id);
+      expect(r.climber.club).toEqual(null);
+      expect(r.climber.firstName).toEqual(climber.firstName);
+      expect(r.climber.lastName).toEqual(climber.lastName);
     });
   });
 });
