@@ -44,6 +44,7 @@ export class BoulderingResultService {
     return result;
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   async addResult(
     group: BoulderingGroup,
     boulder: Boulder,

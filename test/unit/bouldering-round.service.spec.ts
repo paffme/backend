@@ -56,27 +56,32 @@ describe('Bouldering round service (unit)', () => {
         BoulderingRoundService,
         {
           provide: getRepositoryToken(BoulderingRound),
-          useFactory: () => boulderingRoundRepositoryMock,
+          useFactory: (): typeof boulderingRoundRepositoryMock =>
+            boulderingRoundRepositoryMock,
         },
         {
           provide: BoulderingResultService,
-          useFactory: () => boulderingResultServiceMock,
+          useFactory: (): typeof boulderingResultServiceMock =>
+            boulderingResultServiceMock,
         },
         {
           provide: BoulderService,
-          useFactory: () => boulderServiceMock,
+          useFactory: (): typeof boulderServiceMock => boulderServiceMock,
         },
         {
           provide: BoulderingRoundUnlimitedContestRankingService,
-          useFactory: () => boulderingUnlimitedContestRankingServiceMock,
+          useFactory: (): typeof boulderingUnlimitedContestRankingServiceMock =>
+            boulderingUnlimitedContestRankingServiceMock,
         },
         {
           provide: BoulderingRoundCountedRankingService,
-          useFactory: () => boulderingRoundCountedRankingServiceMock,
+          useFactory: (): typeof boulderingRoundCountedRankingServiceMock =>
+            boulderingRoundCountedRankingServiceMock,
         },
         {
           provide: BoulderingGroupService,
-          useFactory: () => boulderingGroupServiceMock,
+          useFactory: (): typeof boulderingGroupServiceMock =>
+            boulderingGroupServiceMock,
         },
         {
           provide: BoulderingRoundMapper,

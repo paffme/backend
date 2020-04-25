@@ -66,6 +66,7 @@ export class BoulderingRoundService {
     return round;
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   async createRound(
     competition: Competition,
     dto: CreateBoulderingRoundDto,

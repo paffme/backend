@@ -8,21 +8,24 @@ import {
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
-  catch(error: any, host: ArgumentsHost) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  catch(error: any, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const res = ctx.getResponse();
     const req = ctx.getRequest();
+    const status = error.getStatus();
 
-    if (error.getStatus() === HttpStatus.UNAUTHORIZED) {
-      if (typeof error.response !== 'string') {
-        error.response.message =
-          error.response.message ||
-          'You do not have permission to access this resource';
-      }
+    if (
+      status === HttpStatus.UNAUTHORIZED &&
+      typeof error.response !== 'string'
+    ) {
+      error.response.message =
+        error.response.message ||
+        'You do not have permission to access this resource';
     }
 
-    res.status(error.getStatus()).json({
-      statusCode: error.getStatus(),
+    res.status(status).json({
+      statusCode: status,
       error: error.response.error,
       message: error.response.message || error.message,
       errors: error.errors,

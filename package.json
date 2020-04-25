@@ -13,7 +13,7 @@
     "prettier:cli": "prettier \"**/*.ts\" \"**/*.js\"",
     "prettier:check": "npm run prettier:cli -- -l",
     "prettier:fix": "npm run prettier:cli -- --write",
-    "eslint": "eslint --report-unused-disable-directives .",
+    "eslint": "eslint --report-unused-disable-directives \"**/*.ts\"",
     "eslint:fix": "npm run eslint -- --fix",
     "test": "jest --forceExit --coverage",
     "migrate": "ts-node src/migrate.ts"

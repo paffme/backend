@@ -37,7 +37,8 @@ export function configure(app: NestExpressApplication): void {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      exceptionFactory: (errors) => new CustomValidationError(errors),
+      exceptionFactory: (errors): CustomValidationError =>
+        new CustomValidationError(errors),
     }),
   );
 

@@ -20,6 +20,7 @@ import { BoulderingRankingService } from '../../src/bouldering/ranking/boulderin
 import { Category } from '../../src/shared/types/category.interface';
 import { CategoryName } from '../../src/shared/types/category-name.enum';
 import { Sex } from '../../src/shared/types/sex.enum';
+import { givenCategory } from '../fixture/category.fixture';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -50,6 +51,11 @@ const boulderingRankingServiceMock: ServiceMock = {
   getRankings: jest.fn(),
 };
 
+const femaleMinime = givenCategory({
+  sex: Sex.Female,
+  name: CategoryName.Minime,
+});
+
 describe('Competition service (unit)', () => {
   let competitionService: CompetitionService;
   let utils: TestUtils;
@@ -60,23 +66,27 @@ describe('Competition service (unit)', () => {
         CompetitionService,
         {
           provide: UserService,
-          useFactory: () => userServiceMock,
+          useFactory: (): typeof userServiceMock => userServiceMock,
         },
         {
           provide: BoulderingRoundService,
-          useFactory: () => boulderingRoundServiceMock,
+          useFactory: (): typeof boulderingRoundServiceMock =>
+            boulderingRoundServiceMock,
         },
         {
           provide: BoulderingRankingService,
-          useFactory: () => boulderingRankingServiceMock,
+          useFactory: (): typeof boulderingRankingServiceMock =>
+            boulderingRankingServiceMock,
         },
         {
           provide: getRepositoryToken(Competition),
-          useFactory: () => competitionRepositoryMock,
+          useFactory: (): typeof competitionRepositoryMock =>
+            competitionRepositoryMock,
         },
         {
           provide: getRepositoryToken(CompetitionRegistration),
-          useFactory: () => competitionRegistrationRepositoryMock,
+          useFactory: (): typeof competitionRegistrationRepositoryMock =>
+            competitionRegistrationRepositoryMock,
         },
         {
           provide: CompetitionMapper,
@@ -178,12 +188,7 @@ describe('Competition service (unit)', () => {
   it('adds a bouldering result', async () => {
     const user = {
       id: utils.getRandomId(),
-      getCategory(): Category {
-        return {
-          name: CategoryName.Minime,
-          sex: Sex.Female,
-        };
-      },
+      getCategory: (): Category => femaleMinime,
     };
 
     const boulderingResult = {};
@@ -199,7 +204,7 @@ describe('Competition service (unit)', () => {
       boulderingRounds: {
         loadItems: jest.fn().mockImplementation(async () => boulderingRounds),
       },
-      getSeason() {
+      getSeason(): undefined {
         return undefined;
       },
     };
@@ -262,12 +267,7 @@ describe('Competition service (unit)', () => {
 
   it('adds the climber into the first round after being registered', async () => {
     const user = {
-      getCategory(): Category {
-        return {
-          name: CategoryName.Minime,
-          sex: Sex.Female,
-        };
-      },
+      getCategory: (): Category => femaleMinime,
     };
 
     const rounds = [
@@ -280,14 +280,14 @@ describe('Competition service (unit)', () => {
         index: 0,
         category: CategoryName.Minime,
         sex: Sex.Female,
-        takesNewClimbers() {
+        takesNewClimbers(): boolean {
           return true;
         },
       },
     ];
 
     const competition = {
-      getSeason() {
+      getSeason(): number {
         return 2020;
       },
       takesRegistrations(): true {
@@ -322,12 +322,7 @@ describe('Competition service (unit)', () => {
 
   it('does not add the climber into the first round after being registered if the round do not takes new climbers', async () => {
     const user = {
-      getCategory(): Category {
-        return {
-          name: CategoryName.Minime,
-          sex: Sex.Female,
-        };
-      },
+      getCategory: (): Category => femaleMinime,
     };
 
     const rounds = [
@@ -335,14 +330,14 @@ describe('Competition service (unit)', () => {
         index: 0,
         category: CategoryName.Minime,
         sex: Sex.Female,
-        takesNewClimbers() {
+        takesNewClimbers(): boolean {
           return false;
         },
       },
     ];
 
     const competition = {
-      getSeason() {
+      getSeason(): number {
         return 2020;
       },
       takesRegistrations(): true {
@@ -374,7 +369,7 @@ describe('Competition service (unit)', () => {
   it('does not add a bouldering result if the climber if not registered', () => {
     competitionRepositoryMock.findOne.mockImplementation(async () => ({
       registrations: {
-        getItems() {
+        getItems(): [] {
           return [];
         },
       },

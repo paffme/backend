@@ -29,7 +29,8 @@ describe('Bouldering result service (unit)', () => {
         BoulderingResultService,
         {
           provide: getRepositoryToken(BoulderingResult),
-          useFactory: () => boulderingResultRepositoryMock,
+          useFactory: (): typeof boulderingResultRepositoryMock =>
+            boulderingResultRepositoryMock,
         },
       ],
     }).compile();

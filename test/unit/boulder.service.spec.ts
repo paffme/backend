@@ -22,7 +22,7 @@ describe('Boulder service (unit)', () => {
         BoulderService,
         {
           provide: getRepositoryToken(Boulder),
-          useFactory: () => boulderRepositoryMock,
+          useFactory: (): typeof boulderRepositoryMock => boulderRepositoryMock,
         },
       ],
     }).compile();

@@ -5,7 +5,6 @@ import {
   BoulderingRoundType,
 } from '../../src/bouldering/round/bouldering-round.entity';
 import { InternalServerErrorException } from '@nestjs/common';
-import TestUtils from '../utils';
 import { givenBoulderingRound } from '../fixture/bouldering-round.fixture';
 import { givenUser } from '../fixture/user.fixture';
 import { givenBoulder } from '../fixture/boulder.fixture';
@@ -14,7 +13,6 @@ import { givenResult } from '../fixture/bouldering-result.fixture';
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 describe('Bouldering unlimited contest ranking service (unit)', () => {
-  let utils: TestUtils;
   let boulderingUnlimitedContestRankingService: BoulderingRoundUnlimitedContestRankingService;
 
   beforeEach(async () => {
@@ -25,8 +23,6 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     boulderingUnlimitedContestRankingService = module.get(
       BoulderingRoundUnlimitedContestRankingService,
     );
-
-    utils = new TestUtils();
   });
 
   it('throws when getting rankings for an non unlimited contest round', () => {

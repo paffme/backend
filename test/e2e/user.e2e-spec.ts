@@ -46,7 +46,7 @@ describe('User (e2e)', () => {
     await app.close();
   });
 
-  function checkUser(expectedUser: any, user: UserDto): void {
+  function checkUser(expectedUser: RegisterDto, user: UserDto): void {
     expect(user.email).toEqual(expectedUser.email);
     expect(user.sex).toEqual(expectedUser.sex);
     expect(user.birthYear).toEqual(expectedUser.birthYear);

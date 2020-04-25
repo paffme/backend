@@ -815,7 +815,7 @@ describe('Bouldering round service (unit)', () => {
       type: BoulderingRoundType.FINAL,
       index: 1,
       climbers: {
-        count: () => 0,
+        count: (): number => 0,
       },
     } as unknown) as BoulderingRound);
 

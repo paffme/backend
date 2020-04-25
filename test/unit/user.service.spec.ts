@@ -36,11 +36,11 @@ describe('User service (unit)', () => {
         JwtService,
         {
           provide: getRepositoryToken(User),
-          useFactory: () => userRepositoryMock,
+          useFactory: (): typeof userRepositoryMock => userRepositoryMock,
         },
         {
           provide: JWT_MODULE_OPTIONS,
-          useFactory: () => ({}),
+          useFactory: (): {} => ({}),
         },
       ],
     }).compile();

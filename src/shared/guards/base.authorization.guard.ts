@@ -72,11 +72,12 @@ export abstract class BaseAuthorizationGuard implements CanActivate {
 
     let possession: ResourcePossession = 'any';
 
-    if (typeof resourceId !== 'undefined') {
-      if (await authorizationService.authorize(user.id, resourceId)) {
-        userRoles.push(AppRoles.OWNER);
-        possession = 'own';
-      }
+    if (
+      typeof resourceId !== 'undefined' &&
+      (await authorizationService.authorize(user.id, resourceId))
+    ) {
+      userRoles.push(AppRoles.OWNER);
+      possession = 'own';
     }
 
     // Generate grants object for accesscontrol library

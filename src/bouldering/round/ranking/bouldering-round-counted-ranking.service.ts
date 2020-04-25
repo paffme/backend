@@ -234,6 +234,7 @@ export class BoulderingRoundCountedRankingService
     );
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   private getTryOccurrenceByClimber(
     triesByClimber: Map<typeof User.prototype.id, number[]>,
   ): {
@@ -278,6 +279,7 @@ export class BoulderingRoundCountedRankingService
     };
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   private sortByTryOccurrence(
     rankings: RankingsMap,
     climbers: typeof User.prototype.id[],
@@ -351,6 +353,7 @@ export class BoulderingRoundCountedRankingService
     }
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   getRankings(
     round: BoulderingRound,
   ): BoulderingRoundCircuitRankings | BoulderingRoundLimitedContestRankings {
