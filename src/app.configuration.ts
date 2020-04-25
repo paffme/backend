@@ -43,4 +43,11 @@ export function configure(app: NestExpressApplication): void {
   );
 
   app.useGlobalFilters(new HttpExceptionFilter());
+
+  app.enableCors({
+    credentials: true,
+    origin(requestOrigin: string, cb: (arg1: null, arg2: boolean) => void) {
+      cb(null, true);
+    },
+  });
 }
