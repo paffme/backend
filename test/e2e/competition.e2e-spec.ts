@@ -9,6 +9,7 @@ import { CompetitionRegistrationDto } from '../../src/competition/dto/out/compet
 import { UserService } from '../../src/user/user.service';
 import { CompetitionService } from '../../src/competition/competition.service';
 import { givenCreateCompetitionDto } from '../fixture/competition.fixture';
+import { UpdateCompetitionByIdDto } from '../../src/competition/dto/in/body/update-competition-by-id.dto';
 
 describe('Competition (e2e)', () => {
   let app: NestExpressApplication;
@@ -48,6 +49,92 @@ describe('Competition (e2e)', () => {
       const competition = await utils.givenCompetition(user);
       const { body } = await api.get('/api/competitions').expect(200);
       expect(body.map((c: CompetitionDto) => c.id)).toContain(competition.id);
+    });
+  });
+
+  describe('GET /competitions/{competitionId}', () => {
+    it('gets a competition by id', async function () {
+      const { user } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+
+      const { body } = await api
+        .get(`/api/competitions/${competition.id}`)
+        .expect(200);
+
+      expect(body.id).toEqual(competition.id);
+      expect(body.categories).toEqual(competition.categories);
+      expect(body.name).toEqual(competition.name);
+      expect(body.startDate).toEqual(competition.startDate.toISOString());
+      expect(body.endDate).toEqual(competition.endDate.toISOString());
+      expect(body.city).toEqual(competition.city);
+      expect(body.address).toEqual(competition.address);
+      expect(body.postalCode).toEqual(competition.postalCode);
+      expect(body.type).toEqual(competition.type);
+      expect(body).toHaveProperty('createdAt');
+      expect(body).toHaveProperty('updatedAt');
+    });
+
+    it('returns 404 when getting an unknown competition', async () => {
+      await api.get('/api/competitions/9999999').expect(404);
+    });
+  });
+
+  describe('PATCH /competitions/{competitionId}', () => {
+    it('updates a competition', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const competition = await utils.givenCompetition(user);
+
+      const dto: UpdateCompetitionByIdDto = {
+        name: 'New name',
+      };
+
+      const { body } = await api
+        .patch(`/api/competitions/${competition.id}`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .send(dto)
+        .expect(200);
+
+      expect(body.id).toEqual(competition.id);
+      expect(body.name).toEqual(dto.name);
+    });
+
+    it('returns 401 when an unauthenticated user try to update a competition', async () => {
+      const { user } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const dto: UpdateCompetitionByIdDto = {};
+
+      await api
+        .patch(`/api/competitions/${competition.id}`)
+        .send(dto)
+        .expect(401);
+    });
+
+    it('returns 403 when someone that is not an organizer try to update a competition', async () => {
+      const { user } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const dto: UpdateCompetitionByIdDto = {};
+
+      await api
+        .patch(`/api/competitions/${competition.id}`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .send(dto)
+        .expect(403);
+    });
+
+    it('returns 404 when updating an unknown competition', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const dto: UpdateCompetitionByIdDto = {};
+
+      await api
+        .patch('/api/competitions/9999999')
+        .set('Authorization', `Bearer ${auth.token}`)
+        .send(dto)
+        .expect(404);
     });
   });
 

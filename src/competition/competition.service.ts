@@ -28,6 +28,7 @@ import { Boulder } from '../bouldering/boulder/boulder.entity';
 import { BoulderingRankingService } from '../bouldering/ranking/bouldering-ranking.service';
 import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
+import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
 
 @Injectable()
 export class CompetitionService {
@@ -80,6 +81,16 @@ export class CompetitionService {
 
     await this.competitionRepository.persistAndFlush(newCompetition);
     return newCompetition;
+  }
+
+  async updateById(
+    competitionId: typeof Competition.prototype.id,
+    dto: UpdateCompetitionByIdDto,
+  ): Promise<Competition> {
+    const competition = await this.getOrFail(competitionId);
+    Object.assign(competition, dto);
+    await this.competitionRepository.persistAndFlush(competition);
+    return competition;
   }
 
   async register(
