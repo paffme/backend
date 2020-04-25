@@ -16,6 +16,7 @@ export function givenBoulderingRound(
   data?: Partial<BoulderingRound>,
   boulders?: Boulder[],
   results?: BoulderingResult[],
+  climbers?: User[],
 ): BoulderingRound {
   const round = new BoulderingRound(
     data?.category ?? CategoryName.Minime,
@@ -65,7 +66,10 @@ export function givenBoulderingRound(
             // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
             // @ts-ignore
             getItems(): User[] {
-              return results ? [...new Set(results.map((r) => r.climber))] : [];
+              return (
+                climbers ??
+                (results ? [...new Set(results.map((r) => r.climber))] : [])
+              );
             },
           },
         },

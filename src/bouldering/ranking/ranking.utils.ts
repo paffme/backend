@@ -33,6 +33,50 @@ export function getExAequoClimbers(
   return exAequoClimbers;
 }
 
+type AggregatedClimbersResultsEntry<Results> = [
+  typeof User.prototype.id,
+  Results,
+];
+
+type exAequoFn<Results> = (
+  resultA: AggregatedClimbersResultsEntry<Results>,
+  resultB: AggregatedClimbersResultsEntry<Results>,
+) => boolean;
+
+/**
+ * Separate correctly ex aequos
+ */
+export function handleExAequosRankings<Results>(
+  sortedEntries: AggregatedClimbersResultsEntry<Results>[],
+  exAequoFn: exAequoFn<Results>,
+): RankingsMap {
+  const rankings = new Map();
+  let previousClimberEntry: AggregatedClimbersResultsEntry<Results> | undefined;
+  let previousClimberRanking: number | undefined;
+
+  for (let i = 0; i < sortedEntries.length; i++) {
+    const entry = sortedEntries[i];
+    const climberId = entry[0];
+    let ranking: number;
+
+    if (
+      typeof previousClimberRanking === 'number' &&
+      previousClimberEntry &&
+      exAequoFn(entry, previousClimberEntry)
+    ) {
+      ranking = previousClimberRanking;
+    } else {
+      ranking = i + 1;
+    }
+
+    rankings.set(climberId, ranking);
+    previousClimberEntry = entry;
+    previousClimberRanking = ranking;
+  }
+
+  return rankings;
+}
+
 export function getPodium(rankings: RankingsMap): RankingsMap {
   return new Map(
     Array.from(rankings).filter(([, ranking]) => ranking >= 1 && ranking <= 3),

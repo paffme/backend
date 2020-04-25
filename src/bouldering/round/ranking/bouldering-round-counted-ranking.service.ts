@@ -12,7 +12,11 @@ import {
 import { InternalServerErrorException } from '@nestjs/common';
 import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { User } from '../../../user/user.entity';
-import { getExAequoClimbers, getPodium } from '../../ranking/ranking.utils';
+import {
+  getExAequoClimbers,
+  getPodium,
+  handleExAequosRankings,
+} from '../../ranking/ranking.utils';
 import { RankingsMap } from '../../types/rankings-map';
 import { BoulderingGroup } from '../../group/bouldering-group.entity';
 
@@ -194,43 +198,14 @@ export class BoulderingRoundCountedRankingService
     return true;
   }
 
-  private computeRankings(
-    entries: AggregatedClimbersResultsEntry[],
-  ): RankingsMap {
-    const rankings: RankingsMap = new Map();
-
-    let previousClimberEntry: AggregatedClimbersResultsEntry | undefined;
-    let previousClimberRanking: number | undefined;
-
-    // Firstly sort entries by points
-    entries = entries
+  private computeRankings(results: AggregatedClimbersResultsMap): RankingsMap {
+    const entries = Array.from(results)
       .sort(this.compareByTops.bind(this))
       .sort(this.compareByZones.bind(this))
       .sort(this.compareByTopsInTries.bind(this))
       .sort(this.compareByZonesInTries.bind(this));
 
-    // Then handle ex-aequo and define final ranking
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-      const climberId = entry[0];
-      let ranking: number;
-
-      if (
-        typeof previousClimberRanking === 'number' &&
-        previousClimberEntry &&
-        this.areExAequo(entry, previousClimberEntry)
-      ) {
-        ranking = previousClimberRanking;
-      } else {
-        ranking = i + 1;
-      }
-
-      rankings.set(climberId, ranking);
-      previousClimberEntry = entry;
-      previousClimberRanking = ranking;
-    }
-
-    return rankings;
+    return handleExAequosRankings(entries, this.areExAequo);
   }
 
   private getTopsInTriesByClimber(
@@ -376,11 +351,9 @@ export class BoulderingRoundCountedRankingService
     }
   }
 
-  async getRankings(
+  getRankings(
     round: BoulderingRound,
-  ): Promise<
-    BoulderingRoundCircuitRankings | BoulderingRoundLimitedContestRankings
-  > {
+  ): BoulderingRoundCircuitRankings | BoulderingRoundLimitedContestRankings {
     if (
       round.rankingType !== BoulderingRoundRankingType.CIRCUIT &&
       round.rankingType !== BoulderingRoundRankingType.LIMITED_CONTEST
@@ -405,22 +378,17 @@ export class BoulderingRoundCountedRankingService
 
       // Group results by climber and aggregate results
       const climberResults = this.groupResultsByClimber(results, boulders);
-      const entries = Array.from(climberResults);
 
-      const climbersIdsInGroup = group.climbers.getItems().map((c) => c.id);
-
-      const groupResults = entries.filter(([climberId]) =>
-        climbersIdsInGroup.includes(climberId),
-      );
-
-      const groupRankings = this.computeRankings(groupResults);
+      // Compute rankings
+      const groupRankings = this.computeRankings(climberResults);
 
       // Handle equality in the podium for the final
       if (round.type === BoulderingRoundType.FINAL) {
         this.handlePodiumExAequos(groupRankings, climberResults);
       }
 
-      groupsResults.set(group.id, new Map(groupResults));
+      // Save
+      groupsResults.set(group.id, climberResults);
       groupsRankings.set(group.id, groupRankings);
     }
 
@@ -428,6 +396,26 @@ export class BoulderingRoundCountedRankingService
     return {
       type: round.rankingType,
       groups: Array.from(groupsRankings, ([groupId, groupRankings]) => {
+        if (round.type !== BoulderingRoundType.QUALIFIER) {
+          const currentGroup = round.groups
+            .getItems()
+            .find((g) => g.id === groupId)!;
+
+          const lastRanking = Array.from(groupRankings).reduce(
+            (lastRanking, [, ranking]) =>
+              ranking >= lastRanking ? ranking + 1 : lastRanking,
+            1,
+          );
+
+          for (const climber of currentGroup.climbers.getItems()) {
+            if (groupRankings.get(climber.id)) {
+              continue;
+            }
+
+            groupRankings.set(climber.id, lastRanking);
+          }
+        }
+
         const rankings = Array.from(
           groupRankings,
           ([climberId, ranking]): BoulderingRoundCountedRanking => ({

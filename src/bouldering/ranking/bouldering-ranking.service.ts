@@ -1,29 +1,56 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '../../user/user.entity';
-import {
-  BaseBoulderingRoundRanking,
-  BoulderingRound,
-} from '../round/bouldering-round.entity';
-import { getExAequoClimbers } from './ranking.utils';
+import { BoulderingRound } from '../round/bouldering-round.entity';
+import { getExAequoClimbers, handleExAequosRankings } from './ranking.utils';
 import { RankingsMap } from '../types/rankings-map';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 @Injectable()
 export class BoulderingRankingService {
-  private getClimberRankingInRound(
-    round: BoulderingRound,
-    climberId: typeof User.prototype.id,
+  private handleExAequos(
+    rankings: RankingsMap,
+    groupRankings: RankingsMap,
   ): number {
-    // find is not available with type checking
-    // because of a lack of support in union types within Typescript
-    // https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-3.html#caveats
-    const index = round.rankings!.groups[0].rankings.findIndex(
-      (r: Pick<BaseBoulderingRoundRanking, 'climberId'>) =>
-        r.climberId === climberId,
-    );
+    const exAequosClimbers = getExAequoClimbers(rankings);
 
-    return round.rankings!.groups[0].rankings[index].ranking;
+    for (const exAequos of exAequosClimbers) {
+      for (let i = 0; i < exAequos.length; i++) {
+        const climberA = exAequos[i];
+
+        for (let j = i + 1; j < exAequos.length; j++) {
+          const climberB = exAequos[j];
+
+          const climberARoundRanking = groupRankings.get(climberA)!;
+          const climberBRoundRanking = groupRankings.get(climberB)!;
+
+          if (climberARoundRanking > climberBRoundRanking) {
+            rankings.set(climberA, rankings.get(climberA)! + 1);
+          } else if (climberARoundRanking < climberBRoundRanking) {
+            rankings.set(climberB, rankings.get(climberB)! + 1);
+          }
+        }
+      }
+    }
+
+    return exAequosClimbers.length;
+  }
+
+  private mergeGroupsRankings(round: BoulderingRound): RankingsMap {
+    const groupRankings: RankingsMap = new Map();
+
+    for (const group of round.rankings!.groups) {
+      for (const climberRanking of group.rankings) {
+        const ranking = climberRanking.ranking;
+        groupRankings.set(climberRanking.climberId, ranking);
+      }
+    }
+
+    const entries = Array.from(groupRankings).sort((a, b) => a[1] - b[1]);
+
+    return handleExAequosRankings(
+      entries,
+      (resultA, resultB) => resultA[1] === resultB[1],
+    );
   }
 
   getRankings(rounds: BoulderingRound[]): RankingsMap {
@@ -46,53 +73,28 @@ export class BoulderingRankingService {
         continue;
       }
 
-      if (round.groups.count() > 1) {
-        break;
-      }
+      const mergedGroupsRankings = this.mergeGroupsRankings(round);
 
-      // Handle all ex-aequos from the previous round
-      const exAequosClimbers = getExAequoClimbers(rankings);
+      // Handle ex-aequos from the previous round thanks to the current round rankings
+      if (round.groups.count() === 1) {
+        const computedExAequos = this.handleExAequos(
+          rankings,
+          mergedGroupsRankings,
+        );
 
-      if (exAequosClimbers.length === 0 && rankings.size === climbers) {
-        // rankings will no more change anymore
-        break;
-      }
-
-      for (const exAequos of exAequosClimbers) {
-        for (let i = 0; i < exAequos.length; i++) {
-          const climberA = exAequos[i];
-
-          for (let j = i + 1; j < exAequos.length; j++) {
-            const climberB = exAequos[j];
-
-            const climberARoundRanking = this.getClimberRankingInRound(
-              round,
-              climberA,
-            );
-
-            const climberBRoundRanking = this.getClimberRankingInRound(
-              round,
-              climberB,
-            );
-
-            if (climberARoundRanking > climberBRoundRanking) {
-              rankings.set(climberA, rankings.get(climberA)! + 1);
-            } else if (climberARoundRanking < climberBRoundRanking) {
-              rankings.set(climberB, rankings.get(climberB)! + 1);
-            }
-          }
+        if (computedExAequos === 0 && rankings.size === climbers) {
+          // rankings will no more change
+          break;
         }
       }
 
       // Add climber ranking if not yet inserted
-      for (const group of round.rankings.groups) {
-        for (const { climberId, ranking } of group.rankings) {
-          if (rankings.has(climberId)) {
-            continue;
-          }
-
-          rankings.set(climberId, ranking);
+      for (const [climberId, ranking] of mergedGroupsRankings) {
+        if (rankings.has(climberId)) {
+          continue;
         }
+
+        rankings.set(climberId, ranking);
       }
     }
 

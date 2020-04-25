@@ -157,10 +157,7 @@ export class BoulderingRoundService {
   }
 
   async updateRankings(round: BoulderingRound): Promise<void> {
-    round.rankings = await this.rankingServices[round.rankingType].getRankings(
-      round,
-    );
-
+    round.rankings = this.rankingServices[round.rankingType].getRankings(round);
     await this.boulderingRoundRepository.persistAndFlush(round);
   }
 

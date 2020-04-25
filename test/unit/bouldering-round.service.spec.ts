@@ -174,7 +174,7 @@ describe('Bouldering round service (unit)', () => {
     );
 
     boulderingUnlimitedContestRankingServiceMock.getRankings.mockImplementation(
-      async () => rankings,
+      () => rankings,
     );
 
     const res = await boulderingRoundService.updateRankings(round);
@@ -210,7 +210,7 @@ describe('Bouldering round service (unit)', () => {
     );
 
     boulderingRoundCountedRankingServiceMock.getRankings.mockImplementation(
-      async () => rankings,
+      () => rankings,
     );
 
     const res = await boulderingRoundService.updateRankings(round);
@@ -246,7 +246,7 @@ describe('Bouldering round service (unit)', () => {
     );
 
     boulderingRoundCountedRankingServiceMock.getRankings.mockImplementation(
-      async () => rankings,
+      () => rankings,
     );
 
     const res = await boulderingRoundService.updateRankings(round);

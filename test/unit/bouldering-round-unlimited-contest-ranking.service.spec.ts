@@ -30,7 +30,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
   });
 
   it('throws when getting rankings for an non unlimited contest round', () => {
-    return expect(
+    return expect(() =>
       boulderingUnlimitedContestRankingService.getRankings(
         givenBoulderingRound(
           {
@@ -40,7 +40,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
           [],
         ),
       ),
-    ).rejects.toBeInstanceOf(InternalServerErrorException);
+    ).toThrow(InternalServerErrorException);
   });
 
   it('gets rankings', async () => {
@@ -115,7 +115,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     expect(secondClimberRanking!.tops).toEqual([true, true]);
   });
 
-  it('gets rankings with ex-aequo', async () => {
+  it('gets rankings with ex-aequo', () => {
     const firstClimber = givenUser();
     const secondClimber = givenUser();
 
@@ -139,9 +139,9 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
       results,
     );
 
-    const {
-      groups,
-    } = await boulderingUnlimitedContestRankingService.getRankings(round);
+    const { groups } = boulderingUnlimitedContestRankingService.getRankings(
+      round,
+    );
 
     expect(groups).toHaveLength(1);
     const { rankings, bouldersPoints } = groups[0];
@@ -177,7 +177,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     expect(secondClimberRanking!.tops).toEqual([true]);
   });
 
-  it('gets rankings with non-topped boulder', async () => {
+  it('gets rankings with non-topped boulder', () => {
     const firstClimber = givenUser();
     const boulders = [givenBoulder(0)];
     const results = [givenResult(firstClimber, boulders[0])];
@@ -191,9 +191,9 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
       results,
     );
 
-    const {
-      groups,
-    } = await boulderingUnlimitedContestRankingService.getRankings(round);
+    const { groups } = boulderingUnlimitedContestRankingService.getRankings(
+      round,
+    );
 
     expect(groups).toHaveLength(1);
     const { rankings, bouldersPoints } = groups[0];
@@ -214,7 +214,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     expect(firstClimberRanking!.tops).toEqual([false]);
   });
 
-  it('shifts rankings after ex-aequos', async () => {
+  it('shifts rankings after ex-aequos', () => {
     const firstClimber = givenUser();
     const secondClimber = givenUser();
     const thirdClimber = givenUser();
@@ -242,9 +242,9 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
       results,
     );
 
-    const {
-      groups,
-    } = await boulderingUnlimitedContestRankingService.getRankings(round);
+    const { groups } = boulderingUnlimitedContestRankingService.getRankings(
+      round,
+    );
 
     expect(groups).toHaveLength(1);
     const { rankings, bouldersPoints } = groups[0];
@@ -278,5 +278,49 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     expect(firstClimberRanking!.ranking).toEqual(1);
     expect(secondClimberRanking!.ranking).toEqual(1);
     expect(thirdClimberRanking!.ranking).toEqual(3);
+  });
+
+  it('does not put climbers in rankings if there are no results', () => {
+    const firstClimber = givenUser();
+    const secondClimber = givenUser();
+
+    const boulders = [givenBoulder(0)];
+
+    const results = [
+      givenResult(firstClimber, boulders[0], {
+        top: true,
+        topInTries: 10,
+        zone: true,
+        zoneInTries: 5,
+      }),
+    ];
+
+    const round = givenBoulderingRound(
+      {
+        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        type: BoulderingRoundType.QUALIFIER,
+      },
+      boulders,
+      results,
+      [firstClimber, secondClimber],
+    );
+
+    const {
+      groups,
+      type,
+    } = boulderingUnlimitedContestRankingService.getRankings(round);
+
+    expect(type).toEqual(BoulderingRoundRankingType.UNLIMITED_CONTEST);
+    expect(groups).toHaveLength(1);
+
+    const rankings = groups[0].rankings;
+    expect(rankings).toHaveLength(1);
+
+    const firstClimberRanking = rankings.find(
+      (c) => c.climberId === firstClimber.id,
+    );
+
+    expect(firstClimberRanking).toBeTruthy();
+    expect(firstClimberRanking!.ranking).toEqual(1);
   });
 });

@@ -4,5 +4,5 @@ import type {
 } from '../bouldering-round.entity';
 
 export interface BoulderingRoundRankingService {
-  getRankings(round: BoulderingRound): Promise<BoulderingRoundRankings>;
+  getRankings(round: BoulderingRound): BoulderingRoundRankings;
 }

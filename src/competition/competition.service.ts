@@ -394,6 +394,7 @@ export class CompetitionService {
     }
 
     const season = competition.getSeason();
+
     const climbers = competition.registrations
       .getItems()
       .filter((r) => {

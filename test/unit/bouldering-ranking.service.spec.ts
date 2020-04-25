@@ -55,22 +55,24 @@ describe('Bouldering round service (unit)', () => {
 
       round.id = utils.getRandomId();
 
-      const groups = [
-        {
-          id: utils.getRandomId(),
+      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // @ts-ignore
+      const groups: BoulderingGroup[] = d[1].groups.map(
+        (g: { id: number; rankings: [] }): BoulderingGroup => ({
+          id: g.id ?? utils.getRandomId(),
           round,
           results: {} as Collection<BoulderingResult>,
           climbers: {
             count(): number {
-              return d[1].groups[0].rankings.length;
+              return g.rankings.length;
             },
           } as Collection<User>,
           boulders: {} as Collection<Boulder>,
           name: uuid.v4(),
           updatedAt: new Date(),
           createdAt: new Date(),
-        },
-      ];
+        }),
+      );
 
       round.groups = {
         getItems(): BoulderingGroup[] {
@@ -891,5 +893,292 @@ describe('Bouldering round service (unit)', () => {
     expect(rankings.size).toEqual(2);
     expect(rankings.get(1)).toEqual(1);
     expect(rankings.get(2)).toEqual(2);
+  });
+
+  it('handles a competition with multiple qualifiers groups and only one round', () => {
+    const rounds = givenBoulderingRounds([
+      BoulderingRoundType.QUALIFIER,
+      {
+        type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        groups: [
+          {
+            id: 0,
+            bouldersPoints: [50, 50],
+            rankings: [
+              {
+                tops: [true, true],
+                nbTops: 2,
+                points: 100,
+                ranking: 1,
+                climberId: 1,
+              },
+              {
+                tops: [true, false],
+                nbTops: 1,
+                points: 50,
+                ranking: 2,
+                climberId: 2,
+              },
+            ],
+          },
+          {
+            id: 1,
+            bouldersPoints: [50, 50],
+            rankings: [
+              {
+                tops: [true, true],
+                nbTops: 2,
+                points: 100,
+                ranking: 1,
+                climberId: 3,
+              },
+              {
+                tops: [true, false],
+                nbTops: 1,
+                points: 50,
+                ranking: 2,
+                climberId: 4,
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+
+    const rankings = boulderingRankingService.getRankings(rounds);
+
+    expect(rankings).toBeInstanceOf(Map);
+    expect(rankings.size).toEqual(4);
+    expect(rankings.get(1)).toEqual(1);
+    expect(rankings.get(2)).toEqual(3);
+    expect(rankings.get(3)).toEqual(1);
+    expect(rankings.get(4)).toEqual(3);
+  });
+
+  it('handles a competition with multiple qualifiers groups for the qualifications and one semi-final round', () => {
+    const rounds = givenBoulderingRounds(
+      [
+        BoulderingRoundType.QUALIFIER,
+        {
+          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+          groups: [
+            {
+              id: 0,
+              bouldersPoints: [50, 50],
+              rankings: [
+                {
+                  tops: [true, true],
+                  nbTops: 2,
+                  points: 100,
+                  ranking: 1,
+                  climberId: 1,
+                },
+                {
+                  tops: [true, false],
+                  nbTops: 1,
+                  points: 50,
+                  ranking: 2,
+                  climberId: 2,
+                },
+              ],
+            },
+            {
+              id: 1,
+              bouldersPoints: [50, 50],
+              rankings: [
+                {
+                  tops: [true, true],
+                  nbTops: 2,
+                  points: 100,
+                  ranking: 1,
+                  climberId: 3,
+                },
+                {
+                  tops: [true, false],
+                  nbTops: 1,
+                  points: 50,
+                  ranking: 2,
+                  climberId: 4,
+                },
+                {
+                  tops: [false, false],
+                  nbTops: 0,
+                  points: 0,
+                  ranking: 3,
+                  climberId: 5,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      [
+        BoulderingRoundType.SEMI_FINAL,
+        {
+          type: BoulderingRoundRankingType.CIRCUIT,
+          groups: [
+            {
+              id: 0,
+              rankings: [
+                {
+                  tops: [true, true, true, true],
+                  topsInTries: [1, 1, 1, 1],
+                  zones: [true, true, true, true],
+                  zonesInTries: [1, 1, 1, 1],
+                  ranking: 1,
+                  climberId: 1,
+                },
+                {
+                  tops: [true, true, true, true],
+                  topsInTries: [1, 1, 1, 1],
+                  zones: [true, true, true, true],
+                  zonesInTries: [1, 1, 1, 1],
+                  ranking: 1,
+                  climberId: 3,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    );
+
+    const rankings = boulderingRankingService.getRankings(rounds);
+
+    expect(rankings).toBeInstanceOf(Map);
+    expect(rankings.size).toEqual(5);
+    expect(rankings.get(1)).toEqual(1);
+    expect(rankings.get(2)).toEqual(3);
+    expect(rankings.get(3)).toEqual(1);
+    expect(rankings.get(4)).toEqual(3);
+    expect(rankings.get(5)).toEqual(5);
+  });
+
+  it('handles a competition with multiple qualifiers groups for the qualifications, one semi-final round and one final round', () => {
+    const rounds = givenBoulderingRounds(
+      [
+        BoulderingRoundType.QUALIFIER,
+        {
+          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+          groups: [
+            {
+              id: 0,
+              bouldersPoints: [50, 50],
+              rankings: [
+                {
+                  tops: [true, true],
+                  nbTops: 2,
+                  points: 100,
+                  ranking: 1,
+                  climberId: 1,
+                },
+                {
+                  tops: [true, false],
+                  nbTops: 1,
+                  points: 50,
+                  ranking: 2,
+                  climberId: 2,
+                },
+              ],
+            },
+            {
+              id: 1,
+              bouldersPoints: [50, 50],
+              rankings: [
+                {
+                  tops: [true, true],
+                  nbTops: 2,
+                  points: 100,
+                  ranking: 1,
+                  climberId: 3,
+                },
+                {
+                  tops: [true, false],
+                  nbTops: 1,
+                  points: 50,
+                  ranking: 2,
+                  climberId: 4,
+                },
+                {
+                  tops: [false, false],
+                  nbTops: 0,
+                  points: 0,
+                  ranking: 3,
+                  climberId: 5,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      [
+        BoulderingRoundType.SEMI_FINAL,
+        {
+          type: BoulderingRoundRankingType.CIRCUIT,
+          groups: [
+            {
+              id: 0,
+              rankings: [
+                {
+                  tops: [true, true, true, true],
+                  topsInTries: [1, 1, 1, 1],
+                  zones: [true, true, true, true],
+                  zonesInTries: [1, 1, 1, 1],
+                  ranking: 1,
+                  climberId: 1,
+                },
+                {
+                  tops: [true, true, true, true],
+                  topsInTries: [1, 1, 1, 1],
+                  zones: [true, true, true, true],
+                  zonesInTries: [1, 1, 1, 1],
+                  ranking: 1,
+                  climberId: 3,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      [
+        BoulderingRoundType.FINAL,
+        {
+          type: BoulderingRoundRankingType.CIRCUIT,
+          groups: [
+            {
+              id: 0,
+              rankings: [
+                {
+                  tops: [true, true, true, true],
+                  topsInTries: [1, 1, 1, 1],
+                  zones: [true, true, true, true],
+                  zonesInTries: [1, 1, 1, 1],
+                  ranking: 1,
+                  climberId: 1,
+                },
+                {
+                  tops: [true, true, true, false],
+                  topsInTries: [1, 1, 1, 0],
+                  zones: [true, true, true, true],
+                  zonesInTries: [1, 1, 1, 1],
+                  ranking: 2,
+                  climberId: 3,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    );
+
+    const rankings = boulderingRankingService.getRankings(rounds);
+
+    expect(rankings).toBeInstanceOf(Map);
+    expect(rankings.size).toEqual(5);
+    expect(rankings.get(1)).toEqual(1);
+    expect(rankings.get(2)).toEqual(3);
+    expect(rankings.get(3)).toEqual(2);
+    expect(rankings.get(4)).toEqual(3);
+    expect(rankings.get(5)).toEqual(5);
   });
 });

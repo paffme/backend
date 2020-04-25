@@ -16,13 +16,13 @@
 
 ## Si un concurrent ne parvient pas à prendre le départ
 
-- [ ] Au tour de qualification, il ne sera pas classé
-- [ ] Dans tout autre tour, il sera classé en dernier dans le tour en question
+- [x] Au tour de qualification, il ne sera pas classé
+- [x] Dans tout autre tour, il sera classé en dernier dans le tour en question
 
 # Classement des demi-finales
 
 - [x] Si, à l'issue d'une demi-finale, les compétiteurs sont à égalité en suivant la procédure de classement de l'article 6.9.1, leur classement relatif sera déterminé en prenant en compte le classement des qualifications
-    - [ ] à moins que le tour de qualification ne se soit déroulé avec deux groupes de départ
+    - [x] à moins que le tour de qualification ne se soit déroulé avec deux groupes de départ
 
 # Classement des finales
 
@@ -43,4 +43,4 @@ Le classement général est réalisé en prenant en compte les principes suivant
 - [x] Le cas échéant, les compétiteurs classés en finale, suivant cet ordre ; et
 - [x] Le cas échéant, les compétiteurs classés en demi-finale, suivant cet ordre ; et
 - [x] Les compétiteurs étant uniquement classés en qualification, suivant cet ordre
-    - [ ] sachant que si le tour de qualification s’est déroulé avec deux groupes de départ, le classement général est réalisé en fusionnant les classements de chaque groupe, plusieurs compétiteurs ayant le même classement dans les groupes étant classés ex-aequo.
+    - [x] sachant que si le tour de qualification s’est déroulé avec deux groupes de départ, le classement général est réalisé en fusionnant les classements de chaque groupe, plusieurs compétiteurs ayant le même classement dans les groupes étant classés ex-aequo.

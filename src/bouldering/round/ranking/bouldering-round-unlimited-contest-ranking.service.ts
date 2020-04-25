@@ -12,6 +12,7 @@ import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { BoulderingRoundRankingService } from './bouldering-round-ranking.service';
 import { RankingsMap } from '../../types/rankings-map';
 import { BoulderingGroup } from '../../group/bouldering-group.entity';
+import { handleExAequosRankings } from '../../ranking/ranking.utils';
 
 type AggregatedBoulderingUnlimitedResults = Pick<
   BoulderingRoundUnlimitedContestRanking,
@@ -87,44 +88,17 @@ export class BoulderingRoundUnlimitedContestRankingService
     });
   }
 
-  private computeRankings(
-    entries: AggregatedClimbersResultsEntry[],
-  ): RankingsMap {
-    const rankings: RankingsMap = new Map();
-
-    let previousClimberEntry: AggregatedClimbersResultsEntry | undefined;
-    let previousClimberRanking: number | undefined;
-
-    // Firstly sort entries by points
-    entries = this.sortClimbersByPoints(entries);
+  private computeRankings(results: AggregatedClimbersResultsMap): RankingsMap {
+    const entries = this.sortClimbersByPoints(Array.from(results));
 
     // Then handle ex-aequo and define final ranking
-    for (let i = 0; i < entries.length; i++) {
-      const entry = entries[i];
-      const [climberId, { points }] = entry;
-      let ranking: number;
-
-      if (
-        typeof previousClimberRanking === 'number' &&
-        previousClimberEntry &&
-        Math.abs(points - previousClimberEntry[1].points) < 0.01
-      ) {
-        ranking = previousClimberRanking;
-      } else {
-        ranking = i + 1;
-      }
-
-      rankings.set(climberId, ranking);
-      previousClimberEntry = entry;
-      previousClimberRanking = ranking;
-    }
-
-    return rankings;
+    return handleExAequosRankings(
+      entries,
+      (entryA, entryB) => Math.abs(entryA[1].points - entryB[1].points) < 0.01,
+    );
   }
 
-  async getRankings(
-    round: BoulderingRound,
-  ): Promise<BoulderingRoundUnlimitedContestRankings> {
+  getRankings(round: BoulderingRound): BoulderingRoundUnlimitedContestRankings {
     if (round.rankingType !== this.rankingType) {
       throw new InternalServerErrorException('Wrong ranking type');
     }
@@ -159,17 +133,12 @@ export class BoulderingRoundUnlimitedContestRankingService
         boulders,
       );
 
-      const entries = Array.from(climberResults);
-      const climbersIdsInGroup = group.climbers.getItems().map((c) => c.id);
+      // Compute rankings
+      const groupRankings = this.computeRankings(climberResults);
 
-      const groupResults = entries.filter(([climberId]) =>
-        climbersIdsInGroup.includes(climberId),
-      );
-
-      const groupRankings = this.computeRankings(groupResults);
-
+      // Save rankings
       groupsBouldersPoint.set(group.id, bouldersPoints);
-      groupsResults.set(group.id, new Map(groupResults));
+      groupsResults.set(group.id, climberResults);
       groupsRankings.set(group.id, groupRankings);
     }
 
