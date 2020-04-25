@@ -6,7 +6,7 @@ import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 
 @Injectable()
-export class JudgeAuthorizationService extends BaseAuthorizationService {
+export class ChiefRouteSetterAuthorizationService extends BaseAuthorizationService {
   constructor(
     @InjectRepository(Competition)
     private readonly competitionRepository: EntityRepository<Competition>,
@@ -20,7 +20,7 @@ export class JudgeAuthorizationService extends BaseAuthorizationService {
   ): Promise<boolean> {
     const competition = await this.competitionRepository.findOne(
       competitionId,
-      ['juryPresidents', 'judges'],
+      ['chiefRouteSetters'],
     );
 
     if (!competition) {
@@ -28,9 +28,11 @@ export class JudgeAuthorizationService extends BaseAuthorizationService {
     }
 
     return (
-      competition.judges
+      competition.chiefRouteSetters
         .getItems()
-        .findIndex((judge) => judge.id === authenticatedUserId) !== -1
+        .findIndex(
+          (chiefRouteSetter) => chiefRouteSetter.id === authenticatedUserId,
+        ) !== -1
     );
   }
 }
