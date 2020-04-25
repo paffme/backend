@@ -670,4 +670,67 @@ describe('User (e2e)', () => {
       expect(organization).toBeTruthy();
     });
   });
+
+  describe('GET /users/{userId}/competition-roles', () => {
+    it('gets user competition roles', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const auth = await utils.login(credentials);
+
+      await utils.addJuryPresidentInCompetition(user, competition);
+      await utils.addJudgeInCompetition(user, competition);
+      await utils.addChiefRouteSetterInCompetition(user, competition);
+      await utils.addRouteSetterInCompetition(user, competition);
+      await utils.addTechnicalDelegateInCompetition(user, competition);
+
+      const { body } = await api
+        .get(`/api/users/${user.id}/competition-roles`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(200);
+
+      expect(body).toHaveProperty('organizations');
+      expect(body.organizations[0].id).toEqual(competition.id);
+
+      expect(body).toHaveProperty('juryPresidencies');
+      expect(body.juryPresidencies[0].id).toEqual(competition.id);
+
+      expect(body).toHaveProperty('judgements');
+      expect(body.judgements[0].id).toEqual(competition.id);
+
+      expect(body).toHaveProperty('chiefRouteSettings');
+      expect(body.chiefRouteSettings[0].id).toEqual(competition.id);
+
+      expect(body).toHaveProperty('routeSettings');
+      expect(body.routeSettings[0].id).toEqual(competition.id);
+
+      expect(body).toHaveProperty('technicalDelegations');
+      expect(body.technicalDelegations[0].id).toEqual(competition.id);
+    });
+
+    it('returns 401 when getting user competition roles without authentication', async () => {
+      const { user } = await utils.givenUser();
+      await api.get(`/api/users/${user.id}/competition-roles`).expect(401);
+    });
+
+    it('returns 403 when getting user competition roles from another user', async () => {
+      const { user } = await utils.givenUser();
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      await api
+        .get(`/api/users/${user.id}/competition-roles`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
+    });
+
+    it('returns 403 when getting user competition roles of an unknown user', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      await api
+        .get('/api/users/9999999/competition-roles')
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
+    });
+  });
 });
