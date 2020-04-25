@@ -9,6 +9,11 @@ import { OrganizerAuthorizationService } from './authorization/organizer.authori
 import { BoulderingModule } from '../bouldering/bouldering.module';
 import { JuryPresidentAuthorizationService } from './authorization/jury-president.authorization.service';
 import { JudgeAuthorizationService } from './authorization/judge.authorization.service';
+import { OrganizerAuthorizationGuard } from './authorization/organizer.authorization.guard';
+import { JuryPresidentAuthorizationGuard } from './authorization/jury-president.authorization.guard';
+import { ChiefRouteSetterAuthorizationGuard } from './authorization/chief-route-setter.authorization.guard';
+import { ChiefRouteSetterAuthorizationService } from './authorization/chief-route-setter.authorization.service';
+import { JudgeAuthorizationGuard } from './authorization/judge.authorization.guard';
 
 @Module({
   imports: [
@@ -20,10 +25,15 @@ import { JudgeAuthorizationService } from './authorization/judge.authorization.s
   ],
   controllers: [CompetitionController],
   providers: [
+    OrganizerAuthorizationGuard,
+    JuryPresidentAuthorizationGuard,
+    ChiefRouteSetterAuthorizationGuard,
+    JudgeAuthorizationGuard,
     CompetitionService,
     OrganizerAuthorizationService,
     JuryPresidentAuthorizationService,
     JudgeAuthorizationService,
+    ChiefRouteSetterAuthorizationService,
   ],
 })
 export class CompetitionModule {}

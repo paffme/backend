@@ -423,7 +423,7 @@ describe('Competition (e2e)', () => {
 
   describe('Judges', function () {
     describe('PUT /competitions/{competitionId}/judges/{userId}', () => {
-      it('adds a juge', async function () {
+      it('adds a juge as an organizer', async function () {
         const { user, credentials } = await utils.givenUser();
         const token = await utils.login(credentials);
         const competition = await utils.givenCompetition(user);
@@ -432,6 +432,24 @@ describe('Competition (e2e)', () => {
         await api
           .put(`/api/competitions/${competition.id}/judges/${user.id}`)
           .set('Authorization', `Bearer ${token.token}`)
+          .expect(204);
+
+        const judges = await utils.getJudges(competition);
+        const judge = judges.find((j) => j.id === user.id);
+        expect(judge).toBeTruthy();
+      });
+
+      it('adds a juge as a jury president', async function () {
+        const { user } = await utils.givenUser();
+        const { user: juryPresident, credentials } = await utils.givenUser();
+        const auth = await utils.login(credentials);
+        const competition = await utils.givenCompetition(user);
+        await utils.addJuryPresidentInCompetition(juryPresident, competition);
+        utils.clearORM();
+
+        await api
+          .put(`/api/competitions/${competition.id}/judges/${user.id}`)
+          .set('Authorization', `Bearer ${auth.token}`)
           .expect(204);
 
         const judges = await utils.getJudges(competition);
@@ -475,10 +493,29 @@ describe('Competition (e2e)', () => {
     });
 
     describe('DELETE /competitions/{competitionId}/judges/{userId}', () => {
-      it('removes a judge', async function () {
+      it('removes a judge as an organizer', async function () {
         const { credentials, user } = await utils.givenUser();
         const token = await utils.login(credentials);
         const competition = await utils.givenCompetition(user);
+        await utils.addJudgeInCompetition(user, competition);
+        utils.clearORM();
+
+        await api
+          .delete(`/api/competitions/${competition.id}/judges/${user.id}`)
+          .set('Authorization', `Bearer ${token.token}`)
+          .expect(204);
+
+        const judges = await utils.getJudges(competition);
+        const judge = judges.find((r) => r.id === user.id);
+        expect(judge).toBeUndefined();
+      });
+
+      it('removes a judge as a jury president', async function () {
+        const { user } = await utils.givenUser();
+        const { user: juryPresident, credentials } = await utils.givenUser();
+        const token = await utils.login(credentials);
+        const competition = await utils.givenCompetition(user);
+        await utils.addJuryPresidentInCompetition(juryPresident, competition);
         await utils.addJudgeInCompetition(user, competition);
         utils.clearORM();
 
@@ -629,7 +666,7 @@ describe('Competition (e2e)', () => {
 
   describe('Route setters', function () {
     describe('PUT /competitions/{competitionId}/route-setters/{userId}', () => {
-      it('adds route setter', async function () {
+      it('adds route setter as an organizer', async function () {
         const { credentials, user } = await utils.givenUser();
         const token = await utils.login(credentials);
         const competition = await utils.givenCompetition(user);
@@ -638,6 +675,28 @@ describe('Competition (e2e)', () => {
         await api
           .put(`/api/competitions/${competition.id}/route-setters/${user.id}`)
           .set('Authorization', `Bearer ${token.token}`)
+          .expect(204);
+
+        const routeSetters = await utils.getRouteSetters(competition);
+        const routeSetter = routeSetters.find((j) => j.id === user.id);
+        expect(routeSetter).toBeTruthy();
+      });
+
+      it('adds route setter as a chief route setter', async function () {
+        const { user } = await utils.givenUser();
+        const { user: chiefRouteSetter, credentials } = await utils.givenUser();
+        const auth = await utils.login(credentials);
+        const competition = await utils.givenCompetition(user);
+        await utils.addChiefRouteSetterInCompetition(
+          chiefRouteSetter,
+          competition,
+        );
+
+        utils.clearORM();
+
+        await api
+          .put(`/api/competitions/${competition.id}/route-setters/${user.id}`)
+          .set('Authorization', `Bearer ${auth.token}`)
           .expect(204);
 
         const routeSetters = await utils.getRouteSetters(competition);
@@ -687,7 +746,7 @@ describe('Competition (e2e)', () => {
     });
 
     describe('DELETE /competitions/{competitionId}/route-setters/{userId}', () => {
-      it('removes a route setter', async function () {
+      it('removes a route setter as an organizer', async function () {
         const { credentials, user } = await utils.givenUser();
         const token = await utils.login(credentials);
         const competition = await utils.givenCompetition(user);
@@ -699,6 +758,30 @@ describe('Competition (e2e)', () => {
             `/api/competitions/${competition.id}/route-setters/${user.id}`,
           )
           .set('Authorization', `Bearer ${token.token}`)
+          .expect(204);
+
+        const routeSetters = await utils.getRouteSetters(competition);
+        const routeSetter = routeSetters.find((r) => r.id === user.id);
+        expect(routeSetter).toBeUndefined();
+      });
+
+      it('removes a route setter as a chief route setter', async function () {
+        const { user } = await utils.givenUser();
+        const { user: chiefRouteSetter, credentials } = await utils.givenUser();
+        const auth = await utils.login(credentials);
+        const competition = await utils.givenCompetition(user);
+        await utils.addChiefRouteSetterInCompetition(
+          chiefRouteSetter,
+          competition,
+        );
+        await utils.addRouteSetterInCompetition(user, competition);
+        utils.clearORM();
+
+        await api
+          .delete(
+            `/api/competitions/${competition.id}/route-setters/${user.id}`,
+          )
+          .set('Authorization', `Bearer ${auth.token}`)
           .expect(204);
 
         const routeSetters = await utils.getRouteSetters(competition);
