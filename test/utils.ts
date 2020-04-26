@@ -20,9 +20,12 @@ import { Boulder } from '../src/bouldering/boulder/boulder.entity';
 import { givenCreateCompetitionDto } from './fixture/competition.fixture';
 import { Sex } from '../src/shared/types/sex.enum';
 import { CategoryName } from '../src/shared/types/category-name.enum';
+import { ConfigurationService } from '../src/shared/configuration/configuration.service';
 
 // FIXME, cut this utils in multiple parts to remove ts-ignore comments
 /* eslint-disable @typescript-eslint/ban-ts-ignore */
+
+const config = new ConfigurationService();
 
 export default class TestUtils {
   constructor(

@@ -1,29 +1,29 @@
 import { Test } from '@nestjs/testing';
-import { Competition } from '../../src/competition/competition.entity';
-import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
+import { Competition } from '../../../src/competition/competition.entity';
+import { BoulderingRoundService } from '../../../src/bouldering/round/bouldering-round.service';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
   BoulderingRoundType,
   BoulderingRoundUnlimitedContestRankings,
-} from '../../src/bouldering/round/bouldering-round.entity';
+} from '../../../src/bouldering/round/bouldering-round.entity';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
-import { BoulderingRoundMapper } from '../../src/shared/mappers/bouldering-round.mapper';
-import { RepositoryMock, ServiceMock } from './mocks/types';
-import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
-import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
-import { BoulderingResultService } from '../../src/bouldering/result/bouldering-result.service';
-import { BoulderMapper } from '../../src/shared/mappers/boulder.mapper';
+import { BoulderingRoundMapper } from '../../../src/shared/mappers/bouldering-round.mapper';
+import { RepositoryMock, ServiceMock } from '../mocks/types';
+import { CreateBoulderingRoundDto } from '../../../src/competition/dto/in/body/create-bouldering-round.dto';
+import { BoulderService } from '../../../src/bouldering/boulder/boulder.service';
+import { BoulderingResultService } from '../../../src/bouldering/result/bouldering-result.service';
+import { BoulderMapper } from '../../../src/shared/mappers/boulder.mapper';
 import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
-import { BoulderingRoundCountedRankingService } from '../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
-import { Sex } from '../../src/shared/types/sex.enum';
-import { CategoryName } from '../../src/shared/types/category-name.enum';
-import { BoulderingGroupService } from '../../src/bouldering/group/bouldering-group.service';
-import { BoulderingGroupMapper } from '../../src/shared/mappers/bouldering-group.mapper';
+import { BoulderingRoundUnlimitedContestRankingService } from '../../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
+import { BoulderingRoundCountedRankingService } from '../../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
+import { Sex } from '../../../src/shared/types/sex.enum';
+import { CategoryName } from '../../../src/shared/types/category-name.enum';
+import { BoulderingGroupService } from '../../../src/bouldering/group/bouldering-group.service';
+import { BoulderingGroupMapper } from '../../../src/shared/mappers/bouldering-group.mapper';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),

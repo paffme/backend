@@ -1,27 +1,27 @@
-import TestUtils from '../utils';
-import { UserService } from '../../src/user/user.service';
+import TestUtils from '../../utils';
+import { UserService } from '../../../src/user/user.service';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
-import { CompetitionService } from '../../src/competition/competition.service';
+import { CompetitionService } from '../../../src/competition/competition.service';
 import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { Competition } from '../../src/competition/competition.entity';
-import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
-import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
-import { CompetitionMapper } from '../../src/shared/mappers/competition.mapper';
-import { RepositoryMock, ServiceMock } from './mocks/types';
-import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
-import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
-import { CompetitionType } from '../../src/competition/types/competition-type.enum';
-import { BoulderingRankingService } from '../../src/bouldering/ranking/bouldering-ranking.service';
-import { Category } from '../../src/shared/types/category.interface';
-import { CategoryName } from '../../src/shared/types/category-name.enum';
-import { Sex } from '../../src/shared/types/sex.enum';
-import { givenCategory } from '../fixture/category.fixture';
-import { UpdateCompetitionByIdDto } from '../../src/competition/dto/in/body/update-competition-by-id.dto';
+import { Competition } from '../../../src/competition/competition.entity';
+import { CompetitionRegistration } from '../../../src/shared/entity/competition-registration.entity';
+import { BoulderingRoundService } from '../../../src/bouldering/round/bouldering-round.service';
+import { CompetitionMapper } from '../../../src/shared/mappers/competition.mapper';
+import { RepositoryMock, ServiceMock } from '../mocks/types';
+import { CreateBoulderingRoundDto } from '../../../src/competition/dto/in/body/create-bouldering-round.dto';
+import { CreateBoulderingResultDto } from '../../../src/competition/dto/in/body/create-bouldering-result.dto';
+import { CompetitionType } from '../../../src/competition/types/competition-type.enum';
+import { BoulderingRankingService } from '../../../src/bouldering/ranking/bouldering-ranking.service';
+import { Category } from '../../../src/shared/types/category.interface';
+import { CategoryName } from '../../../src/shared/types/category-name.enum';
+import { Sex } from '../../../src/shared/types/sex.enum';
+import { givenCategory } from '../../fixture/category.fixture';
+import { UpdateCompetitionByIdDto } from '../../../src/competition/dto/in/body/update-competition-by-id.dto';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),

@@ -1,14 +1,14 @@
 import { Test } from '@nestjs/testing';
-import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
+import { BoulderingRoundUnlimitedContestRankingService } from '../../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
 import {
   BoulderingRoundRankingType,
   BoulderingRoundType,
-} from '../../src/bouldering/round/bouldering-round.entity';
+} from '../../../src/bouldering/round/bouldering-round.entity';
 import { InternalServerErrorException } from '@nestjs/common';
-import { givenBoulderingRound } from '../fixture/bouldering-round.fixture';
-import { givenUser } from '../fixture/user.fixture';
-import { givenBoulder } from '../fixture/boulder.fixture';
-import { givenResult } from '../fixture/bouldering-result.fixture';
+import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
+import { givenUser } from '../../fixture/user.fixture';
+import { givenBoulder } from '../../fixture/boulder.fixture';
+import { givenResult } from '../../fixture/bouldering-result.fixture';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 

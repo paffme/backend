@@ -1,21 +1,21 @@
 import { Test } from '@nestjs/testing';
-import { UserService } from '../../src/user/user.service';
+import { UserService } from '../../../src/user/user.service';
 import {
   BadRequestException,
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { UpdateUserDto } from '../../src/user/dto/in/body/update-user.dto';
+import { UpdateUserDto } from '../../../src/user/dto/in/body/update-user.dto';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
-import { User } from '../../src/user/user.entity';
-import { RepositoryMock } from './mocks/types';
-import { UserMapper } from '../../src/shared/mappers/user.mapper';
-import { AuthenticationService } from '../../src/shared/authentication/authentication.service';
-import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
+import { User } from '../../../src/user/user.entity';
+import { RepositoryMock } from '../mocks/types';
+import { UserMapper } from '../../../src/shared/mappers/user.mapper';
+import { AuthenticationService } from '../../../src/shared/authentication/authentication.service';
+import { ConfigurationService } from '../../../src/shared/configuration/configuration.service';
 import { JwtService } from '@nestjs/jwt';
 import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
 import * as uuid from 'uuid';
-import { Sex } from '../../src/shared/types/sex.enum';
+import { Sex } from '../../../src/shared/types/sex.enum';
 
 const userRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),

@@ -7,7 +7,7 @@ import {
   NotImplementedException,
 } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
-import { EntityRepository } from 'mikro-orm';
+import { EntityRepository, QueryOrder } from 'mikro-orm';
 import {
   Competition,
   CompetitionRelation,
@@ -29,6 +29,11 @@ import { BoulderingRankingService } from '../bouldering/ranking/bouldering-ranki
 import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
 import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
+
+import {
+  OffsetLimitRequest,
+  OffsetLimitResponse,
+} from '../shared/pagination/pagination.service';
 
 @Injectable()
 export class CompetitionService {
@@ -61,8 +66,30 @@ export class CompetitionService {
     return competition;
   }
 
-  getAll(): Promise<Competition[]> {
-    return this.competitionRepository.findAll();
+  async getUpcomingCompetitions(
+    offsetLimitRequest: OffsetLimitRequest,
+  ): Promise<OffsetLimitResponse<Competition>> {
+    const now = new Date();
+
+    const [competitions, total] = await this.competitionRepository.findAndCount(
+      {
+        startDate: {
+          $gte: now,
+        },
+      },
+      {
+        limit: offsetLimitRequest.limit,
+        offset: offsetLimitRequest.offset,
+        orderBy: {
+          startDate: QueryOrder.DESC,
+        },
+      },
+    );
+
+    return {
+      total,
+      data: competitions,
+    };
   }
 
   async create(dto: CreateCompetitionDTO, owner: User): Promise<Competition> {

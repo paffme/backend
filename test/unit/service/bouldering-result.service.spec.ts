@@ -1,17 +1,17 @@
-import TestUtils from '../utils';
+import TestUtils from '../../utils';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
-import { BoulderingResultService } from '../../src/bouldering/result/bouldering-result.service';
-import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
-import { RepositoryMock } from './mocks/types';
-import { BoulderingRoundRankingType } from '../../src/bouldering/round/bouldering-round.entity';
-import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
-import { User } from '../../src/user/user.entity';
-import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
+import { BoulderingResultService } from '../../../src/bouldering/result/bouldering-result.service';
+import { BoulderingResult } from '../../../src/bouldering/result/bouldering-result.entity';
+import { RepositoryMock } from '../mocks/types';
+import { BoulderingRoundRankingType } from '../../../src/bouldering/round/bouldering-round.entity';
+import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
+import { User } from '../../../src/user/user.entity';
+import { CreateBoulderingResultDto } from '../../../src/competition/dto/in/body/create-bouldering-result.dto';
 import { UnprocessableEntityException } from '@nestjs/common';
-import { givenBoulderingRound } from '../fixture/bouldering-round.fixture';
-import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.entity';
-import { givenBoulderingGroup } from '../fixture/bouldering-group.fixture';
+import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
+import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
+import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
 
 const boulderingResultRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),

@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Put,
+  Req,
   UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
@@ -76,6 +77,12 @@ import { UpdateCompetitionByIdParamsDto } from './dto/in/params/update-competiti
 import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
 import { OrGuard } from '../shared/guards/or.authorization.guard';
 import { ChiefRouteSetterAuthorizationGuard } from './authorization/chief-route-setter.authorization.guard';
+import { Pagination } from '../shared/decorators/pagination.decorator';
+import {
+  OffsetLimitRequest,
+  PaginationService,
+} from '../shared/pagination/pagination.service';
+import { Request } from 'express';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -88,16 +95,29 @@ export class CompetitionController {
     private readonly boulderingResultMapper: BoulderingResultMapper,
     private readonly rankingMapper: RankingsMapper,
     private readonly mapper: CompetitionMapper,
+    private readonly paginationService: PaginationService,
   ) {}
 
   @Get()
   @ApiOkResponse({ type: CompetitionDto, isArray: true })
   @ApiOperation(
-    GetOperationId(CompetitionDto.constructor.name, 'GetCompetitions'),
+    GetOperationId(CompetitionDto.constructor.name, 'GetUpcomingCompetitions'),
   )
-  async getAll(): Promise<CompetitionDto[]> {
-    const competitions = await this.competitionService.getAll();
-    return this.mapper.mapArray(competitions);
+  async getUpcomingCompetitions(
+    @Pagination() offsetLimitRequest: OffsetLimitRequest,
+    @Req() request: Request,
+  ): Promise<CompetitionDto[]> {
+    const offsetLimitResponse = await this.competitionService.getUpcomingCompetitions(
+      offsetLimitRequest,
+    );
+
+    this.paginationService.addPaginationHeaders(
+      offsetLimitResponse,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      request.res!,
+    );
+
+    return this.mapper.mapArray(offsetLimitResponse.data);
   }
 
   @Post()

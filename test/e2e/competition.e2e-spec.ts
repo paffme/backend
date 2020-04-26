@@ -10,6 +10,7 @@ import { UserService } from '../../src/user/user.service';
 import { CompetitionService } from '../../src/competition/competition.service';
 import { givenCreateCompetitionDto } from '../fixture/competition.fixture';
 import { UpdateCompetitionByIdDto } from '../../src/competition/dto/in/body/update-competition-by-id.dto';
+import LinkHeader from 'http-link-header';
 
 describe('Competition (e2e)', () => {
   let app: NestExpressApplication;
@@ -44,11 +45,20 @@ describe('Competition (e2e)', () => {
   });
 
   describe('GET /competitions', () => {
-    it('retrieves competitions', async function () {
+    it('retrieves competitions with pagination', async function () {
       const { user } = await utils.givenUser();
-      const competition = await utils.givenCompetition(user);
-      const { body } = await api.get('/api/competitions').expect(200);
-      expect(body.map((c: CompetitionDto) => c.id)).toContain(competition.id);
+      const now = new Date();
+      now.setSeconds(now.getSeconds() + 10);
+
+      const competition = await utils.givenCompetition(user, {
+        startDate: now,
+      });
+
+      const res = await api.get('/competitions').expect(200);
+
+      expect(res.body.map((c: CompetitionDto) => c.id)).toContain(
+        competition.id,
+      );
     });
   });
 
@@ -58,7 +68,7 @@ describe('Competition (e2e)', () => {
       const competition = await utils.givenCompetition(user);
 
       const { body } = await api
-        .get(`/api/competitions/${competition.id}`)
+        .get(`/competitions/${competition.id}`)
         .expect(200);
 
       expect(body.id).toEqual(competition.id);
@@ -75,7 +85,7 @@ describe('Competition (e2e)', () => {
     });
 
     it('returns 404 when getting an unknown competition', async () => {
-      await api.get('/api/competitions/9999999').expect(404);
+      await api.get('/competitions/9999999').expect(404);
     });
   });
 
@@ -90,7 +100,7 @@ describe('Competition (e2e)', () => {
       };
 
       const { body } = await api
-        .patch(`/api/competitions/${competition.id}`)
+        .patch(`/competitions/${competition.id}`)
         .set('Authorization', `Bearer ${auth.token}`)
         .send(dto)
         .expect(200);
@@ -104,10 +114,7 @@ describe('Competition (e2e)', () => {
       const competition = await utils.givenCompetition(user);
       const dto: UpdateCompetitionByIdDto = {};
 
-      await api
-        .patch(`/api/competitions/${competition.id}`)
-        .send(dto)
-        .expect(401);
+      await api.patch(`/competitions/${competition.id}`).send(dto).expect(401);
     });
 
     it('returns 403 when someone that is not an organizer try to update a competition', async () => {
@@ -119,7 +126,7 @@ describe('Competition (e2e)', () => {
       const dto: UpdateCompetitionByIdDto = {};
 
       await api
-        .patch(`/api/competitions/${competition.id}`)
+        .patch(`/competitions/${competition.id}`)
         .set('Authorization', `Bearer ${auth.token}`)
         .send(dto)
         .expect(403);
@@ -131,7 +138,7 @@ describe('Competition (e2e)', () => {
       const dto: UpdateCompetitionByIdDto = {};
 
       await api
-        .patch('/api/competitions/9999999')
+        .patch('/competitions/9999999')
         .set('Authorization', `Bearer ${auth.token}`)
         .send(dto)
         .expect(404);
@@ -145,7 +152,7 @@ describe('Competition (e2e)', () => {
       const competition = givenCreateCompetitionDto();
 
       const { body } = await api
-        .post('/api/competitions')
+        .post('/competitions')
         .set('Authorization', `Bearer ${auth.token}`)
         .send(competition)
         .expect(201);
@@ -166,7 +173,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(`/api/competitions/${competition.id}/registrations/${user.id}`)
+          .put(`/competitions/${competition.id}/registrations/${user.id}`)
           .set('Authorization', `Bearer ${auth.token}`)
           .expect(204);
 
@@ -188,9 +195,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(
-            '/api/competitions/' + competition.id + '/registrations/' + user.id,
-          )
+          .put('/competitions/' + competition.id + '/registrations/' + user.id)
           .set('Authorization', 'Bearer ' + auth.token)
           .expect(204);
 
@@ -204,9 +209,7 @@ describe('Competition (e2e)', () => {
       });
 
       it('returns 401 when unauthenticated user do not own the accessed user to get registrations', async () => {
-        await api
-          .put('/api/competitions/999999/registrations/888888')
-          .expect(401);
+        await api.put('/competitions/999999/registrations/888888').expect(401);
       });
 
       it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -214,7 +217,7 @@ describe('Competition (e2e)', () => {
         const auth = await utils.login(credentials);
 
         await api
-          .put('/api/competitions/999999999/registrations/888888')
+          .put('/competitions/999999999/registrations/888888')
           .set('Authorization', 'Bearer ' + auth.token)
           .expect(403);
       });
@@ -227,7 +230,7 @@ describe('Competition (e2e)', () => {
         await utils.registerUserInCompetition(user, competition);
 
         const res = await api
-          .get(`/api/competitions/${competition.id}/registrations`)
+          .get(`/competitions/${competition.id}/registrations`)
           .expect(200);
 
         const registration = res.body.find(
@@ -250,9 +253,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .delete(
-            `/api/competitions/${competition.id}/registrations/${user.id}`,
-          )
+          .delete(`/competitions/${competition.id}/registrations/${user.id}`)
           .set('Authorization', `Bearer ${auth.token}`)
           .expect(204);
 
@@ -268,7 +269,7 @@ describe('Competition (e2e)', () => {
 
       it('returns 401 when unauthenticated user do not own the accessed user to delete registrations', async () => {
         await api
-          .delete('/api/competitions/999999/registrations/888888')
+          .delete('/competitions/999999/registrations/888888')
           .expect(401);
       });
 
@@ -284,7 +285,7 @@ describe('Competition (e2e)', () => {
 
         await api
           .delete(
-            `/api/competitions/${competition.id}/registrations/${thirdUser.id}`,
+            `/competitions/${competition.id}/registrations/${thirdUser.id}`,
           )
           .set('Authorization', 'Bearer ' + secondAuth.token)
           .expect(403);
@@ -300,7 +301,7 @@ describe('Competition (e2e)', () => {
 
         await api
           .delete(
-            '/api/competitions/' + competition.id + '/registrations/' + user.id,
+            '/competitions/' + competition.id + '/registrations/' + user.id,
           )
           .set('Authorization', 'Bearer ' + auth.token)
           .expect(204);
@@ -326,7 +327,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         const res = await api
-          .get(`/api/competitions/${competition.id}/jury-presidents`)
+          .get(`/competitions/${competition.id}/jury-presidents`)
           .expect(200);
 
         const juryPresident = res.body.find(
@@ -345,7 +346,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(`/api/competitions/${competition.id}/jury-presidents/${user.id}`)
+          .put(`/competitions/${competition.id}/jury-presidents/${user.id}`)
           .set('Authorization', `Bearer ${auth.token}`)
           .expect(204);
 
@@ -356,7 +357,7 @@ describe('Competition (e2e)', () => {
 
       it('returns 401 when unauthenticated user do not own the accessed user to add jury president', async () => {
         await api
-          .put('/api/competitions/999999/jury-presidents/888888')
+          .put('/competitions/999999/jury-presidents/888888')
           .expect(401);
       });
 
@@ -370,7 +371,7 @@ describe('Competition (e2e)', () => {
         const competition = await utils.givenCompetition(user);
 
         await api
-          .put(`/api/competitions/${competition.id}/jury-presidents/${user.id}`)
+          .put(`/competitions/${competition.id}/jury-presidents/${user.id}`)
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
@@ -385,9 +386,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .delete(
-            `/api/competitions/${competition.id}/jury-presidents/${user.id}`,
-          )
+          .delete(`/competitions/${competition.id}/jury-presidents/${user.id}`)
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
 
@@ -398,7 +397,7 @@ describe('Competition (e2e)', () => {
 
       it('returns 401 when unauthenticated user do not own the accessed user to delete a jury president', async () => {
         await api
-          .delete('/api/competitions/999999/jury-presidents/888888')
+          .delete('/competitions/999999/jury-presidents/888888')
           .expect(401);
       });
 
@@ -412,9 +411,7 @@ describe('Competition (e2e)', () => {
         const competition = await utils.givenCompetition(user);
 
         await api
-          .delete(
-            `/api/competitions/${competition.id}/jury-presidents/${user.id}`,
-          )
+          .delete(`/competitions/${competition.id}/jury-presidents/${user.id}`)
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
@@ -430,7 +427,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(`/api/competitions/${competition.id}/judges/${user.id}`)
+          .put(`/competitions/${competition.id}/judges/${user.id}`)
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
 
@@ -448,7 +445,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(`/api/competitions/${competition.id}/judges/${user.id}`)
+          .put(`/competitions/${competition.id}/judges/${user.id}`)
           .set('Authorization', `Bearer ${auth.token}`)
           .expect(204);
 
@@ -458,7 +455,7 @@ describe('Competition (e2e)', () => {
       });
 
       it('returns 401 when unauthenticated user do not own the accessed user to add a judge', async () => {
-        await api.put('/api/competitions/999999/judges/888888').expect(401);
+        await api.put('/competitions/999999/judges/888888').expect(401);
       });
 
       it('returns 403 when a non organizer add a jury judge', async function () {
@@ -471,7 +468,7 @@ describe('Competition (e2e)', () => {
         const competition = await utils.givenCompetition(user);
 
         await api
-          .put(`/api/competitions/${competition.id}/judges/${user.id}`)
+          .put(`/competitions/${competition.id}/judges/${user.id}`)
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
@@ -484,7 +481,7 @@ describe('Competition (e2e)', () => {
         await utils.addJudgeInCompetition(user, competition);
 
         const res = await api
-          .get(`/api/competitions/${competition.id}/judges`)
+          .get(`/competitions/${competition.id}/judges`)
           .expect(200);
 
         const judge = res.body.find((r: CompetitionDto) => r.id === user.id);
@@ -501,7 +498,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .delete(`/api/competitions/${competition.id}/judges/${user.id}`)
+          .delete(`/competitions/${competition.id}/judges/${user.id}`)
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
 
@@ -520,7 +517,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .delete(`/api/competitions/${competition.id}/judges/${user.id}`)
+          .delete(`/competitions/${competition.id}/judges/${user.id}`)
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
 
@@ -530,7 +527,7 @@ describe('Competition (e2e)', () => {
       });
 
       it('returns 401 when unauthenticated user do not own the accessed user to get judges', async () => {
-        await api.delete('/api/competitions/999999/judges/888888').expect(401);
+        await api.delete('/competitions/999999/judges/888888').expect(401);
       });
 
       it('returns 403 when a non organizer remove a jury judge', async function () {
@@ -543,7 +540,7 @@ describe('Competition (e2e)', () => {
         const competition = await utils.givenCompetition(user);
 
         await api
-          .delete(`/api/competitions/${competition.id}/judges/${user.id}`)
+          .delete(`/competitions/${competition.id}/judges/${user.id}`)
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
@@ -559,9 +556,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(
-            `/api/competitions/${competition.id}/chief-route-setters/${user.id}`,
-          )
+          .put(`/competitions/${competition.id}/chief-route-setters/${user.id}`)
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
 
@@ -575,7 +570,7 @@ describe('Competition (e2e)', () => {
 
       it('returns 401 when unauthenticated user do not own the accessed user to add a chief route setter', async () => {
         await api
-          .put('/api/competitions/999999/chief-route-setters/888888')
+          .put('/competitions/999999/chief-route-setters/888888')
           .expect(401);
       });
 
@@ -589,9 +584,7 @@ describe('Competition (e2e)', () => {
         const competition = await utils.givenCompetition(user);
 
         await api
-          .put(
-            `/api/competitions/${competition.id}/chief-route-setters/${user.id}`,
-          )
+          .put(`/competitions/${competition.id}/chief-route-setters/${user.id}`)
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
@@ -605,7 +598,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         const res = await api
-          .get(`/api/competitions/${competition.id}/chief-route-setters`)
+          .get(`/competitions/${competition.id}/chief-route-setters`)
           .expect(200);
 
         const chiefRouteSetter = res.body.find(
@@ -626,7 +619,7 @@ describe('Competition (e2e)', () => {
 
         await api
           .delete(
-            `/api/competitions/${competition.id}/chief-route-setters/${user.id}`,
+            `/competitions/${competition.id}/chief-route-setters/${user.id}`,
           )
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
@@ -641,7 +634,7 @@ describe('Competition (e2e)', () => {
 
       it('returns 401 when unauthenticated user do not own the accessed user to delete a chief route setter', async () => {
         await api
-          .delete('/api/competitions/999999/chief-route-setters/888888')
+          .delete('/competitions/999999/chief-route-setters/888888')
           .expect(401);
       });
 
@@ -656,7 +649,7 @@ describe('Competition (e2e)', () => {
 
         await api
           .delete(
-            `/api/competitions/${competition.id}/chief-route-setters/${user.id}`,
+            `/competitions/${competition.id}/chief-route-setters/${user.id}`,
           )
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
@@ -673,7 +666,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(`/api/competitions/${competition.id}/route-setters/${user.id}`)
+          .put(`/competitions/${competition.id}/route-setters/${user.id}`)
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
 
@@ -695,7 +688,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(`/api/competitions/${competition.id}/route-setters/${user.id}`)
+          .put(`/competitions/${competition.id}/route-setters/${user.id}`)
           .set('Authorization', `Bearer ${auth.token}`)
           .expect(204);
 
@@ -705,9 +698,7 @@ describe('Competition (e2e)', () => {
       });
 
       it('returns 401 when unauthenticated user do not own the accessed user to add a route setter', async () => {
-        await api
-          .put('/api/competitions/999999/route-setters/888888')
-          .expect(401);
+        await api.put('/competitions/999999/route-setters/888888').expect(401);
       });
 
       it('returns 403 when a non organizer add a route setter', async function () {
@@ -720,7 +711,7 @@ describe('Competition (e2e)', () => {
         const competition = await utils.givenCompetition(user);
 
         await api
-          .put(`/api/competitions/${competition.id}/route-setters/${user.id}`)
+          .put(`/competitions/${competition.id}/route-setters/${user.id}`)
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
@@ -734,7 +725,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         const res = await api
-          .get(`/api/competitions/${competition.id}/route-setters`)
+          .get(`/competitions/${competition.id}/route-setters`)
           .expect(200);
 
         const routeSetter = res.body.find(
@@ -754,9 +745,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .delete(
-            `/api/competitions/${competition.id}/route-setters/${user.id}`,
-          )
+          .delete(`/competitions/${competition.id}/route-setters/${user.id}`)
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
 
@@ -778,9 +767,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .delete(
-            `/api/competitions/${competition.id}/route-setters/${user.id}`,
-          )
+          .delete(`/competitions/${competition.id}/route-setters/${user.id}`)
           .set('Authorization', `Bearer ${auth.token}`)
           .expect(204);
 
@@ -791,7 +778,7 @@ describe('Competition (e2e)', () => {
 
       it('returns 401 when unauthenticated user do not own the accessed user to delete a route setter', async () => {
         await api
-          .delete('/api/competitions/999999/route-setters/888888')
+          .delete('/competitions/999999/route-setters/888888')
           .expect(401);
       });
 
@@ -805,9 +792,7 @@ describe('Competition (e2e)', () => {
         const competition = await utils.givenCompetition(user);
 
         await api
-          .delete(
-            `/api/competitions/${competition.id}/route-setters/${user.id}`,
-          )
+          .delete(`/competitions/${competition.id}/route-setters/${user.id}`)
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
@@ -823,9 +808,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(
-            `/api/competitions/${competition.id}/technical-delegates/${user.id}`,
-          )
+          .put(`/competitions/${competition.id}/technical-delegates/${user.id}`)
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
 
@@ -842,7 +825,7 @@ describe('Competition (e2e)', () => {
 
       it('returns 401 when unauthenticated user do not own the accessed user to add a technical delegate', async () => {
         await api
-          .put('/api/competitions/999999/technical-delegates/888888')
+          .put('/competitions/999999/technical-delegates/888888')
           .expect(401);
       });
 
@@ -857,9 +840,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(
-            `/api/competitions/${competition.id}/technical-delegates/${user.id}`,
-          )
+          .put(`/competitions/${competition.id}/technical-delegates/${user.id}`)
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
@@ -873,7 +854,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         const res = await api
-          .get(`/api/competitions/${competition.id}/technical-delegates`)
+          .get(`/competitions/${competition.id}/technical-delegates`)
           .expect(200);
 
         const technicalDelegate = res.body.find(
@@ -894,7 +875,7 @@ describe('Competition (e2e)', () => {
 
         await api
           .delete(
-            `/api/competitions/${competition.id}/technical-delegates/${user.id}`,
+            `/competitions/${competition.id}/technical-delegates/${user.id}`,
           )
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
@@ -912,7 +893,7 @@ describe('Competition (e2e)', () => {
 
       it('returns 401 when unauthenticated user do not own the accessed user to delete a technical delegate', async () => {
         await api
-          .delete('/api/competitions/999999/technical-delegates/888888')
+          .delete('/competitions/999999/technical-delegates/888888')
           .expect(401);
       });
 
@@ -927,7 +908,7 @@ describe('Competition (e2e)', () => {
 
         await api
           .delete(
-            `/api/competitions/${competition.id}/technical-delegates/${user.id}`,
+            `/competitions/${competition.id}/technical-delegates/${user.id}`,
           )
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
@@ -948,9 +929,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .put(
-            `/api/competitions/${competition.id}/organizers/${secondUser.id}`,
-          )
+          .put(`/competitions/${competition.id}/organizers/${secondUser.id}`)
           .set('Authorization', `Bearer ${token.token}`)
           .expect(204);
 
@@ -960,7 +939,7 @@ describe('Competition (e2e)', () => {
       });
 
       it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-        await api.put('/api/competitions/999999/organizers/888888').expect(401);
+        await api.put('/competitions/999999/organizers/888888').expect(401);
       });
 
       it('returns 403 when a non organizer add an organizer', async function () {
@@ -973,7 +952,7 @@ describe('Competition (e2e)', () => {
         const competition = await utils.givenCompetition(user);
 
         await api
-          .put(`/api/competitions/${competition.id}/organizers/${user.id}`)
+          .put(`/competitions/${competition.id}/organizers/${user.id}`)
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
@@ -986,7 +965,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         const res = await api
-          .get(`/api/competitions/${competition.id}/organizers`)
+          .get(`/competitions/${competition.id}/organizers`)
           .expect(200);
 
         const organizer = res.body.find(
@@ -1007,9 +986,7 @@ describe('Competition (e2e)', () => {
         utils.clearORM();
 
         await api
-          .delete(
-            `/api/competitions/${competition.id}/organizers/${secondUser.id}`,
-          )
+          .delete(`/competitions/${competition.id}/organizers/${secondUser.id}`)
           .set('Authorization', `Bearer ${userAuth.token}`)
           .expect(204);
 
@@ -1022,9 +999,7 @@ describe('Competition (e2e)', () => {
       });
 
       it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-        await api
-          .delete('/api/competitions/999999/organizers/888888')
-          .expect(401);
+        await api.delete('/competitions/999999/organizers/888888').expect(401);
       });
 
       it('returns 403 when a non organizer remove an organizer', async function () {
@@ -1037,7 +1012,7 @@ describe('Competition (e2e)', () => {
         const competition = await utils.givenCompetition(user);
 
         await api
-          .delete(`/api/competitions/${competition.id}/organizers/${user.id}`)
+          .delete(`/competitions/${competition.id}/organizers/${user.id}`)
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
