@@ -45,7 +45,7 @@ describe('Competition (e2e)', () => {
   });
 
   describe('GET /competitions', () => {
-    it('retrieves competitions with pagination', async function () {
+    it('retrieves competitions', async function () {
       const { user } = await utils.givenUser();
       const now = new Date();
       now.setSeconds(now.getSeconds() + 10);
@@ -59,6 +59,22 @@ describe('Competition (e2e)', () => {
       expect(res.body.map((c: CompetitionDto) => c.id)).toContain(
         competition.id,
       );
+    });
+
+    it('retrieves competitions with pagination', async function () {
+      const { user } = await utils.givenUser();
+
+      for (let i = 0; i < 2; i++) {
+        await utils.givenCompetition(user);
+      }
+
+      const res = await api.get('/competitions?perPage=1').expect(200);
+      expect(res.body).toHaveLength(1);
+      expect(res.header).toHaveProperty('link');
+      const linkHeader = LinkHeader.parse(res.header.link);
+      const rels = linkHeader.refs.map((r) => r.rel);
+      expect(rels).toContain('next');
+      expect(rels).toContain('last');
     });
   });
 
@@ -241,6 +257,26 @@ describe('Competition (e2e)', () => {
         expect(registration).toBeTruthy();
         expect(registration).toHaveProperty('createdAt');
         expect(registration).toHaveProperty('updatedAt');
+      });
+
+      it('gets registrations with pagination', async function () {
+        const { user } = await utils.givenUser();
+        const { user: user2 } = await utils.givenUser();
+        const competition = await utils.givenCompetition(user);
+        await utils.registerUserInCompetition(user, competition);
+        await utils.registerUserInCompetition(user2, competition);
+        utils.clearORM();
+
+        const res = await api
+          .get(`/competitions/${competition.id}/registrations?perPage=1`)
+          .expect(200);
+
+        expect(res.body).toHaveLength(1);
+        expect(res.header).toHaveProperty('link');
+        const linkHeader = LinkHeader.parse(res.header.link);
+        const rels = linkHeader.refs.map((r) => r.rel);
+        expect(rels).toContain('next');
+        expect(rels).toContain('last');
       });
     });
 

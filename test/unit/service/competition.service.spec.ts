@@ -35,6 +35,7 @@ const competitionRegistrationRepositoryMock: RepositoryMock = {
   flush: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
+  count: jest.fn().mockImplementation(async () => 0),
 };
 
 const userServiceMock: ServiceMock = {
@@ -108,7 +109,13 @@ describe('Competition service (unit)', () => {
     competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
 
     return expect(
-      competitionService.getRegistrations(999999),
+      competitionService.getRegistrations(
+        {
+          limit: 1,
+          offset: 1,
+        },
+        999999,
+      ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -365,6 +372,56 @@ describe('Competition service (unit)', () => {
     await competitionService.register(123, 456);
 
     expect(boulderingRoundServiceMock.addClimbers).toHaveBeenCalledTimes(0);
+  });
+
+  it('throws when adding an already registered climber', async () => {
+    const user = {
+      getCategory: (): Category => femaleMinime,
+    };
+
+    const rounds = [
+      {
+        index: 0,
+        category: CategoryName.Minime,
+        sex: Sex.Female,
+        takesNewClimbers(): boolean {
+          return true;
+        },
+      },
+    ];
+
+    const competition = {
+      getSeason(): number {
+        return 2020;
+      },
+      takesRegistrations(): true {
+        return true;
+      },
+      boulderingRounds: {
+        async loadItems(): Promise<unknown[]> {
+          return rounds;
+        },
+      },
+      type: CompetitionType.Bouldering,
+    };
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.addClimbers.mockImplementation(
+      async () => undefined,
+    );
+
+    competitionRegistrationRepositoryMock.count.mockImplementation(
+      async () => 1,
+    );
+
+    userServiceMock.getOrFail.mockImplementation(async () => user);
+
+    return expect(competitionService.register(123, 456)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 
   it('does not add a bouldering result if the climber if not registered', () => {

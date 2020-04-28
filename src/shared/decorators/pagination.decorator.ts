@@ -4,14 +4,14 @@ import { validateOrReject } from 'class-validator';
 import { OffsetLimitRequest } from '../pagination/pagination.service';
 import {
   PAGE,
-  PaginationParamsDto,
+  PaginationQueriesDto,
   PER_PAGE,
-} from '../pagination/pagination-params.dto';
+} from '../pagination/pagination-queries.dto';
 
 export const Pagination = createParamDecorator(
   async (data: unknown, ctx: ExecutionContext): Promise<OffsetLimitRequest> => {
-    const { params } = ctx.switchToHttp().getRequest();
-    const pagination = plainToClass(PaginationParamsDto, params);
+    const { query } = ctx.switchToHttp().getRequest();
+    const pagination = plainToClass(PaginationQueriesDto, query);
     await validateOrReject(pagination);
 
     return {

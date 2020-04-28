@@ -71,10 +71,20 @@ export class CompetitionService {
   ): Promise<OffsetLimitResponse<Competition>> {
     const now = new Date();
 
+    const today = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      0,
+      0,
+      0,
+      0,
+    );
+
     const [competitions, total] = await this.competitionRepository.findAndCount(
       {
         startDate: {
-          $gte: now,
+          $gte: today,
         },
       },
       {
@@ -134,6 +144,16 @@ export class CompetitionService {
 
     const user = await this.userService.getOrFail(userId);
 
+    const registrationExists =
+      (await this.competitionRegistrationRepository.count({
+        competition,
+        climber: user,
+      })) === 1;
+
+    if (registrationExists) {
+      throw new BadRequestException('Already registered');
+    }
+
     this.competitionRegistrationRepository.persistLater(
       new CompetitionRegistration(competition, user),
     );
@@ -161,10 +181,28 @@ export class CompetitionService {
   }
 
   async getRegistrations(
+    offsetLimitRequest: OffsetLimitRequest,
     competitionId: typeof Competition.prototype.id,
-  ): Promise<CompetitionRegistration[]> {
-    const competition = await this.getOrFail(competitionId, ['registrations']);
-    return competition.registrations.getItems();
+  ): Promise<OffsetLimitResponse<CompetitionRegistration>> {
+    const competition = await this.getOrFail(competitionId);
+
+    const [
+      registrations,
+      total,
+    ] = await this.competitionRegistrationRepository.findAndCount(
+      {
+        competition,
+      },
+      {
+        limit: offsetLimitRequest.limit,
+        offset: offsetLimitRequest.offset,
+      },
+    );
+
+    return {
+      data: registrations,
+      total,
+    };
   }
 
   async removeRegistration(

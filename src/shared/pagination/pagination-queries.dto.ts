@@ -8,7 +8,7 @@ export const PAGE = 'page';
 export const DEFAULT_PER_PAGE = 30;
 export const PER_PAGE = 'perPage';
 
-export class PaginationParamsDto {
+export class PaginationQueriesDto {
   @ApiPropertyOptional({
     default: DEFAULT_PAGE,
     minimum: 1,

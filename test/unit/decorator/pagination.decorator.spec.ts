@@ -4,9 +4,9 @@ import { OffsetLimitRequest } from '../../../src/shared/pagination/pagination.se
 import {
   DEFAULT_PER_PAGE,
   PAGE,
-  PaginationParamsDto,
+  PaginationQueriesDto,
   PER_PAGE,
-} from '../../../src/shared/pagination/pagination-params.dto';
+} from '../../../src/shared/pagination/pagination-queries.dto';
 import { ValidationError } from 'class-validator';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -21,7 +21,7 @@ function getParamDecoratorFactory(decorator: Function): Function {
 }
 
 function givenPaginationDecorator(
-  params: Partial<PaginationParamsDto>,
+  queries: Partial<PaginationQueriesDto>,
 ): Promise<OffsetLimitRequest> {
   const factory = getParamDecoratorFactory(Pagination);
 
@@ -30,7 +30,7 @@ function givenPaginationDecorator(
       return {
         getRequest(): {} {
           return {
-            params,
+            query: queries,
           };
         },
       };

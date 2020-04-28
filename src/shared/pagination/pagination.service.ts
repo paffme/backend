@@ -4,7 +4,7 @@ import {
   DEFAULT_PER_PAGE,
   PAGE,
   PER_PAGE,
-} from './pagination-params.dto';
+} from './pagination-queries.dto';
 import LinkHeader from 'http-link-header';
 import { Response } from 'express';
 import { ConfigurationService } from '../configuration/configuration.service';

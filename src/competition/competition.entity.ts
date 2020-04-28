@@ -15,6 +15,7 @@ import { Sex } from '../shared/types/sex.enum';
 import { CategoryName } from '../shared/types/category-name.enum';
 import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
+import { PrimaryKeyType } from 'mikro-orm/dist/typings';
 
 interface ClimberRankingInfo {
   id: typeof User.prototype.id;

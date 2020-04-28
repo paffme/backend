@@ -179,14 +179,23 @@ export class CompetitionController {
   @ApiOkResponse({ isArray: true, type: CompetitionRegistrationDto })
   @ApiOperation(GetOperationId(Competition.name, 'GetRegistrations'))
   async getRegistrations(
+    @Pagination() offsetLimitRequest: OffsetLimitRequest,
     @Param() params: GetCompetitionRegistrationsParamsDto,
+    @Req() request: Request,
   ): Promise<CompetitionRegistrationDto[]> {
-    const competitionRegistrations = await this.competitionService.getRegistrations(
+    const offsetLimitResponse = await this.competitionService.getRegistrations(
+      offsetLimitRequest,
       params.competitionId,
     );
 
+    this.paginationService.addPaginationHeaders(
+      offsetLimitResponse,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      request.res!,
+    );
+
     return this.competitionRegistrationMapper.mapArray(
-      competitionRegistrations,
+      offsetLimitResponse.data,
     );
   }
 
