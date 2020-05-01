@@ -21,8 +21,7 @@ import { givenCreateCompetitionDto } from './fixture/competition.fixture';
 import { Sex } from '../src/shared/types/sex.enum';
 import { CategoryName } from '../src/shared/types/category-name.enum';
 
-// FIXME, cut this utils in multiple parts to remove ts-ignore comments
-/* eslint-disable @typescript-eslint/ban-ts-ignore */
+// FIXME, cut this utils in multiple parts to remove ! assertions
 
 export default class TestUtils {
   constructor(
@@ -35,8 +34,7 @@ export default class TestUtils {
    * Clear ORM to make sure that this instance is up to date
    */
   clearORM(): void {
-    // @ts-ignore
-    this.orm.em.clear();
+    this.orm!.em.clear();
   }
 
   async givenUser(
@@ -55,8 +53,7 @@ export default class TestUtils {
     };
 
     return {
-      // @ts-ignore
-      user: await this.userService.register(registerDto),
+      user: await this.userService!.register(registerDto),
       credentials: registerDto,
     };
   }
@@ -74,15 +71,12 @@ export default class TestUtils {
       sex: Sex.Female,
     };
 
-    // @ts-ignore
-    const res = await this.userService.register(registerDto);
+    const res = await this.userService!.register(registerDto);
 
-    // @ts-ignore
-    const userEntity = await this.orm.em.findOneOrFail(User, res.id);
+    const userEntity = await this.orm!.em.findOneOrFail(User, res.id);
     userEntity.systemRole = SystemRole.Admin;
 
-    // @ts-ignore
-    await this.orm.em.persistAndFlush(userEntity);
+    await this.orm!.em.persistAndFlush(userEntity);
 
     return {
       user: userEntity,
@@ -94,109 +88,106 @@ export default class TestUtils {
     user: User,
     competitionData?: Partial<Competition>,
   ): Promise<Competition> {
-    // @ts-ignore
-    return this.competitionService.create(
+    return this.competitionService!.create(
       givenCreateCompetitionDto(competitionData),
       user,
     );
   }
 
   login(credentials: CredentialsDto): Promise<TokenResponseDto> {
-    // @ts-ignore
-    return this.userService.login(credentials);
+    return this.userService!.login(credentials);
   }
 
   async registerUserInCompetition(
     user: User,
     competition: Competition,
   ): Promise<void> {
-    // @ts-ignore
-    await this.competitionService.register(competition.id, user.id);
+    await this.competitionService!.register(competition.id, user.id);
   }
 
-  getRegistrations(
+  async getRegistrations(
     competition: Competition,
   ): Promise<CompetitionRegistration[]> {
-    // @ts-ignore
-    return this.competitionService.getRegistrations(competition.id);
+    const { data } = await this.competitionService!.getRegistrations(
+      {
+        offset: 0,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        limit: undefined,
+      },
+      competition.id,
+    );
+
+    return data;
   }
 
   async addJuryPresidentInCompetition(
     user: User,
     competition: Competition,
   ): Promise<void> {
-    // @ts-ignore
-    await this.competitionService.addJuryPresident(competition.id, user.id);
+    await this.competitionService!.addJuryPresident(competition.id, user.id);
   }
 
   getJuryPresidents(competition: Competition): Promise<User[]> {
-    // @ts-ignore
-    return this.competitionService.getJuryPresidents(competition.id);
+    return this.competitionService!.getJuryPresidents(competition.id);
   }
 
   async addJudgeInCompetition(
     user: User,
     competition: Competition,
   ): Promise<void> {
-    // @ts-ignore
-    await this.competitionService.addJudge(competition.id, user.id);
+    await this.competitionService!.addJudge(competition.id, user.id);
   }
 
   async getJudges(competition: Competition): Promise<User[]> {
-    // @ts-ignore
-    return await this.competitionService.getJudges(competition.id);
+    return await this.competitionService!.getJudges(competition.id);
   }
 
   async addChiefRouteSetterInCompetition(
     user: User,
     competition: Competition,
   ): Promise<void> {
-    // @ts-ignore
-    await this.competitionService.addChiefRouteSetter(competition.id, user.id);
+    await this.competitionService!.addChiefRouteSetter(competition.id, user.id);
   }
 
   getChiefRouteSetters(competition: Competition): Promise<User[]> {
-    // @ts-ignore
-    return this.competitionService.getChiefRouteSetters(competition.id);
+    return this.competitionService!.getChiefRouteSetters(competition.id);
   }
 
   async addRouteSetterInCompetition(
     user: User,
     competition: Competition,
   ): Promise<void> {
-    // @ts-ignore
-    await this.competitionService.addRouteSetter(competition.id, user.id);
+    await this.competitionService!.addRouteSetter(competition.id, user.id);
   }
 
   getRouteSetters(competition: Competition): Promise<User[]> {
-    // @ts-ignore
-    return this.competitionService.getRouteSetters(competition.id);
+    return this.competitionService!.getRouteSetters(competition.id);
   }
 
   async addTechnicalDelegateInCompetition(
     user: User,
     competition: Competition,
   ): Promise<void> {
-    // @ts-ignore
-    await this.competitionService.addTechnicalDelegate(competition.id, user.id);
+    await this.competitionService!.addTechnicalDelegate(
+      competition.id,
+      user.id,
+    );
   }
 
   getTechnicalDelegates(competition: Competition): Promise<User[]> {
-    // @ts-ignore
-    return this.competitionService.getTechnicalDelegates(competition.id);
+    return this.competitionService!.getTechnicalDelegates(competition.id);
   }
 
   async addOrganizerInCompetition(
     user: User,
     competition: Competition,
   ): Promise<void> {
-    // @ts-ignore
-    await this.competitionService.addOrganizer(competition.id, user.id);
+    await this.competitionService!.addOrganizer(competition.id, user.id);
   }
 
   getOrganizers(competition: Competition): Promise<User[]> {
-    // @ts-ignore
-    return this.competitionService.getOrganizers(competition.id);
+    return this.competitionService!.getOrganizers(competition.id);
   }
 
   getRandomId(): number {
@@ -218,8 +209,7 @@ export default class TestUtils {
       sex: partialDto?.sex ?? Sex.Female,
     };
 
-    // @ts-ignore
-    return this.competitionService.addBoulderingRound(competition.id, dto);
+    return this.competitionService!.addBoulderingRound(competition.id, dto);
   }
 
   addBoulderingResult(
@@ -236,8 +226,7 @@ export default class TestUtils {
       try: partialDto?.try ?? true,
     };
 
-    // @ts-ignore
-    return this.competitionService.addBoulderingResult(
+    return this.competitionService!.addBoulderingResult(
       competition.id,
       round.id,
       boulder.id,

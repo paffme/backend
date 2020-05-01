@@ -1,21 +1,21 @@
 import { Test } from '@nestjs/testing';
-import { BoulderingRankingService } from '../../src/bouldering/ranking/bouldering-ranking.service';
+import { BoulderingRankingService } from '../../../src/bouldering/ranking/bouldering-ranking.service';
 import {
   BoulderingRound,
   BoulderingRoundRankings,
   BoulderingRoundRankingType,
   BoulderingRoundType,
-} from '../../src/bouldering/round/bouldering-round.entity';
-import TestUtils from '../utils';
-import { CategoryName } from '../../src/shared/types/category-name.enum';
-import { Sex } from '../../src/shared/types/sex.enum';
+} from '../../../src/bouldering/round/bouldering-round.entity';
+import TestUtils from '../../utils';
+import { CategoryName } from '../../../src/shared/types/category-name.enum';
+import { Sex } from '../../../src/shared/types/sex.enum';
 import * as uuid from 'uuid';
-import { Competition } from '../../src/competition/competition.entity';
-import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.entity';
+import { Competition } from '../../../src/competition/competition.entity';
+import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
 import { Collection } from 'mikro-orm';
-import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
-import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
-import { User } from '../../src/user/user.entity';
+import { BoulderingResult } from '../../../src/bouldering/result/bouldering-result.entity';
+import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
+import { User } from '../../../src/user/user.entity';
 
 describe('Bouldering round service (unit)', () => {
   let utils: TestUtils;

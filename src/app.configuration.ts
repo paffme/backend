@@ -33,8 +33,6 @@ export function configure(app: NestExpressApplication): void {
     res.json(swaggerDoc);
   });
 
-  app.setGlobalPrefix('api');
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

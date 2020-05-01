@@ -127,7 +127,7 @@ describe('Bouldering (e2e)', () => {
       };
 
       const { body } = await api
-        .post(`/api/competitions/${competition.id}/bouldering-rounds`)
+        .post(`/competitions/${competition.id}/bouldering-rounds`)
         .set('Authorization', `Bearer ${auth.token}`)
         .send(dto)
         .expect(201);
@@ -175,7 +175,7 @@ describe('Bouldering (e2e)', () => {
 
       const { body } = await api
         .post(
-          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .send(dto)
@@ -213,7 +213,7 @@ describe('Bouldering (e2e)', () => {
 
       const { body } = await api
         .post(
-          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .send(dto)
@@ -249,7 +249,7 @@ describe('Bouldering (e2e)', () => {
 
       const { body } = await api
         .post(
-          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .send(dto)
@@ -290,7 +290,7 @@ describe('Bouldering (e2e)', () => {
 
       await api
         .post(
-          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
         .send(dto)
@@ -312,7 +312,7 @@ describe('Bouldering (e2e)', () => {
 
       const { body } = await api
         .post(
-          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .send(dto)
@@ -341,7 +341,7 @@ describe('Bouldering (e2e)', () => {
 
       return api
         .post(
-          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${auth.token}`)
         .send(dto)
@@ -363,14 +363,14 @@ describe('Bouldering (e2e)', () => {
 
       return api
         .post(
-          `/api/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
         )
         .send(dto)
         .expect(401);
     });
   });
 
-  describe('GET /api/competitions/{competitionId}/rankings', () => {
+  describe('GET /competitions/{competitionId}/rankings', () => {
     it('gets the competition ranking', async () => {
       const {
         climber,
@@ -382,7 +382,7 @@ describe('Bouldering (e2e)', () => {
       await utils.addBoulderingResult(competition, round, boulder, climber);
 
       const res = await api
-        .get(`/api/competitions/${competition.id}/rankings`)
+        .get(`/competitions/${competition.id}/rankings`)
         .expect(200);
 
       const body: RankingsDto = res.body;

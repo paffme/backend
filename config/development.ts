@@ -1,6 +1,7 @@
 import { Config } from './config.interface';
 
 const config: Config = {
+  BASE_API_URL: 'http://localhost:3000',
   HOST: '0.0.0.0',
   PORT: 3000,
   JWT_SECRET:

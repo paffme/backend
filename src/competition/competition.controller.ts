@@ -8,6 +8,7 @@ import {
   Patch,
   Post,
   Put,
+  Req,
   UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
@@ -76,6 +77,14 @@ import { UpdateCompetitionByIdParamsDto } from './dto/in/params/update-competiti
 import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
 import { OrGuard } from '../shared/guards/or.authorization.guard';
 import { ChiefRouteSetterAuthorizationGuard } from './authorization/chief-route-setter.authorization.guard';
+import { Pagination } from '../shared/decorators/pagination.decorator';
+import {
+  OffsetLimitRequest,
+  PaginationService,
+} from '../shared/pagination/pagination.service';
+import { Request } from 'express';
+import { Search, SearchQuery } from '../shared/decorators/search.decorator';
+import { SearchCompetitionsDto } from './dto/in/search/search-competitions.dto';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -88,6 +97,7 @@ export class CompetitionController {
     private readonly boulderingResultMapper: BoulderingResultMapper,
     private readonly rankingMapper: RankingsMapper,
     private readonly mapper: CompetitionMapper,
+    private readonly paginationService: PaginationService,
   ) {}
 
   @Get()
@@ -95,9 +105,23 @@ export class CompetitionController {
   @ApiOperation(
     GetOperationId(CompetitionDto.constructor.name, 'GetCompetitions'),
   )
-  async getAll(): Promise<CompetitionDto[]> {
-    const competitions = await this.competitionService.getAll();
-    return this.mapper.mapArray(competitions);
+  async getCompetitions(
+    @Pagination() offsetLimitRequest: OffsetLimitRequest,
+    @Search(SearchCompetitionsDto) search: SearchQuery<Competition>,
+    @Req() request: Request,
+  ): Promise<CompetitionDto[]> {
+    const offsetLimitResponse = await this.competitionService.getCompetitions(
+      offsetLimitRequest,
+      search,
+    );
+
+    this.paginationService.addPaginationHeaders(
+      offsetLimitResponse,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      request.res!,
+    );
+
+    return this.mapper.mapArray(offsetLimitResponse.data);
   }
 
   @Post()
@@ -159,14 +183,23 @@ export class CompetitionController {
   @ApiOkResponse({ isArray: true, type: CompetitionRegistrationDto })
   @ApiOperation(GetOperationId(Competition.name, 'GetRegistrations'))
   async getRegistrations(
+    @Pagination() offsetLimitRequest: OffsetLimitRequest,
     @Param() params: GetCompetitionRegistrationsParamsDto,
+    @Req() request: Request,
   ): Promise<CompetitionRegistrationDto[]> {
-    const competitionRegistrations = await this.competitionService.getRegistrations(
+    const offsetLimitResponse = await this.competitionService.getRegistrations(
+      offsetLimitRequest,
       params.competitionId,
     );
 
+    this.paginationService.addPaginationHeaders(
+      offsetLimitResponse,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      request.res!,
+    );
+
     return this.competitionRegistrationMapper.mapArray(
-      competitionRegistrations,
+      offsetLimitResponse.data,
     );
   }
 

@@ -1,30 +1,32 @@
-import TestUtils from '../utils';
-import { UserService } from '../../src/user/user.service';
+import TestUtils from '../../utils';
+import { UserService } from '../../../src/user/user.service';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
-import { CompetitionService } from '../../src/competition/competition.service';
+import { CompetitionService } from '../../../src/competition/competition.service';
 import {
   BadRequestException,
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { Competition } from '../../src/competition/competition.entity';
-import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
-import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
-import { CompetitionMapper } from '../../src/shared/mappers/competition.mapper';
-import { RepositoryMock, ServiceMock } from './mocks/types';
-import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
-import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
-import { CompetitionType } from '../../src/competition/types/competition-type.enum';
-import { BoulderingRankingService } from '../../src/bouldering/ranking/bouldering-ranking.service';
-import { Category } from '../../src/shared/types/category.interface';
-import { CategoryName } from '../../src/shared/types/category-name.enum';
-import { Sex } from '../../src/shared/types/sex.enum';
-import { givenCategory } from '../fixture/category.fixture';
-import { UpdateCompetitionByIdDto } from '../../src/competition/dto/in/body/update-competition-by-id.dto';
+import { Competition } from '../../../src/competition/competition.entity';
+import { CompetitionRegistration } from '../../../src/shared/entity/competition-registration.entity';
+import { BoulderingRoundService } from '../../../src/bouldering/round/bouldering-round.service';
+import { CompetitionMapper } from '../../../src/shared/mappers/competition.mapper';
+import { RepositoryMock, ServiceMock } from '../mocks/types';
+import { CreateBoulderingRoundDto } from '../../../src/competition/dto/in/body/create-bouldering-round.dto';
+import { CreateBoulderingResultDto } from '../../../src/competition/dto/in/body/create-bouldering-result.dto';
+import { CompetitionType } from '../../../src/competition/types/competition-type.enum';
+import { BoulderingRankingService } from '../../../src/bouldering/ranking/bouldering-ranking.service';
+import { Category } from '../../../src/shared/types/category.interface';
+import { CategoryName } from '../../../src/shared/types/category-name.enum';
+import { Sex } from '../../../src/shared/types/sex.enum';
+import { givenCategory } from '../../fixture/category.fixture';
+import { UpdateCompetitionByIdDto } from '../../../src/competition/dto/in/body/update-competition-by-id.dto';
+import { QueryOrder } from 'mikro-orm';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
+  findAndCount: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
 };
@@ -35,6 +37,7 @@ const competitionRegistrationRepositoryMock: RepositoryMock = {
   flush: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
+  count: jest.fn().mockImplementation(async () => 0),
 };
 
 const userServiceMock: ServiceMock = {
@@ -104,11 +107,63 @@ describe('Competition service (unit)', () => {
     jest.clearAllMocks();
   });
 
+  it('gets competitions with filtering, ordering and pagination', async () => {
+    const now = new Date();
+    const data: unknown[] = [];
+
+    competitionRepositoryMock.findAndCount.mockImplementation(async () => [
+      data,
+      0,
+    ]);
+
+    const res = await competitionService.getCompetitions(
+      {
+        offset: 10,
+        limit: 11,
+      },
+      {
+        order: {
+          startDate: QueryOrder.desc,
+        },
+        filter: {
+          startDate: {
+            $gte: now,
+          },
+        },
+      },
+    );
+
+    expect(competitionRepositoryMock.findAndCount).toHaveBeenCalledTimes(1);
+    expect(competitionRepositoryMock.findAndCount).toHaveBeenCalledWith(
+      {
+        startDate: {
+          $gte: now,
+        },
+      },
+      {
+        limit: 11,
+        offset: 10,
+        orderBy: {
+          startDate: QueryOrder.desc,
+        },
+      },
+    );
+
+    expect(res.total).toEqual(0);
+    expect(res.data).toBe(data);
+  });
+
   it('throws 404 when getting an unknown registration', () => {
     competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
 
     return expect(
-      competitionService.getRegistrations(999999),
+      competitionService.getRegistrations(
+        {
+          limit: 1,
+          offset: 1,
+        },
+        999999,
+      ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -365,6 +420,56 @@ describe('Competition service (unit)', () => {
     await competitionService.register(123, 456);
 
     expect(boulderingRoundServiceMock.addClimbers).toHaveBeenCalledTimes(0);
+  });
+
+  it('throws when adding an already registered climber', async () => {
+    const user = {
+      getCategory: (): Category => femaleMinime,
+    };
+
+    const rounds = [
+      {
+        index: 0,
+        category: CategoryName.Minime,
+        sex: Sex.Female,
+        takesNewClimbers(): boolean {
+          return true;
+        },
+      },
+    ];
+
+    const competition = {
+      getSeason(): number {
+        return 2020;
+      },
+      takesRegistrations(): true {
+        return true;
+      },
+      boulderingRounds: {
+        async loadItems(): Promise<unknown[]> {
+          return rounds;
+        },
+      },
+      type: CompetitionType.Bouldering,
+    };
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.addClimbers.mockImplementation(
+      async () => undefined,
+    );
+
+    competitionRegistrationRepositoryMock.count.mockImplementation(
+      async () => 1,
+    );
+
+    userServiceMock.getOrFail.mockImplementation(async () => user);
+
+    return expect(competitionService.register(123, 456)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 
   it('does not add a bouldering result if the climber if not registered', () => {

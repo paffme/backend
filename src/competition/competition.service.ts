@@ -6,14 +6,21 @@ import {
   NotFoundException,
   NotImplementedException,
 } from '@nestjs/common';
-import { InjectRepository } from 'nestjs-mikro-orm';
-import { EntityRepository } from 'mikro-orm';
+
 import {
   Competition,
   CompetitionRelation,
   Rankings,
   UserCompetitionRelation,
 } from './competition.entity';
+
+import {
+  OffsetLimitRequest,
+  OffsetLimitResponse,
+} from '../shared/pagination/pagination.service';
+
+import { InjectRepository } from 'nestjs-mikro-orm';
+import { EntityRepository } from 'mikro-orm';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
 import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
 import { UserService } from '../user/user.service';
@@ -29,6 +36,7 @@ import { BoulderingRankingService } from '../bouldering/ranking/bouldering-ranki
 import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
 import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
+import { SearchQuery } from '../shared/decorators/search.decorator';
 
 @Injectable()
 export class CompetitionService {
@@ -61,8 +69,23 @@ export class CompetitionService {
     return competition;
   }
 
-  getAll(): Promise<Competition[]> {
-    return this.competitionRepository.findAll();
+  async getCompetitions(
+    offsetLimitRequest: OffsetLimitRequest,
+    search: SearchQuery<Competition>,
+  ): Promise<OffsetLimitResponse<Competition>> {
+    const [competitions, total] = await this.competitionRepository.findAndCount(
+      search.filter,
+      {
+        limit: offsetLimitRequest.limit,
+        offset: offsetLimitRequest.offset,
+        orderBy: search.order,
+      },
+    );
+
+    return {
+      total,
+      data: competitions,
+    };
   }
 
   async create(dto: CreateCompetitionDTO, owner: User): Promise<Competition> {
@@ -107,6 +130,16 @@ export class CompetitionService {
 
     const user = await this.userService.getOrFail(userId);
 
+    const registrationExists =
+      (await this.competitionRegistrationRepository.count({
+        competition,
+        climber: user,
+      })) === 1;
+
+    if (registrationExists) {
+      throw new BadRequestException('Already registered');
+    }
+
     this.competitionRegistrationRepository.persistLater(
       new CompetitionRegistration(competition, user),
     );
@@ -134,10 +167,28 @@ export class CompetitionService {
   }
 
   async getRegistrations(
+    offsetLimitRequest: OffsetLimitRequest,
     competitionId: typeof Competition.prototype.id,
-  ): Promise<CompetitionRegistration[]> {
-    const competition = await this.getOrFail(competitionId, ['registrations']);
-    return competition.registrations.getItems();
+  ): Promise<OffsetLimitResponse<CompetitionRegistration>> {
+    const competition = await this.getOrFail(competitionId);
+
+    const [
+      registrations,
+      total,
+    ] = await this.competitionRegistrationRepository.findAndCount(
+      {
+        competition,
+      },
+      {
+        limit: offsetLimitRequest.limit,
+        offset: offsetLimitRequest.offset,
+      },
+    );
+
+    return {
+      data: registrations,
+      total,
+    };
   }
 
   async removeRegistration(

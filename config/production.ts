@@ -2,6 +2,7 @@ import { Config } from './config.interface';
 const env = process.env;
 
 const config: Config = {
+  BASE_API_URL: 'https://paffme.hdaroit.fr/api/v1',
   HOST: '0.0.0.0',
   PORT: 4000,
   JWT_SECRET: env.JWT_SECRET as string,

@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -53,6 +54,16 @@ import { UserAuthorizationGuard } from '../shared/authorization/user.authorizati
 import { UserMapper } from '../shared/mappers/user.mapper';
 import { UserCompetitionRolesDto } from './dto/out/user-competition-roles.dto';
 import { GetUserCompetitionRolesParamsDto } from './dto/in/params/get-user-competition-roles-params.dto';
+import { UserLimitedDto } from './dto/out/user-limited.dto';
+import { Search, SearchQuery } from '../shared/decorators/search.decorator';
+import { Request } from 'express';
+import {
+  OffsetLimitRequest,
+  PaginationService,
+} from '../shared/pagination/pagination.service';
+import { LimitedUserMapper } from '../shared/mappers/limited-user.mapper';
+import { Pagination } from '../shared/decorators/pagination.decorator';
+import { SearchUsersDto } from './dto/in/search/search-users.dto';
 
 @Controller('users')
 @ApiTags(User.name)
@@ -63,7 +74,36 @@ export class UserController {
     private readonly competitionRegistrationMapper: CompetitionRegistrationMapper,
     private readonly competitionMapper: CompetitionMapper,
     private readonly mapper: UserMapper,
+    private readonly limitedUserMapper: LimitedUserMapper,
+    private readonly paginationService: PaginationService,
   ) {}
+
+  @Get()
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard)
+  @ApiOkResponse({ type: UserLimitedDto, isArray: true })
+  @ApiOperation(GetOperationId(User.name, 'Get'))
+  async get(
+    @Pagination() offsetLimitRequest: OffsetLimitRequest,
+    @Search(SearchUsersDto, {
+      mandatoryQuery: true,
+    })
+    search: SearchQuery<User>,
+    @Req() request: Request,
+  ): Promise<UserLimitedDto[]> {
+    const offsetLimitResponse = await this.userService.get(
+      offsetLimitRequest,
+      search,
+    );
+
+    this.paginationService.addPaginationHeaders(
+      offsetLimitResponse,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      request.res!,
+    );
+
+    return this.limitedUserMapper.mapArray(offsetLimitResponse.data);
+  }
 
   @Post()
   @AllowedAppRoles(AppRoles.UNAUTHENTICATED)

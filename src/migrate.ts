@@ -14,6 +14,7 @@ import config from './mikro-orm.config';
 
   const generator = await orm.getSchemaGenerator();
   // await generator.dropSchema();
+  // await generator.createSchema();
   await generator.updateSchema();
 
   await orm.close(true);

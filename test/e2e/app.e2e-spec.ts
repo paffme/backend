@@ -25,7 +25,7 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ (GET)', async () => {
-    const { body } = await api.get('/api').expect(200);
+    const { body } = await api.get('/').expect(200);
     expect(body).toHaveProperty('startedAt');
     expect(body).toHaveProperty('uptime');
   });

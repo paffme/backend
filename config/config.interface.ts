@@ -1,6 +1,7 @@
 import { Algorithm } from 'jsonwebtoken';
 
 export interface Config {
+  BASE_API_URL: string;
   HOST: string;
   PORT: number;
   JWT_SECRET: string;

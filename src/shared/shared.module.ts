@@ -14,6 +14,8 @@ import { BoulderingResultMapper } from './mappers/bouldering-result.mapper';
 import { BoulderMapper } from './mappers/boulder.mapper';
 import { RankingsMapper } from './mappers/rankings-mapper.service';
 import { BoulderingGroupMapper } from './mappers/bouldering-group.mapper';
+import { PaginationService } from './pagination/pagination.service';
+import { LimitedUserMapper } from './mappers/limited-user.mapper';
 
 @Global()
 @Module({
@@ -22,6 +24,7 @@ import { BoulderingGroupMapper } from './mappers/bouldering-group.mapper';
     AuthenticationService,
     JwtStrategy,
     UserMapper,
+    LimitedUserMapper,
     CompetitionMapper,
     CompetitionRegistrationMapper,
     BoulderingRoundMapper,
@@ -30,11 +33,13 @@ import { BoulderingGroupMapper } from './mappers/bouldering-group.mapper';
     RankingsMapper,
     BoulderingGroupMapper,
     UserAuthorizationService,
+    PaginationService,
   ],
   exports: [
     ConfigurationService,
     AuthenticationService,
     UserMapper,
+    LimitedUserMapper,
     CompetitionMapper,
     CompetitionRegistrationMapper,
     BoulderingRoundMapper,
@@ -43,6 +48,7 @@ import { BoulderingGroupMapper } from './mappers/bouldering-group.mapper';
     RankingsMapper,
     BoulderingGroupMapper,
     UserAuthorizationService,
+    PaginationService,
   ],
   imports: [
     UserModule,

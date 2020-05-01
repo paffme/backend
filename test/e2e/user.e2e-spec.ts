@@ -58,6 +58,54 @@ describe('User (e2e)', () => {
     expect(user).toHaveProperty('updatedAt');
   }
 
+  describe('GET /users', () => {
+    it('gets user with filtering', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const firstName = uuid.v4();
+
+      const { user: user1 } = await utils.givenUser({
+        firstName,
+        lastName: 'World1',
+      });
+
+      const { user: user2 } = await utils.givenUser({
+        firstName,
+        lastName: 'World2',
+      });
+
+      const { body } = await api
+        .get('/users')
+        .query({
+          q: JSON.stringify({
+            firstName,
+          }),
+          sort: 'lastName',
+          order: 'desc',
+        })
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(200);
+
+      expect(body).toHaveLength(2);
+      expect(body[0].id).toEqual(user2.id);
+      expect(body[1].id).toEqual(user1.id);
+    });
+
+    it('returns 400 when getting user without filtering', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      await api
+        .get('/users')
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(400);
+    });
+
+    it('returns 401 when getting users without being authenticated', async () => {
+      await api.get('/users').expect(401);
+    });
+  });
+
   describe('POST /users', () => {
     it('creates a user', async () => {
       const user: RegisterDto = {
@@ -69,7 +117,7 @@ describe('User (e2e)', () => {
         birthYear: 2000,
       };
 
-      const { body } = await api.post('/api/users').send(user).expect(201);
+      const { body } = await api.post('/users').send(user).expect(201);
       checkUser(user, body);
     });
 
@@ -79,7 +127,7 @@ describe('User (e2e)', () => {
         password: 444,
       };
 
-      const { body } = await api.post('/api/users').send(user).expect(422);
+      const { body } = await api.post('/users').send(user).expect(422);
 
       expect(body.statusCode).toEqual(422);
       expect(body.error).toEqual('Validation Error');
@@ -111,7 +159,7 @@ describe('User (e2e)', () => {
       };
 
       await api
-        .post('/api/users')
+        .post('/users')
         .set('Authorization', 'Bearer ' + auth.token)
         .send(secondUser)
         .expect(403);
@@ -123,7 +171,7 @@ describe('User (e2e)', () => {
       const { credentials, user } = await utils.givenUser();
 
       const { body } = await api
-        .post('/api/users/token')
+        .post('/users/token')
         .send({
           email: credentials.email,
           password: credentials.password,
@@ -142,7 +190,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       const { body } = await api
-        .post('/api/users/token')
+        .post('/users/token')
         .set('Authorization', 'Bearer ' + auth.token)
         .send({
           email: credentials.email,
@@ -160,7 +208,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       const { body } = await api
-        .get('/api/users/' + auth.userId)
+        .get('/users/' + auth.userId)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(200);
 
@@ -168,7 +216,7 @@ describe('User (e2e)', () => {
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-      await api.get('/api/users/999999').expect(401);
+      await api.get('/users/999999').expect(401);
     });
 
     it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -176,7 +224,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get('/api/users/999999999')
+        .get('/users/999999999')
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(403);
     });
@@ -187,7 +235,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       const { body } = await api
-        .get('/api/users/' + user.id)
+        .get('/users/' + user.id)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(200);
 
@@ -201,13 +249,13 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .delete('/api/users/' + user.id)
+        .delete('/users/' + user.id)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(204);
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-      await api.delete('/api/users/999999').expect(401);
+      await api.delete('/users/999999').expect(401);
     });
 
     it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -215,7 +263,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .delete('/api/users/999999999')
+        .delete('/users/999999999')
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(403);
     });
@@ -226,7 +274,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .delete('/api/users/' + user.id)
+        .delete('/users/' + user.id)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(204);
     });
@@ -238,7 +286,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       const { body } = await api
-        .patch('/api/users/' + auth.userId)
+        .patch('/users/' + auth.userId)
         .set('Authorization', 'Bearer ' + auth.token)
         .send({
           email: 'new@email.fr',
@@ -255,7 +303,7 @@ describe('User (e2e)', () => {
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-      await api.patch('/api/users/999999').expect(401);
+      await api.patch('/users/999999').expect(401);
     });
 
     it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -263,7 +311,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .patch('/api/users/999999999')
+        .patch('/users/999999999')
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(403);
     });
@@ -274,7 +322,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       const { body } = await api
-        .patch('/api/users/' + user.id)
+        .patch('/users/' + user.id)
         .set('Authorization', 'Bearer ' + auth.token)
         .send({
           email: 'new@email.fr',
@@ -299,7 +347,7 @@ describe('User (e2e)', () => {
       await utils.registerUserInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/registrations`)
+        .get(`/users/${user.id}/registrations`)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(200);
 
@@ -314,7 +362,7 @@ describe('User (e2e)', () => {
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-      await api.get('/api/users/999999/registrations').expect(401);
+      await api.get('/users/999999/registrations').expect(401);
     });
 
     it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -322,7 +370,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get('/api/users/999999/registrations')
+        .get('/users/999999/registrations')
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(403);
     });
@@ -336,7 +384,7 @@ describe('User (e2e)', () => {
       await utils.registerUserInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/registrations`)
+        .get(`/users/${user.id}/registrations`)
         .set('Authorization', 'Bearer ' + adminAuth.token)
         .expect(200);
 
@@ -357,7 +405,7 @@ describe('User (e2e)', () => {
       await utils.addJuryPresidentInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/jury-presidencies`)
+        .get(`/users/${user.id}/jury-presidencies`)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(200);
 
@@ -369,7 +417,7 @@ describe('User (e2e)', () => {
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-      await api.get('/api/users/999999/jury-presidencies').expect(401);
+      await api.get('/users/999999/jury-presidencies').expect(401);
     });
 
     it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -377,7 +425,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get('/api/users/999999/jury-presidencies')
+        .get('/users/999999/jury-presidencies')
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(403);
     });
@@ -391,7 +439,7 @@ describe('User (e2e)', () => {
       await utils.addJuryPresidentInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/jury-presidencies`)
+        .get(`/users/${user.id}/jury-presidencies`)
         .set('Authorization', 'Bearer ' + adminAuth.token)
         .expect(200);
 
@@ -411,7 +459,7 @@ describe('User (e2e)', () => {
       await utils.addJudgeInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/judgements`)
+        .get(`/users/${user.id}/judgements`)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(200);
 
@@ -423,7 +471,7 @@ describe('User (e2e)', () => {
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-      await api.get('/api/users/999999/judgements').expect(401);
+      await api.get('/users/999999/judgements').expect(401);
     });
 
     it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -431,7 +479,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get('/api/users/999999/judgements')
+        .get('/users/999999/judgements')
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(403);
     });
@@ -445,7 +493,7 @@ describe('User (e2e)', () => {
       await utils.addJudgeInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/judgements`)
+        .get(`/users/${user.id}/judgements`)
         .set('Authorization', 'Bearer ' + adminAuth.token)
         .expect(200);
 
@@ -465,7 +513,7 @@ describe('User (e2e)', () => {
       await utils.addChiefRouteSetterInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/chief-route-settings`)
+        .get(`/users/${user.id}/chief-route-settings`)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(200);
 
@@ -477,7 +525,7 @@ describe('User (e2e)', () => {
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-      await api.get('/api/users/999999/chief-route-settings').expect(401);
+      await api.get('/users/999999/chief-route-settings').expect(401);
     });
 
     it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -485,7 +533,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get('/api/users/999999/chief-route-settings')
+        .get('/users/999999/chief-route-settings')
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(403);
     });
@@ -499,7 +547,7 @@ describe('User (e2e)', () => {
       await utils.addChiefRouteSetterInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/chief-route-settings`)
+        .get(`/users/${user.id}/chief-route-settings`)
         .set('Authorization', 'Bearer ' + adminAuth.token)
         .expect(200);
 
@@ -519,7 +567,7 @@ describe('User (e2e)', () => {
       await utils.addRouteSetterInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/route-settings`)
+        .get(`/users/${user.id}/route-settings`)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(200);
 
@@ -531,7 +579,7 @@ describe('User (e2e)', () => {
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-      await api.get('/api/users/999999/route-settings').expect(401);
+      await api.get('/users/999999/route-settings').expect(401);
     });
 
     it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -539,7 +587,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get('/api/users/999999/route-settings')
+        .get('/users/999999/route-settings')
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(403);
     });
@@ -553,7 +601,7 @@ describe('User (e2e)', () => {
       await utils.addRouteSetterInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/route-settings`)
+        .get(`/users/${user.id}/route-settings`)
         .set('Authorization', 'Bearer ' + adminAuth.token)
         .expect(200);
 
@@ -573,7 +621,7 @@ describe('User (e2e)', () => {
       await utils.addTechnicalDelegateInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/technical-delegations`)
+        .get(`/users/${user.id}/technical-delegations`)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(200);
 
@@ -585,7 +633,7 @@ describe('User (e2e)', () => {
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-      await api.get('/api/users/999999/technical-delegations').expect(401);
+      await api.get('/users/999999/technical-delegations').expect(401);
     });
 
     it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -593,7 +641,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get('/api/users/999999/technical-delegations')
+        .get('/users/999999/technical-delegations')
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(403);
     });
@@ -607,7 +655,7 @@ describe('User (e2e)', () => {
       await utils.addTechnicalDelegateInCompetition(user, competition);
 
       const res = await api
-        .get(`/api/users/${user.id}/technical-delegations`)
+        .get(`/users/${user.id}/technical-delegations`)
         .set('Authorization', 'Bearer ' + adminAuth.token)
         .expect(200);
 
@@ -626,7 +674,7 @@ describe('User (e2e)', () => {
       const competition = await utils.givenCompetition(user);
 
       const res = await api
-        .get(`/api/users/${user.id}/organizations`)
+        .get(`/users/${user.id}/organizations`)
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(200);
 
@@ -638,7 +686,7 @@ describe('User (e2e)', () => {
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
-      await api.get('/api/users/999999/organizations').expect(401);
+      await api.get('/users/999999/organizations').expect(401);
     });
 
     it('returns 403 when authenticated user do not own the accessed user', async () => {
@@ -646,7 +694,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get('/api/users/999999/organizations')
+        .get('/users/999999/organizations')
         .set('Authorization', 'Bearer ' + auth.token)
         .expect(403);
     });
@@ -659,7 +707,7 @@ describe('User (e2e)', () => {
       const adminAuth = await utils.login(credentials);
 
       const res = await api
-        .get(`/api/users/${user.id}/organizations`)
+        .get(`/users/${user.id}/organizations`)
         .set('Authorization', 'Bearer ' + adminAuth.token)
         .expect(200);
 
@@ -684,7 +732,7 @@ describe('User (e2e)', () => {
       await utils.addTechnicalDelegateInCompetition(user, competition);
 
       const { body } = await api
-        .get(`/api/users/${user.id}/competition-roles`)
+        .get(`/users/${user.id}/competition-roles`)
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(200);
 
@@ -709,7 +757,7 @@ describe('User (e2e)', () => {
 
     it('returns 401 when getting user competition roles without authentication', async () => {
       const { user } = await utils.givenUser();
-      await api.get(`/api/users/${user.id}/competition-roles`).expect(401);
+      await api.get(`/users/${user.id}/competition-roles`).expect(401);
     });
 
     it('returns 403 when getting user competition roles from another user', async () => {
@@ -718,7 +766,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get(`/api/users/${user.id}/competition-roles`)
+        .get(`/users/${user.id}/competition-roles`)
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(403);
     });
@@ -728,7 +776,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get('/api/users/9999999/competition-roles')
+        .get('/users/9999999/competition-roles')
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(403);
     });
