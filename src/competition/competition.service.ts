@@ -92,6 +92,10 @@ export class CompetitionService {
     const newCompetition = new Competition(
       dto.name,
       dto.type,
+      dto.description,
+      dto.agenda,
+      dto.open,
+      dto.welcomingDate,
       dto.startDate,
       dto.endDate,
       dto.address,

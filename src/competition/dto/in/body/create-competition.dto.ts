@@ -5,9 +5,11 @@ import { CompetitionType } from '../../../types/competition-type.enum';
 
 import {
   IsArray,
+  IsBoolean,
   IsDateString,
   IsEnum,
   IsString,
+  Length,
   ValidateNested,
 } from 'class-validator';
 
@@ -35,6 +37,24 @@ export class CreateCompetitionDTO {
   })
   @IsEnum(CompetitionType)
   type!: CompetitionType;
+
+  @ApiProperty()
+  @IsString()
+  @Length(10, 1024)
+  description!: string;
+
+  @ApiProperty()
+  @IsString()
+  @Length(10, 1024)
+  agenda!: string;
+
+  @ApiProperty()
+  @IsBoolean()
+  open!: boolean;
+
+  @ApiProperty()
+  @IsDateString()
+  welcomingDate!: Date;
 
   @ApiProperty()
   @IsDateString()

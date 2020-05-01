@@ -26,6 +26,21 @@ export class CompetitionDto extends BaseDtoWithID {
   type!: CompetitionType;
 
   @ApiProperty()
+  cancelled!: boolean;
+
+  @ApiProperty()
+  description!: string;
+
+  @ApiProperty()
+  agenda!: string;
+
+  @ApiProperty()
+  open!: boolean;
+
+  @ApiProperty()
+  welcomingDate!: Date;
+
+  @ApiProperty()
   startDate!: Date;
 
   @ApiProperty()

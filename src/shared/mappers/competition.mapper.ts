@@ -17,6 +17,11 @@ export class CompetitionMapper extends BaseMapper<CompetitionDto, Competition> {
       address: 'address',
       postalCode: 'postalCode',
       type: 'type',
+      agenda: 'agenda',
+      description: 'description',
+      open: 'open',
+      cancelled: 'cancelled',
+      welcomingDate: 'welcomingDate',
       createdAt: 'createdAt',
       updatedAt: 'updatedAt',
     });
