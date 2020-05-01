@@ -7,10 +7,6 @@ import * as packageJson from '../package.json';
 import { NestExpressApplication } from '@nestjs/platform-express';
 
 export function configure(app: NestExpressApplication): void {
-  const hostDomain = AppModule.isDev
-    ? `https://${AppModule.host}:${AppModule.port}`
-    : AppModule.host;
-
   const swaggerOptions = new DocumentBuilder()
     .setTitle(packageJson.name)
     .setDescription(packageJson.description)
@@ -21,7 +17,7 @@ export function configure(app: NestExpressApplication): void {
   const swaggerDoc = SwaggerModule.createDocument(app, swaggerOptions);
 
   SwaggerModule.setup('/explorer', app, swaggerDoc, {
-    swaggerUrl: `${hostDomain}/explorer`,
+    swaggerUrl: `${AppModule.url}/explorer`,
     swaggerOptions: {
       docExpansion: 'list',
       filter: true,

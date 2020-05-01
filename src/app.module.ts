@@ -22,11 +22,13 @@ import { CompetitionModule } from './competition/competition.module';
 export class AppModule {
   static host: string;
   static port: number;
+  static url: string;
   static isDev: boolean;
 
   constructor(private readonly configurationService: ConfigurationService) {
     AppModule.port = configurationService.get('PORT');
     AppModule.host = configurationService.get('HOST');
+    AppModule.url = configurationService.get('BASE_API_URL');
     AppModule.isDev = configurationService.isDevelopment;
   }
 }
