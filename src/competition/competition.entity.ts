@@ -15,7 +15,6 @@ import { Sex } from '../shared/types/sex.enum';
 import { CategoryName } from '../shared/types/category-name.enum';
 import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
-import { PrimaryKeyType } from 'mikro-orm/dist/typings';
 
 interface ClimberRankingInfo {
   id: typeof User.prototype.id;
@@ -52,6 +51,25 @@ export class Competition extends BaseEntity {
 
   @Enum(() => CompetitionType)
   type: CompetitionType;
+
+  @Property()
+  cancelled = false;
+
+  @Property({
+    length: 1024,
+  })
+  description: string;
+
+  @Property({
+    length: 1024,
+  })
+  agenda: string;
+
+  @Property()
+  open: boolean;
+
+  @Property()
+  welcomingDate: Date;
 
   @Property()
   startDate: Date;
@@ -152,6 +170,10 @@ export class Competition extends BaseEntity {
   constructor(
     name: string,
     type: CompetitionType,
+    description: string,
+    agenda: string,
+    open: boolean,
+    welcomingDate: Date,
     startDate: Date,
     endDate: Date,
     address: string,
@@ -163,6 +185,10 @@ export class Competition extends BaseEntity {
     super();
     this.name = name;
     this.type = type;
+    this.description = description;
+    this.agenda = agenda;
+    this.open = open;
+    this.welcomingDate = welcomingDate;
     this.startDate = startDate;
     this.endDate = endDate;
     this.address = address;
