@@ -10,7 +10,6 @@ import { IsString, Min, ValidationError } from 'class-validator';
 import { catchErrors } from './decorator.utils';
 import { QueryOrder } from 'mikro-orm';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getParamDecoratorFactory<T>(
   decorator: Function,
   dto?: ClassType<unknown>,

@@ -12,6 +12,8 @@ import { givenCreateCompetitionDto } from '../fixture/competition.fixture';
 import { UpdateCompetitionByIdDto } from '../../src/competition/dto/in/body/update-competition-by-id.dto';
 import LinkHeader from 'http-link-header';
 
+/* eslint-disable sonarjs/no-duplicate-string */
+
 describe('Competition (e2e)', () => {
   let app: NestExpressApplication;
   let utils: TestUtils;
@@ -46,6 +48,11 @@ describe('Competition (e2e)', () => {
 
   describe('GET /competitions', () => {
     it('retrieves competitions', async function () {
+      const res = await api.get('/competitions').expect(200);
+      expect(res.body).toBeInstanceOf(Array);
+    });
+
+    it('retrieves competitions with filtering and ordering', async function () {
       const { user } = await utils.givenUser();
       const now = new Date();
       now.setSeconds(now.getSeconds() + 10);
@@ -54,7 +61,16 @@ describe('Competition (e2e)', () => {
         startDate: now,
       });
 
-      const res = await api.get('/competitions').expect(200);
+      const res = await api
+        .get('/competitions')
+        .query({
+          q: JSON.stringify({
+            startDate: {
+              $gte: new Date(),
+            },
+          }),
+        })
+        .expect(200);
 
       expect(res.body.map((c: CompetitionDto) => c.id)).toContain(
         competition.id,

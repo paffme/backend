@@ -4,7 +4,7 @@ import {
   ExecutionContext,
 } from '@nestjs/common';
 
-import { QueryOrder, QueryOrderMap } from 'mikro-orm';
+import { FilterQuery, QueryOrder, QueryOrderMap } from 'mikro-orm';
 import { plainToClass } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { ClassType } from 'class-transformer/ClassTransformer';
@@ -15,7 +15,7 @@ export interface SearchOptions {
 }
 
 export interface SearchQuery<T> {
-  filter: FilterValue<T>;
+  filter: FilterQuery<T>;
   order: QueryOrderMap;
 }
 
@@ -23,7 +23,7 @@ async function getFilter<Dto, T>(
   query?: string,
   dto?: ClassType<Dto>,
   options?: SearchOptions,
-): Promise<FilterValue<T>> {
+): Promise<FilterQuery<T>> {
   if (typeof dto === 'undefined') {
     return {};
   }

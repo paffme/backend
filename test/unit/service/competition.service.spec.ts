@@ -22,9 +22,11 @@ import { CategoryName } from '../../../src/shared/types/category-name.enum';
 import { Sex } from '../../../src/shared/types/sex.enum';
 import { givenCategory } from '../../fixture/category.fixture';
 import { UpdateCompetitionByIdDto } from '../../../src/competition/dto/in/body/update-competition-by-id.dto';
+import { QueryOrder } from 'mikro-orm';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
+  findAndCount: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
 };
@@ -103,6 +105,52 @@ describe('Competition service (unit)', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  it('gets competitions with filtering, ordering and pagination', async () => {
+    const now = new Date();
+    const data: unknown[] = [];
+
+    competitionRepositoryMock.findAndCount.mockImplementation(async () => [
+      data,
+      0,
+    ]);
+
+    const res = await competitionService.getCompetitions(
+      {
+        offset: 10,
+        limit: 11,
+      },
+      {
+        order: {
+          startDate: QueryOrder.desc,
+        },
+        filter: {
+          startDate: {
+            $gte: now,
+          },
+        },
+      },
+    );
+
+    expect(competitionRepositoryMock.findAndCount).toHaveBeenCalledTimes(1);
+    expect(competitionRepositoryMock.findAndCount).toHaveBeenCalledWith(
+      {
+        startDate: {
+          $gte: now,
+        },
+      },
+      {
+        limit: 11,
+        offset: 10,
+        orderBy: {
+          startDate: QueryOrder.desc,
+        },
+      },
+    );
+
+    expect(res.total).toEqual(0);
+    expect(res.data).toBe(data);
   });
 
   it('throws 404 when getting an unknown registration', () => {

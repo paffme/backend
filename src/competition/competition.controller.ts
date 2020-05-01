@@ -83,6 +83,8 @@ import {
   PaginationService,
 } from '../shared/pagination/pagination.service';
 import { Request } from 'express';
+import { Search, SearchQuery } from '../shared/decorators/search.decorator';
+import { SearchCompetitionsDto } from './dto/in/search/search-competitions.dto';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -101,14 +103,16 @@ export class CompetitionController {
   @Get()
   @ApiOkResponse({ type: CompetitionDto, isArray: true })
   @ApiOperation(
-    GetOperationId(CompetitionDto.constructor.name, 'GetUpcomingCompetitions'),
+    GetOperationId(CompetitionDto.constructor.name, 'GetCompetitions'),
   )
-  async getUpcomingCompetitions(
+  async getCompetitions(
     @Pagination() offsetLimitRequest: OffsetLimitRequest,
+    @Search(SearchCompetitionsDto) search: SearchQuery<Competition>,
     @Req() request: Request,
   ): Promise<CompetitionDto[]> {
-    const offsetLimitResponse = await this.competitionService.getUpcomingCompetitions(
+    const offsetLimitResponse = await this.competitionService.getCompetitions(
       offsetLimitRequest,
+      search,
     );
 
     this.paginationService.addPaginationHeaders(

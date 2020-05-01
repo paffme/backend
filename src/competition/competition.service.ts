@@ -6,14 +6,21 @@ import {
   NotFoundException,
   NotImplementedException,
 } from '@nestjs/common';
-import { InjectRepository } from 'nestjs-mikro-orm';
-import { EntityRepository, QueryOrder } from 'mikro-orm';
+
 import {
   Competition,
   CompetitionRelation,
   Rankings,
   UserCompetitionRelation,
 } from './competition.entity';
+
+import {
+  OffsetLimitRequest,
+  OffsetLimitResponse,
+} from '../shared/pagination/pagination.service';
+
+import { InjectRepository } from 'nestjs-mikro-orm';
+import { EntityRepository } from 'mikro-orm';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
 import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
 import { UserService } from '../user/user.service';
@@ -29,11 +36,7 @@ import { BoulderingRankingService } from '../bouldering/ranking/bouldering-ranki
 import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
 import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
-
-import {
-  OffsetLimitRequest,
-  OffsetLimitResponse,
-} from '../shared/pagination/pagination.service';
+import { SearchQuery } from '../shared/decorators/search.decorator';
 
 @Injectable()
 export class CompetitionService {
@@ -66,33 +69,16 @@ export class CompetitionService {
     return competition;
   }
 
-  async getUpcomingCompetitions(
+  async getCompetitions(
     offsetLimitRequest: OffsetLimitRequest,
+    search: SearchQuery<Competition>,
   ): Promise<OffsetLimitResponse<Competition>> {
-    const now = new Date();
-
-    const today = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-      0,
-      0,
-      0,
-      0,
-    );
-
     const [competitions, total] = await this.competitionRepository.findAndCount(
-      {
-        startDate: {
-          $gte: today,
-        },
-      },
+      search.filter,
       {
         limit: offsetLimitRequest.limit,
         offset: offsetLimitRequest.offset,
-        orderBy: {
-          startDate: QueryOrder.DESC,
-        },
+        orderBy: search.order,
       },
     );
 
