@@ -17,6 +17,11 @@ import { AuthenticationService } from '../shared/authentication/authentication.s
 import { UserMapper } from '../shared/mappers/user.mapper';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { Competition } from '../competition/competition.entity';
+import {
+  OffsetLimitRequest,
+  OffsetLimitResponse,
+} from '../shared/pagination/pagination.service';
+import { SearchQuery } from '../shared/decorators/search.decorator';
 
 @Injectable()
 export class UserService {
@@ -76,6 +81,25 @@ export class UserService {
         },
       );
     });
+  }
+
+  async get(
+    offsetLimitRequest: OffsetLimitRequest,
+    search: SearchQuery<User>,
+  ): Promise<OffsetLimitResponse<User>> {
+    const [data, total] = await this.userRepository.findAndCount(
+      search.filter,
+      {
+        offset: offsetLimitRequest.offset,
+        limit: offsetLimitRequest.limit,
+        orderBy: search.order,
+      },
+    );
+
+    return {
+      data,
+      total,
+    };
   }
 
   async register(dto: RegisterDto): Promise<User> {

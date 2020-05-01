@@ -16,9 +16,11 @@ import { JwtService } from '@nestjs/jwt';
 import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
 import * as uuid from 'uuid';
 import { Sex } from '../../../src/shared/types/sex.enum';
+import { QueryOrder } from 'mikro-orm';
 
 const userRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
+  findAndCount: jest.fn(),
   findOne: jest.fn(),
   count: jest.fn(),
 };
@@ -50,6 +52,43 @@ describe('User service (unit)', () => {
 
   afterAll(() => {
     jest.clearAllMocks();
+  });
+
+  it('gets user with pagination, filtering and ordering', async () => {
+    const data: unknown[] = [];
+    userRepositoryMock.findAndCount.mockImplementation(async () => [data, 0]);
+
+    const res = await userService.get(
+      {
+        limit: 10,
+        offset: 11,
+      },
+      {
+        filter: {
+          firstName: '123',
+        },
+        order: {
+          firstName: QueryOrder.asc,
+        },
+      },
+    );
+
+    expect(userRepositoryMock.findAndCount).toHaveBeenCalledTimes(1);
+    expect(userRepositoryMock.findAndCount).toHaveBeenCalledWith(
+      {
+        firstName: '123',
+      },
+      {
+        limit: 10,
+        offset: 11,
+        orderBy: {
+          firstName: QueryOrder.asc,
+        },
+      },
+    );
+
+    expect(res.total).toEqual(0);
+    expect(res.data).toBe(data);
   });
 
   it('rejects bad request when trying to login with an unknown user', async () => {

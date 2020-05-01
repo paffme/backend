@@ -58,6 +58,54 @@ describe('User (e2e)', () => {
     expect(user).toHaveProperty('updatedAt');
   }
 
+  describe('GET /users', () => {
+    it('gets user with filtering', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const firstName = uuid.v4();
+
+      const { user: user1 } = await utils.givenUser({
+        firstName,
+        lastName: 'World1',
+      });
+
+      const { user: user2 } = await utils.givenUser({
+        firstName,
+        lastName: 'World2',
+      });
+
+      const { body } = await api
+        .get('/users')
+        .query({
+          q: JSON.stringify({
+            firstName,
+          }),
+          sort: 'lastName',
+          order: 'desc',
+        })
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(200);
+
+      expect(body).toHaveLength(2);
+      expect(body[0].id).toEqual(user2.id);
+      expect(body[1].id).toEqual(user1.id);
+    });
+
+    it('returns 400 when getting user without filtering', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      await api
+        .get('/users')
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(400);
+    });
+
+    it('returns 401 when getting users without being authenticated', async () => {
+      await api.get('/users').expect(401);
+    });
+  });
+
   describe('POST /users', () => {
     it('creates a user', async () => {
       const user: RegisterDto = {

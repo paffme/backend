@@ -1,5 +1,4 @@
 import { Pagination } from '../../../src/shared/decorators/pagination.decorator';
-import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { OffsetLimitRequest } from '../../../src/shared/pagination/pagination.service';
 import {
   DEFAULT_PER_PAGE,
@@ -8,6 +7,8 @@ import {
   PER_PAGE,
 } from '../../../src/shared/pagination/pagination-queries.dto';
 import { ValidationError } from 'class-validator';
+import { catchErrors } from './decorator.utils';
+import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getParamDecoratorFactory(decorator: Function): Function {
@@ -21,7 +22,7 @@ function getParamDecoratorFactory(decorator: Function): Function {
 }
 
 function givenPaginationDecorator(
-  queries: Partial<PaginationQueriesDto>,
+  query: Partial<PaginationQueriesDto>,
 ): Promise<OffsetLimitRequest> {
   const factory = getParamDecoratorFactory(Pagination);
 
@@ -30,21 +31,12 @@ function givenPaginationDecorator(
       return {
         getRequest(): {} {
           return {
-            query: queries,
+            query,
           };
         },
       };
     },
   });
-}
-
-async function catchErrors<T>(promise: Promise<T>): Promise<ValidationError[]> {
-  try {
-    await promise;
-    throw [new Error('should have thrown')];
-  } catch (err) {
-    return err;
-  }
 }
 
 describe('Pagination decorator (unit)', () => {
