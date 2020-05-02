@@ -24,6 +24,9 @@ import { BoulderingRoundUnlimitedContestRankingService } from './ranking/boulder
 import { BoulderingRoundRankingService } from './ranking/bouldering-round-ranking.service';
 import { BoulderingRoundCountedRankingService } from './ranking/bouldering-round-counted-ranking.service';
 import { BoulderingGroupService } from '../group/bouldering-group.service';
+import { BoulderingGroup } from '../group/bouldering-group.entity';
+import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.dto';
+import { validateIndex } from '../../shared/utils/indexing.helper';
 
 @Injectable()
 export class BoulderingRoundService {
@@ -130,15 +133,7 @@ export class BoulderingRoundService {
     }
 
     if (rounds.length > 0) {
-      // Verify that the round index will be next to another index
-      const minDistance = rounds.reduce((minDistance, round) => {
-        const distance = Math.abs(round.index - roundIndex);
-        return distance < minDistance ? distance : minDistance;
-      }, Number.MAX_SAFE_INTEGER);
-
-      if (minDistance > 1) {
-        throw new UnprocessableEntityException('Invalid round index');
-      }
+      validateIndex(rounds, roundIndex);
 
       // Shift other rounds indexes if necessary
       for (const r of rounds) {
@@ -164,24 +159,29 @@ export class BoulderingRoundService {
 
   async addResult(
     roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
     boulderId: typeof Boulder.prototype.id,
     climber: User,
     dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResult> {
     const [round, boulder] = await Promise.all([
-      this.getOrFail(roundId, [
-        'groups',
-        'groups.climbers',
-        'groups.boulders',
-        'groups.results',
-      ]),
+      this.getOrFail(roundId, ['groups']),
       this.boulderService.getOrFail(boulderId),
     ]);
 
-    const groups = round.groups.getItems();
-    const group = groups.find((g) => g.climbers.contains(climber));
+    const group = round.groups.getItems().find((g) => g.id === groupId);
 
     if (!group) {
+      throw new NotFoundException('Unknown group');
+    }
+
+    await Promise.all([
+      group.climbers.init(),
+      group.boulders.init(),
+      group.results.init(),
+    ]);
+
+    if (!group.climbers.contains(climber)) {
       throw new BadRequestException('Climber not in round');
     }
 
@@ -231,5 +231,42 @@ export class BoulderingRoundService {
     } else {
       throw new BadRequestException('This round cannot take new climbers');
     }
+  }
+
+  private async getGroup(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<BoulderingGroup> {
+    const groups = await round.groups.init({
+      where: {
+        id: groupId,
+      },
+    });
+
+    const group = groups.getItems()[0];
+
+    if (!group) {
+      throw new NotFoundException('Unknown group in bouldering round');
+    }
+
+    return group;
+  }
+
+  async createBoulder(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    dto: CreateBoulderDto,
+  ): Promise<Boulder> {
+    const group = await this.getGroup(round, groupId);
+    return this.boulderService.create(group, dto);
+  }
+
+  async removeBoulder(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+  ): Promise<void> {
+    const group = await this.getGroup(round, groupId);
+    return this.boulderService.remove(group, boulderId);
   }
 }

@@ -37,6 +37,8 @@ import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
 import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
 import { SearchQuery } from '../shared/decorators/search.decorator';
+import { BoulderingGroup } from '../bouldering/group/bouldering-group.entity';
+import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
 
 @Injectable()
 export class CompetitionService {
@@ -410,6 +412,7 @@ export class CompetitionService {
   async addBoulderingResult(
     competitionId: typeof Competition.prototype.id,
     roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
     boulderId: typeof Boulder.prototype.id,
     dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResult> {
@@ -429,6 +432,7 @@ export class CompetitionService {
 
     const result = await this.boulderingRoundService.addResult(
       roundId,
+      groupId,
       boulderId,
       user,
       dto,
@@ -502,5 +506,46 @@ export class CompetitionService {
   ): Promise<Rankings> {
     const competition = await this.getOrFail(competitionId);
     return competition.rankings;
+  }
+
+  private async getBoulderingRoundOrFail(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+  ): Promise<BoulderingRound> {
+    const { boulderingRounds } = await this.getOrFail(competitionId);
+
+    const rounds = await boulderingRounds.init({
+      where: {
+        id: roundId,
+      },
+    });
+
+    const round = rounds.getItems()[0];
+
+    if (!round) {
+      throw new NotFoundException('Unknown bouldering round');
+    }
+
+    return round;
+  }
+
+  async createBoulder(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    dto: CreateBoulderDto,
+  ): Promise<Boulder> {
+    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    return this.boulderingRoundService.createBoulder(round, groupId, dto);
+  }
+
+  async deleteBoulder(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+  ): Promise<void> {
+    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    return this.boulderingRoundService.removeBoulder(round, groupId, boulderId);
   }
 }

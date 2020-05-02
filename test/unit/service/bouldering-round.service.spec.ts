@@ -24,6 +24,12 @@ import { Sex } from '../../../src/shared/types/sex.enum';
 import { CategoryName } from '../../../src/shared/types/category-name.enum';
 import { BoulderingGroupService } from '../../../src/bouldering/group/bouldering-group.service';
 import { BoulderingGroupMapper } from '../../../src/shared/mappers/bouldering-group.mapper';
+import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
+import { CreateBoulderDto } from '../../../src/competition/dto/in/body/create-boulder.dto';
+import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
+import { Collection } from 'mikro-orm';
+import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
+import { InitOptions } from 'mikro-orm/dist/entity/Collection';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -45,6 +51,8 @@ const boulderingRoundCountedRankingServiceMock: ServiceMock = {
 
 const boulderServiceMock: ServiceMock = {
   createMany: jest.fn(),
+  create: jest.fn(),
+  remove: jest.fn(),
 };
 
 describe('Bouldering round service (unit)', () => {
@@ -301,5 +309,99 @@ describe('Bouldering round service (unit)', () => {
     return expect(
       boulderingRoundService.createRound(competition, dto),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  function givenRoundWithOneGroup(): {
+    group: BoulderingGroup;
+    round: BoulderingRound;
+  } {
+    const group = givenBoulderingGroup();
+    const round = givenBoulderingRound(
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        async init(
+          options: InitOptions<BoulderingGroup>,
+        ): Promise<Partial<Collection<BoulderingGroup>>> {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+          // @ts-ignore
+          expect(options.where.id).toEqual(group.id);
+
+          return {
+            getItems(): BoulderingGroup[] {
+              return [group];
+            },
+          };
+        },
+      },
+    );
+
+    return {
+      group,
+      round,
+    };
+  }
+
+  it('creates a boulder', async () => {
+    const { group, round } = givenRoundWithOneGroup();
+    const dto: CreateBoulderDto = {};
+    const fakeBoulder = {};
+
+    boulderServiceMock.create.mockImplementation(async () => fakeBoulder);
+
+    const result = await boulderingRoundService.createBoulder(
+      round,
+      group.id,
+      dto,
+    );
+
+    expect(result).toBe(fakeBoulder);
+    expect(boulderServiceMock.create).toHaveBeenCalledTimes(1);
+    expect(boulderServiceMock.create).toHaveBeenCalledWith(group, dto);
+  });
+
+  function givenRoundWithNoGroups(): BoulderingRound {
+    return givenBoulderingRound(undefined, undefined, undefined, undefined, {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // @ts-ignore
+      async init(): Promise<Partial<Collection<BoulderingGroup>>> {
+        return {
+          getItems(): BoulderingGroup[] {
+            return [];
+          },
+        };
+      },
+    });
+  }
+
+  it('throws when adding a boulder to unknown group', () => {
+    const round = givenRoundWithNoGroups();
+    const dto: CreateBoulderDto = {};
+
+    return expect(
+      boulderingRoundService.createBoulder(round, 1, dto),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('removes a boulder', async () => {
+    const { group, round } = givenRoundWithOneGroup();
+    boulderServiceMock.remove.mockImplementation(async () => undefined);
+
+    await boulderingRoundService.removeBoulder(round, group.id, 2);
+
+    expect(boulderServiceMock.remove).toHaveBeenCalledTimes(1);
+    expect(boulderServiceMock.remove).toHaveBeenCalledWith(group, 2);
+  });
+
+  it('throws not found when removing a boulder of an unknown round', () => {
+    const round = givenRoundWithNoGroups();
+
+    return expect(
+      boulderingRoundService.removeBoulder(round, 1, 2),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

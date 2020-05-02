@@ -174,9 +174,10 @@ export class BoulderingRound extends BaseEntity
   }
 }
 
-type Relation = 'groups' | 'competition';
-type DeepRelation = 'groups.climbers' | 'groups.boulders' | 'groups.results';
-export type BoulderingRoundRelation = Relation | DeepRelation;
+export type BoulderingRoundRelation = 'groups' | 'competition';
 
 // This is just for static validation
-type BoulderingRoundRelationValidation = Pick<BoulderingRound, Relation>;
+type BoulderingRoundRelationValidation = Pick<
+  BoulderingRound,
+  BoulderingRoundRelation
+>;

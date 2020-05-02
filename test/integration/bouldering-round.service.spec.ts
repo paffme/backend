@@ -345,6 +345,7 @@ describe('Bouldering round service (integration)', () => {
 
     const result = await boulderingRoundService.addResult(
       round.id,
+      round.groups[0].id,
       round.groups[0].boulders.getItems()[0].id,
       climber,
       dto,
@@ -379,6 +380,7 @@ describe('Bouldering round service (integration)', () => {
 
     await boulderingRoundService.addResult(
       round.id,
+      round.groups[0].id,
       round.groups[0].boulders.getItems()[0].id,
       climber,
       dto,
@@ -421,6 +423,7 @@ describe('Bouldering round service (integration)', () => {
     return expect(
       boulderingRoundService.addResult(
         round.id,
+        round.groups[0].id,
         round.groups[0].boulders.getItems()[0].id,
         climber,
         dto,
@@ -446,7 +449,7 @@ describe('Bouldering round service (integration)', () => {
     );
 
     const group = round.groups.getItems()[0];
-    const [boulder] = await boulderService.createMany(group, 1);
+    const [boulder] = group.boulders;
     const dto = {} as CreateBoulderingResultDto;
 
     const anotherRound = await givenBoulderingRound({
@@ -458,6 +461,7 @@ describe('Bouldering round service (integration)', () => {
     return expect(
       boulderingRoundService.addResult(
         anotherRound.id,
+        anotherRound.groups[0].id,
         boulder.id,
         climber,
         dto,
@@ -475,7 +479,13 @@ describe('Bouldering round service (integration)', () => {
     const dto = {} as CreateBoulderingResultDto;
 
     return expect(
-      boulderingRoundService.addResult(round.id, 99999999, climber, dto),
+      boulderingRoundService.addResult(
+        round.id,
+        round.groups[0].id,
+        99999999,
+        climber,
+        dto,
+      ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
@@ -491,7 +501,13 @@ describe('Bouldering round service (integration)', () => {
     const dto = {} as CreateBoulderingResultDto;
 
     return expect(
-      boulderingRoundService.addResult(9999999, boulder.id, climber, dto),
+      boulderingRoundService.addResult(
+        round.id,
+        9999999,
+        boulder.id,
+        climber,
+        dto,
+      ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 

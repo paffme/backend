@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -12,11 +13,7 @@ import {
   UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
-import { CompetitionDto } from './dto/out/competition.dto';
-import { AllowedSystemRoles } from '../shared/decorators/allowed-system-roles.decorator';
-import { SystemRole } from '../user/user-role.enum';
-import { AuthGuard } from '@nestjs/passport';
-import { AuthenticationGuard } from '../shared/guards/authentication.guard';
+
 import {
   ApiCreatedResponse,
   ApiNoContentResponse,
@@ -24,6 +21,17 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
+
+import {
+  OffsetLimitRequest,
+  PaginationService,
+} from '../shared/pagination/pagination.service';
+
+import { CompetitionDto } from './dto/out/competition.dto';
+import { AllowedSystemRoles } from '../shared/decorators/allowed-system-roles.decorator';
+import { SystemRole } from '../user/user-role.enum';
+import { AuthGuard } from '@nestjs/passport';
+import { AuthenticationGuard } from '../shared/guards/authentication.guard';
 import { GetOperationId } from '../shared/utils/get-operation-id.helper';
 import { CompetitionService } from './competition.service';
 import { CreateCompetitionDTO } from './dto/in/body/create-competition.dto';
@@ -78,13 +86,14 @@ import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id
 import { OrGuard } from '../shared/guards/or.authorization.guard';
 import { ChiefRouteSetterAuthorizationGuard } from './authorization/chief-route-setter.authorization.guard';
 import { Pagination } from '../shared/decorators/pagination.decorator';
-import {
-  OffsetLimitRequest,
-  PaginationService,
-} from '../shared/pagination/pagination.service';
 import { Request } from 'express';
 import { Search, SearchQuery } from '../shared/decorators/search.decorator';
 import { SearchCompetitionsDto } from './dto/in/search/search-competitions.dto';
+import { BoulderDto } from '../bouldering/dto/out/boulder.dto';
+import { CreateBoulderParamsDto } from './dto/in/params/create-boulder-params.dto';
+import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
+import { BoulderMapper } from '../shared/mappers/boulder.mapper';
+import { DeleteBoulderParamsDto } from './dto/in/params/delete-boulder-params.dto';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -98,6 +107,7 @@ export class CompetitionController {
     private readonly rankingMapper: RankingsMapper,
     private readonly mapper: CompetitionMapper,
     private readonly paginationService: PaginationService,
+    private readonly boulderMapper: BoulderMapper,
   ) {}
 
   @Get()
@@ -521,7 +531,7 @@ export class CompetitionController {
   }
 
   @Post(
-    '/:competitionId/bouldering-rounds/:roundId/boulders/:boulderId/results',
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/results',
   )
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
@@ -551,6 +561,7 @@ export class CompetitionController {
     const result = await this.competitionService.addBoulderingResult(
       params.competitionId,
       params.roundId,
+      params.groupId,
       params.boulderId,
       dto,
     );
@@ -569,5 +580,51 @@ export class CompetitionController {
     );
 
     return this.rankingMapper.map(rankings);
+  }
+
+  @Post('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    JuryPresidentAuthorizationGuard,
+  )
+  @ApiCreatedResponse({ type: BoulderDto })
+  @ApiOperation(GetOperationId(Competition.name, 'CreateBoulder'))
+  async createBoulder(
+    @Param() params: CreateBoulderParamsDto,
+    @Body() dto: CreateBoulderDto,
+  ): Promise<BoulderDto> {
+    const boulder = await this.competitionService.createBoulder(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      dto,
+    );
+
+    return this.boulderMapper.map(boulder);
+  }
+
+  @Delete(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId',
+  )
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    JuryPresidentAuthorizationGuard,
+  )
+  @ApiNoContentResponse()
+  @ApiOperation(GetOperationId(Competition.name, 'DeleteBoulder'))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteBoulder(@Param() params: DeleteBoulderParamsDto): Promise<void> {
+    await this.competitionService.deleteBoulder(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      params.boulderId,
+    );
   }
 }
