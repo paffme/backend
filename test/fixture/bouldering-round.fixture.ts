@@ -11,12 +11,17 @@ import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
 import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.entity';
 import { User } from '../../src/user/user.entity';
+import { Collection } from 'mikro-orm';
+import TestUtils from '../utils';
+
+const utils = new TestUtils();
 
 export function givenBoulderingRound(
   data?: Partial<BoulderingRound>,
   boulders?: Boulder[],
   results?: BoulderingResult[],
   climbers?: User[],
+  groups?: Partial<Collection<BoulderingGroup>>,
 ): BoulderingRound {
   const round = new BoulderingRound(
     data?.category ?? CategoryName.Minime,
@@ -29,11 +34,12 @@ export function givenBoulderingRound(
     data?.competition ?? ({} as Competition),
   );
 
+  round.id = utils.getRandomId();
   round.state = data?.state ?? round.state;
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
   // @ts-ignore
-  round.groups = {
+  round.groups = groups ?? {
     getItems(): BoulderingGroup[] {
       return [
         {

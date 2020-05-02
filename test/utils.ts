@@ -20,6 +20,7 @@ import { Boulder } from '../src/bouldering/boulder/boulder.entity';
 import { givenCreateCompetitionDto } from './fixture/competition.fixture';
 import { Sex } from '../src/shared/types/sex.enum';
 import { CategoryName } from '../src/shared/types/category-name.enum';
+import { BoulderingGroup } from '../src/bouldering/group/bouldering-group.entity';
 
 // FIXME, cut this utils in multiple parts to remove ! assertions
 
@@ -215,6 +216,7 @@ export default class TestUtils {
   addBoulderingResult(
     competition: Competition,
     round: BoulderingRound,
+    group: BoulderingGroup,
     boulder: Boulder,
     climber: User,
     partialDto?: Partial<CreateBoulderingResultDto>,
@@ -229,8 +231,15 @@ export default class TestUtils {
     return this.competitionService!.addBoulderingResult(
       competition.id,
       round.id,
+      group.id,
       boulder.id,
       dto,
     );
+  }
+
+  getBoulderingGroup(
+    id: typeof BoulderingGroup.prototype.id,
+  ): Promise<BoulderingGroup> {
+    return this.orm!.em.findOneOrFail(BoulderingGroup, id);
   }
 }

@@ -22,7 +22,12 @@ import { CategoryName } from '../../../src/shared/types/category-name.enum';
 import { Sex } from '../../../src/shared/types/sex.enum';
 import { givenCategory } from '../../fixture/category.fixture';
 import { UpdateCompetitionByIdDto } from '../../../src/competition/dto/in/body/update-competition-by-id.dto';
-import { QueryOrder } from 'mikro-orm';
+import { Collection, QueryOrder } from 'mikro-orm';
+import { CreateBoulderDto } from '../../../src/competition/dto/in/body/create-boulder.dto';
+import { BoulderingRound } from '../../../src/bouldering/round/bouldering-round.entity';
+import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
+import { InitOptions } from 'mikro-orm/dist/entity/Collection';
+import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -49,6 +54,8 @@ const boulderingRoundServiceMock: ServiceMock = {
   createRound: jest.fn(),
   addResult: jest.fn(),
   addClimbers: jest.fn(),
+  createBoulder: jest.fn(),
+  removeBoulder: jest.fn(),
 };
 
 const boulderingRankingServiceMock: ServiceMock = {
@@ -281,13 +288,20 @@ describe('Competition service (unit)', () => {
       climberId: utils.getRandomId(),
     } as CreateBoulderingResultDto;
 
-    const result = await competitionService.addBoulderingResult(1, 2, 3, dto);
+    const result = await competitionService.addBoulderingResult(
+      1,
+      2,
+      3,
+      4,
+      dto,
+    );
 
     expect(result).toBe(boulderingResult);
     expect(boulderingRoundServiceMock.addResult).toHaveBeenCalledTimes(1);
     expect(boulderingRoundServiceMock.addResult).toHaveBeenCalledWith(
       2,
       3,
+      4,
       user,
       dto,
     );
@@ -488,6 +502,7 @@ describe('Competition service (unit)', () => {
         1,
         2,
         3,
+        4,
         {} as CreateBoulderingResultDto,
       ),
     ).rejects.toBeInstanceOf(ForbiddenException);
@@ -525,6 +540,134 @@ describe('Competition service (unit)', () => {
 
     return expect(
       competitionService.updateById(123, {}),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  function givenCompetitionWithBoulderingRound(): {
+    round: BoulderingRound;
+    competition: {
+      id: typeof Competition.prototype.id;
+      boulderingRounds: Partial<Collection<BoulderingRound>>;
+    };
+  } {
+    const round = givenBoulderingRound();
+
+    const competition = {
+      id: utils.getRandomId(),
+      boulderingRounds: {
+        async init(
+          options: InitOptions<BoulderingGroup>,
+        ): Promise<Partial<Collection<BoulderingRound>>> {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+          // @ts-ignore
+          expect(options.where.id).toEqual(round.id);
+
+          return {
+            getItems(): BoulderingRound[] {
+              return [round];
+            },
+          };
+        },
+      },
+    };
+
+    return {
+      round,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // @ts-ignore
+      competition,
+    };
+  }
+
+  function givenCompetitionWithNoBoulderingRounds(): Partial<{
+    boulderingRounds: Partial<Collection<BoulderingRound>>;
+  }> {
+    return {
+      boulderingRounds: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        async init(): Promise<Partial<Collection<BoulderingRound>>> {
+          return {
+            getItems(): BoulderingRound[] {
+              return [];
+            },
+          };
+        },
+      },
+    };
+  }
+
+  it('adds a boulder', async () => {
+    const { competition, round } = givenCompetitionWithBoulderingRound();
+    const dto: CreateBoulderDto = {};
+    const fakeBoulder = {};
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.createBoulder.mockImplementation(
+      async () => fakeBoulder,
+    );
+
+    const result = await competitionService.createBoulder(
+      competition.id,
+      round.id,
+      3,
+      dto,
+    );
+
+    expect(result).toBe(fakeBoulder);
+    expect(boulderingRoundServiceMock.createBoulder).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundServiceMock.createBoulder).toHaveBeenCalledWith(
+      round,
+      3,
+      dto,
+    );
+  });
+
+  it('throws not found when adding a boulder to an unknown round', () => {
+    const competition = givenCompetitionWithNoBoulderingRounds();
+    const dto: CreateBoulderDto = {};
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(
+      competitionService.createBoulder(1, 2, 3, dto),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('removes a boulder', async () => {
+    const { competition, round } = givenCompetitionWithBoulderingRound();
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.removeBoulder.mockImplementation(
+      async () => undefined,
+    );
+
+    await competitionService.deleteBoulder(competition.id, round.id, 3, 4);
+
+    expect(boulderingRoundServiceMock.removeBoulder).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundServiceMock.removeBoulder).toHaveBeenCalledWith(
+      round,
+      3,
+      4,
+    );
+  });
+
+  it('throws not found when removing a boulder to an unknown round', () => {
+    const competition = givenCompetitionWithNoBoulderingRounds();
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(
+      competitionService.deleteBoulder(1, 2, 3, 4),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

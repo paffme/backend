@@ -21,6 +21,7 @@ import { RankingsDto } from '../../src/competition/dto/out/rankings.dto';
 import { CompetitionType } from '../../src/competition/types/competition-type.enum';
 import { Sex } from '../../src/shared/types/sex.enum';
 import { CategoryName } from '../../src/shared/types/category-name.enum';
+import { CreateBoulderDto } from '../../src/competition/dto/in/body/create-boulder.dto';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -156,7 +157,7 @@ describe('Bouldering (e2e)', () => {
     });
   });
 
-  describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/boulders/:boulderId/results', () => {
+  describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders/:boulderId/results', () => {
     it('adds a bouldering result for an unlimited contest', async function () {
       const {
         climber,
@@ -175,7 +176,7 @@ describe('Bouldering (e2e)', () => {
 
       const { body } = await api
         .post(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .send(dto)
@@ -213,7 +214,7 @@ describe('Bouldering (e2e)', () => {
 
       const { body } = await api
         .post(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .send(dto)
@@ -249,7 +250,7 @@ describe('Bouldering (e2e)', () => {
 
       const { body } = await api
         .post(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .send(dto)
@@ -290,7 +291,7 @@ describe('Bouldering (e2e)', () => {
 
       await api
         .post(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
         .send(dto)
@@ -312,7 +313,7 @@ describe('Bouldering (e2e)', () => {
 
       const { body } = await api
         .post(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .send(dto)
@@ -341,7 +342,7 @@ describe('Bouldering (e2e)', () => {
 
       return api
         .post(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
         )
         .set('Authorization', `Bearer ${auth.token}`)
         .send(dto)
@@ -363,7 +364,7 @@ describe('Bouldering (e2e)', () => {
 
       return api
         .post(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/boulders/${boulder.id}/results`,
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
         )
         .send(dto)
         .expect(401);
@@ -379,7 +380,13 @@ describe('Bouldering (e2e)', () => {
         boulder,
       } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
 
-      await utils.addBoulderingResult(competition, round, boulder, climber);
+      await utils.addBoulderingResult(
+        competition,
+        round,
+        round.groups[0],
+        boulder,
+        climber,
+      );
 
       const res = await api
         .get(`/competitions/${competition.id}/rankings`)
@@ -397,6 +404,129 @@ describe('Bouldering (e2e)', () => {
       expect(r.climber.club).toEqual(null);
       expect(r.climber.firstName).toEqual(climber.firstName);
       expect(r.climber.lastName).toEqual(climber.lastName);
+    });
+  });
+
+  describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders', () => {
+    it('adds a boulder', async () => {
+      const { competition, round, boulder } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const {
+        user: juryPresident,
+        credentials: juryPresidentCredentials,
+      } = await utils.givenUser();
+
+      const presidentJuryAuth = await utils.login(juryPresidentCredentials);
+      await utils.addJuryPresidentInCompetition(juryPresident, competition);
+
+      const dto: CreateBoulderDto = {};
+
+      const { body } = await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders`,
+        )
+        .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
+        .send(dto)
+        .expect(201);
+
+      expect(body.index).toEqual(boulder.index + 1);
+      expect(body).toHaveProperty('id');
+
+      const group = await utils.getBoulderingGroup(round.groups[0].id);
+      const boulders = await group.boulders.loadItems();
+      const createdBoulder = boulders.find((b) => b.id === body.id);
+      expect(createdBoulder).toBeTruthy();
+    });
+
+    it('returns 401 when adding a boulder without being authenticated', async () => {
+      const { competition, round } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const dto: CreateBoulderDto = {};
+
+      await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders`,
+        )
+        .send(dto)
+        .expect(401);
+    });
+
+    it('returns 403 when adding a boulder without being a jury president', async () => {
+      const { competition, round } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const dto: CreateBoulderDto = {};
+
+      await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders`,
+        )
+        .set('Authorization', `Bearer ${auth.token}`)
+        .send(dto)
+        .expect(403);
+    });
+  });
+
+  describe('DELETE /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders/{boulderId}', () => {
+    it('deletes a boulder', async () => {
+      const { competition, round, boulder } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const {
+        user: juryPresident,
+        credentials: juryPresidentCredentials,
+      } = await utils.givenUser();
+
+      const presidentJuryAuth = await utils.login(juryPresidentCredentials);
+      await utils.addJuryPresidentInCompetition(juryPresident, competition);
+
+      await api
+        .delete(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}`,
+        )
+        .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
+        .expect(204);
+
+      const group = await utils.getBoulderingGroup(round.groups[0].id);
+      const boulders = await group.boulders.loadItems();
+      const deletedBoulder = boulders.find((b) => b.id === boulder.id);
+      expect(deletedBoulder).toBeUndefined();
+    });
+
+    it('returns 401 when deleting a boulder without being authenticated', async () => {
+      const { competition, round, boulder } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      await api
+        .delete(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}`,
+        )
+        .expect(401);
+    });
+
+    it('returns 403 when deleting a boulder without being a jury president', async () => {
+      const { competition, round, boulder } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      await api
+        .delete(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}`,
+        )
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
     });
   });
 });
