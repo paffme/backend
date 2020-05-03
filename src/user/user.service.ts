@@ -122,6 +122,7 @@ export class UserService {
       dto.sex,
       email,
       hashedPassword,
+      dto.club,
     );
 
     await this.userRepository.persistAndFlush(newUser);

@@ -13,6 +13,7 @@ export function givenUser(data?: Partial<User>): User {
     data?.sex ?? Sex.Female,
     data?.email ?? uuid.v4(),
     data?.password ?? uuid.v4(),
+    data?.club ?? uuid.v4(),
   );
 
   user.id = data?.id ?? utils.getRandomId();

@@ -59,4 +59,9 @@ export class RegisterDto {
   @ApiProperty({ enum: Sex })
   @IsEnum(Sex)
   readonly sex!: Sex;
+
+  @ApiProperty()
+  @IsString()
+  @Length(2, 32)
+  readonly club!: string;
 }

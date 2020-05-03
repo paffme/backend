@@ -408,7 +408,7 @@ describe('Bouldering (e2e)', () => {
       const r = body[category.name]![category.sex]![0];
       expect(r.ranking).toEqual(1);
       expect(r.climber.id).toEqual(climber.id);
-      expect(r.climber.club).toEqual(null);
+      expect(r.climber.club).toEqual(climber.club);
       expect(r.climber.firstName).toEqual(climber.firstName);
       expect(r.climber.lastName).toEqual(climber.lastName);
     });

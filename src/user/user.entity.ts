@@ -34,7 +34,7 @@ export class User extends BaseEntity {
   sex: Sex;
 
   @Property()
-  club?: string;
+  club: string;
 
   @Enum(() => SystemRole)
   systemRole: SystemRole = SystemRole.User;
@@ -109,6 +109,7 @@ export class User extends BaseEntity {
     sex: Sex,
     email: string,
     password: string,
+    club: string,
   ) {
     super();
     this.firstName = firstName;
@@ -117,6 +118,7 @@ export class User extends BaseEntity {
     this.sex = sex;
     this.email = email.trim();
     this.password = password;
+    this.club = club;
   }
 }
 

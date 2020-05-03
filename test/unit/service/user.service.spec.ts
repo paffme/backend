@@ -126,6 +126,7 @@ describe('User service (unit)', () => {
         password: String(Math.random()),
         birthYear: 2000,
         sex: Sex.Female,
+        club: uuid.v4(),
       }),
     ).rejects.toBeInstanceOf(ConflictException);
   });
