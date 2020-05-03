@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
@@ -45,4 +45,9 @@ export class BoulderingRoundDto {
 
   @ApiProperty({ enum: CategoryName })
   readonly category!: CategoryName;
+
+  @ApiPropertyOptional({
+    type: Number,
+  })
+  readonly maxTries!: typeof BoulderingRound.prototype.maxTries;
 }

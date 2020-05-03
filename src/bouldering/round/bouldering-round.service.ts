@@ -84,6 +84,15 @@ export class BoulderingRoundService {
       );
     }
 
+    if (
+      dto.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST &&
+      typeof dto.maxTries !== 'number'
+    ) {
+      throw new UnprocessableEntityException(
+        'maxTries is mandatory for a limited contest',
+      );
+    }
+
     const groups = dto.groups ?? 1;
 
     if (groups > 1) {
@@ -113,6 +122,7 @@ export class BoulderingRoundService {
       dto.sex,
       dto.name,
       roundIndex,
+      dto.maxTries,
       dto.quota,
       dto.rankingType,
       dto.type,

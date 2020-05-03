@@ -21,6 +21,7 @@ export class BoulderingRoundMapper extends BaseMapper<
       category: 'category',
       sex: 'sex',
       groups: (round) => groupMapper.mapArray(round.groups.getItems()),
+      maxTries: 'maxTries',
     });
   }
 

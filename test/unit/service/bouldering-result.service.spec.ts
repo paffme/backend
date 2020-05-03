@@ -12,6 +12,7 @@ import { UnprocessableEntityException } from '@nestjs/common';
 import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
 import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
 import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
+import { givenBoulder } from '../../fixture/boulder.fixture';
 
 const boulderingResultRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -519,5 +520,29 @@ describe('Bouldering result service (unit)', () => {
     expect(res.zone).toEqual(true);
     expect(res.zoneInTries).toEqual(10);
     expect(res.topInTries).toEqual(10);
+  });
+
+  it('should not add a result if maxTries is already reached for a limited contest', () => {
+    const group = givenBoulderingGroup({
+      round: givenBoulderingRound({
+        maxTries: 5,
+      }),
+    });
+
+    boulderingResultRepositoryMock.findOne.mockImplementation(async () => ({
+      tries: 5,
+    }));
+
+    const boulder = {} as Boulder;
+    const user = {} as User;
+
+    const dto: CreateBoulderingResultDto = {
+      try: true,
+      climberId: 123,
+    };
+
+    return expect(
+      boulderingResultService.addResult(group, boulder, user, dto),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 });

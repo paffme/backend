@@ -60,6 +60,13 @@ export class BoulderingResultService {
         );
       }
 
+      if (
+        typeof group.round.maxTries === 'number' &&
+        result.tries >= group.round.maxTries
+      ) {
+        throw new UnprocessableEntityException('maxTries reached');
+      }
+
       result.tries++;
     }
 

@@ -104,6 +104,9 @@ export class BoulderingRound extends BaseEntity
   index: number;
 
   @Property()
+  maxTries?: number;
+
+  @Property()
   started = false;
 
   @Property()
@@ -157,6 +160,7 @@ export class BoulderingRound extends BaseEntity
     sex: Sex,
     name: string,
     index: number,
+    maxTries: number | undefined,
     quota: number,
     rankingType: BoulderingRoundRankingType,
     type: BoulderingRoundType,
@@ -167,6 +171,7 @@ export class BoulderingRound extends BaseEntity
     this.sex = sex;
     this.name = name;
     this.index = index;
+    this.maxTries = maxTries;
     this.quota = quota;
     this.rankingType = rankingType;
     this.type = type;

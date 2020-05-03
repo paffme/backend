@@ -28,6 +28,7 @@ export function givenBoulderingRound(
     data?.sex ?? Sex.Female,
     data?.name ?? uuid.v4(),
     data?.index ?? 0,
+    data?.maxTries ?? 5,
     data?.quota ?? 0,
     data?.rankingType ?? BoulderingRoundRankingType.CIRCUIT,
     data?.type ?? BoulderingRoundType.QUALIFIER,

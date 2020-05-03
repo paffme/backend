@@ -28,6 +28,12 @@ export class CreateBoulderingRoundDto {
   index?: number;
 
   @ApiProperty()
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  maxTries?: number;
+
+  @ApiProperty()
   @IsString()
   name!: string;
 

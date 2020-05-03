@@ -208,6 +208,7 @@ export default class TestUtils {
       type: partialDto?.type ?? BoulderingRoundType.QUALIFIER,
       category: partialDto?.category ?? CategoryName.Minime,
       sex: partialDto?.sex ?? Sex.Female,
+      maxTries: partialDto?.maxTries,
     };
 
     return this.competitionService!.addBoulderingRound(competition.id, dto);

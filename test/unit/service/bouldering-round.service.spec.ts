@@ -30,6 +30,8 @@ import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
 import { Collection } from 'mikro-orm';
 import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
 import { InitOptions } from 'mikro-orm/dist/entity/Collection';
+import { givenCompetition } from '../../fixture/competition.fixture';
+import { CompetitionType } from '../../../src/competition/types/competition-type.enum';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -403,5 +405,27 @@ describe('Bouldering round service (unit)', () => {
     return expect(
       boulderingRoundService.removeBoulder(round, 1, 2),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('should not allow to create a limited contest round without maxTries defined', () => {
+    const competition = givenCompetition({
+      type: CompetitionType.Bouldering,
+    });
+
+    const dto: CreateBoulderingRoundDto = {
+      rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
+      type: BoulderingRoundType.QUALIFIER,
+      quota: 0,
+      name: 'SuperRound',
+      boulders: 4,
+      index: 0,
+      sex: Sex.Female,
+      category: CategoryName.Minime,
+      maxTries: undefined,
+    };
+
+    return expect(
+      boulderingRoundService.createRound(competition, dto),
+    ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 });

@@ -57,6 +57,7 @@ describe('Bouldering (e2e)', () => {
 
   async function givenReadyCompetition(
     rankingType: BoulderingRoundRankingType,
+    roundData?: Partial<BoulderingRound>,
   ): Promise<{
     competition: Competition;
     organizer: User;
@@ -92,6 +93,7 @@ describe('Bouldering (e2e)', () => {
       boulders: 1,
       sex: Sex.Female,
       category: CategoryName.Minime,
+      maxTries: roundData?.maxTries,
     });
 
     const boulder = round.groups.getItems()[0].boulders.getItems()[0];
@@ -125,6 +127,7 @@ describe('Bouldering (e2e)', () => {
         type: BoulderingRoundType.QUALIFIER,
         sex: Sex.Female,
         category: CategoryName.Minime,
+        maxTries: 5,
       };
 
       const { body } = await api
@@ -138,6 +141,7 @@ describe('Bouldering (e2e)', () => {
       expect(body.type).toEqual(dto.type);
       expect(body.quota).toEqual(dto.quota);
       expect(body.index).toEqual(dto.index);
+      expect(body.maxTries).toEqual(dto.maxTries);
       expect(body.competitionId).toEqual(competition.id);
       expect(body.sex).toEqual(Sex.Female);
       expect(body.category).toEqual(CategoryName.Minime);
@@ -203,6 +207,9 @@ describe('Bouldering (e2e)', () => {
         judgeAuth,
       } = await givenReadyCompetition(
         BoulderingRoundRankingType.LIMITED_CONTEST,
+        {
+          maxTries: 5,
+        },
       );
 
       const dto: CreateBoulderingResultDto = {
