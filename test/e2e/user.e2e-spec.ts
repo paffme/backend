@@ -52,6 +52,7 @@ describe('User (e2e)', () => {
     expect(user.birthYear).toEqual(expectedUser.birthYear);
     expect(user.firstName).toEqual(expectedUser.firstName);
     expect(user.lastName).toEqual(expectedUser.lastName);
+    expect(user.club).toEqual(expectedUser.club);
     expect((user as any).password).toBeUndefined();
     expect(user).toHaveProperty('id');
     expect(user).toHaveProperty('createdAt');
@@ -115,6 +116,7 @@ describe('User (e2e)', () => {
         password: uuid.v4().substr(0, 10),
         sex: Sex.Female,
         birthYear: 2000,
+        club: uuid.v4().substr(0, 10),
       };
 
       const { body } = await api.post('/users').send(user).expect(201);
@@ -156,6 +158,7 @@ describe('User (e2e)', () => {
         password: uuid.v4().substr(0, 10),
         birthYear: 1500,
         sex: Sex.Female,
+        club: uuid.v4(),
       };
 
       await api

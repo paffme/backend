@@ -51,6 +51,7 @@ export default class TestUtils {
       password: data?.password ?? uuid.v4().substr(0, 10),
       birthYear: data?.birthYear ?? 2000,
       sex: data?.sex ?? Sex.Female,
+      club: data?.club ?? uuid.v4(),
     };
 
     return {
@@ -70,6 +71,7 @@ export default class TestUtils {
       password: uuid.v4().substr(0, 10),
       birthYear: 2000,
       sex: Sex.Female,
+      club: uuid.v4(),
     };
 
     const res = await this.userService!.register(registerDto);
