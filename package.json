@@ -19,7 +19,8 @@
     "migrate": "ts-node src/migrate.ts"
   },
   "repository": {
-    "type": "git"
+    "type": "git",
+    "url": "git@github.com:paffme/backend.git"
   },
   "dependencies": {
     "@nestjs/common": "^7.0.9",
