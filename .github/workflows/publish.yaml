@@ -19,11 +19,12 @@ jobs:
       - run: npm run build
       - name: Publish
         run: |
+          PKG_VERSION='"'`node -p "require('./package.json').version"`'"'
           mkdir types
           find dist -type f -name '*.dto.d.ts' -exec mv -i {} types \;
           cd types
           npm init -y --scope paffme
-          npm version from-git
+          node -p "fs.writeFileSync('package.json', JSON.stringify({...require('./package.json'), version: $PKG_VERSION}))"
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
