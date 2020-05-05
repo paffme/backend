@@ -22,6 +22,7 @@ import {
   OffsetLimitResponse,
 } from '../shared/pagination/pagination.service';
 import { SearchQuery } from '../shared/decorators/search.decorator';
+import { UserCompetitionRolesDto } from './dto/out/user-competition-roles.dto';
 
 @Injectable()
 export class UserService {
@@ -244,5 +245,43 @@ export class UserService {
   ): Promise<Competition[]> {
     const user = await this.getOrFail(userId, ['organizations']);
     return user.organizations.getItems();
+  }
+
+  async getCompetitionRoles(
+    userId: typeof User.prototype.id,
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<UserCompetitionRolesDto> {
+    const user = await this.getOrFail(userId);
+
+    const initOptions = {
+      where: {
+        id: competitionId,
+      },
+    };
+
+    const [
+      organizations,
+      juryPresidencies,
+      judgements,
+      chiefRouteSettings,
+      routeSettings,
+      technicalDelegations,
+    ] = await Promise.all([
+      user.organizations.init(initOptions),
+      user.juryPresidencies.init(initOptions),
+      user.judgements.init(initOptions),
+      user.chiefRouteSettings.init(initOptions),
+      user.routeSettings.init(initOptions),
+      user.technicalDelegations.init(initOptions),
+    ]);
+
+    return {
+      organizer: organizations.count() === 1,
+      juryPresident: juryPresidencies.count() === 1,
+      judge: judgements.count() === 1,
+      chiefRouteSetter: chiefRouteSettings.count() === 1,
+      routeSetter: routeSettings.count() === 1,
+      technicalDelegate: technicalDelegations.count() === 1,
+    };
   }
 }

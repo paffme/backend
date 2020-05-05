@@ -18,10 +18,6 @@ describe('Pagination service (unit)', () => {
     paginationService = module.get(PaginationService);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('does not add the header if they are no rels', () => {
     const response = {
       req: {

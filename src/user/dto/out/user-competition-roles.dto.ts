@@ -1,40 +1,21 @@
-import { CompetitionDto } from '../../../competition/dto/out/competition.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UserCompetitionRolesDto {
-  @ApiProperty({
-    isArray: true,
-    type: CompetitionDto,
-  })
-  readonly organizations!: CompetitionDto[];
+  @ApiProperty()
+  readonly organizer!: boolean;
 
-  @ApiProperty({
-    isArray: true,
-    type: CompetitionDto,
-  })
-  readonly juryPresidencies!: CompetitionDto[];
+  @ApiProperty()
+  readonly juryPresident!: boolean;
 
-  @ApiProperty({
-    isArray: true,
-    type: CompetitionDto,
-  })
-  readonly judgements!: CompetitionDto[];
+  @ApiProperty()
+  readonly judge!: boolean;
 
-  @ApiProperty({
-    isArray: true,
-    type: CompetitionDto,
-  })
-  readonly chiefRouteSettings!: CompetitionDto[];
+  @ApiProperty()
+  readonly chiefRouteSetter!: boolean;
 
-  @ApiProperty({
-    isArray: true,
-    type: CompetitionDto,
-  })
-  readonly routeSettings!: CompetitionDto[];
+  @ApiProperty()
+  readonly routeSetter!: boolean;
 
-  @ApiProperty({
-    isArray: true,
-    type: CompetitionDto,
-  })
-  readonly technicalDelegations!: CompetitionDto[];
+  @ApiProperty()
+  readonly technicalDelegate!: boolean;
 }

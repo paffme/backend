@@ -31,10 +31,6 @@ describe('Bouldering round service (unit)', () => {
     utils = new TestUtils();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   function givenBoulderingRounds(
     ...data: [BoulderingRoundType, BoulderingRoundRankings][]
   ): BoulderingRound[] {

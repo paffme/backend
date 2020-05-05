@@ -722,8 +722,8 @@ describe('User (e2e)', () => {
     });
   });
 
-  describe('GET /users/{userId}/competition-roles', () => {
-    it('gets user competition roles', async () => {
+  describe('GET /users/{userId}/competitions-roles', () => {
+    it('gets user competitions roles', async () => {
       const { user, credentials } = await utils.givenUser();
       const competition = await utils.givenCompetition(user);
       const auth = await utils.login(credentials);
@@ -735,7 +735,7 @@ describe('User (e2e)', () => {
       await utils.addTechnicalDelegateInCompetition(user, competition);
 
       const { body } = await api
-        .get(`/users/${user.id}/competition-roles`)
+        .get(`/users/${user.id}/competitions-roles`)
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(200);
 
@@ -758,9 +758,78 @@ describe('User (e2e)', () => {
       expect(body.technicalDelegations[0].id).toEqual(competition.id);
     });
 
+    it('returns 401 when getting user competitions roles without authentication', async () => {
+      const { user } = await utils.givenUser();
+      await api.get(`/users/${user.id}/competitions-roles`).expect(401);
+    });
+
+    it('returns 403 when getting user competitions roles from another user', async () => {
+      const { user } = await utils.givenUser();
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      await api
+        .get(`/users/${user.id}/competitions-roles`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
+    });
+
+    it('returns 403 when getting user competitions roles of an unknown user', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      await api
+        .get('/users/9999999/competitions-roles')
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
+    });
+  });
+
+  describe('GET /users/{userId}/competitions-roles/{competitionId}', () => {
+    it('gets user competition roles (1)', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const auth = await utils.login(credentials);
+
+      await utils.addJuryPresidentInCompetition(user, competition);
+      await utils.addJudgeInCompetition(user, competition);
+      await utils.addChiefRouteSetterInCompetition(user, competition);
+      await utils.addRouteSetterInCompetition(user, competition);
+      await utils.addTechnicalDelegateInCompetition(user, competition);
+
+      const { body } = await api
+        .get(`/users/${user.id}/competitions-roles/${competition.id}`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(200);
+
+      expect(body.organizer).toEqual(true);
+      expect(body.juryPresident).toEqual(true);
+      expect(body.judge).toEqual(true);
+      expect(body.chiefRouteSetter).toEqual(true);
+      expect(body.routeSetter).toEqual(true);
+      expect(body.technicalDelegate).toEqual(true);
+    });
+
+    it('gets user competition roles (2)', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      const { body } = await api
+        .get(`/users/${user.id}/competitions-roles/9999999`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(200);
+
+      expect(body.organizer).toEqual(false);
+      expect(body.juryPresident).toEqual(false);
+      expect(body.judge).toEqual(false);
+      expect(body.chiefRouteSetter).toEqual(false);
+      expect(body.routeSetter).toEqual(false);
+      expect(body.technicalDelegate).toEqual(false);
+    });
+
     it('returns 401 when getting user competition roles without authentication', async () => {
       const { user } = await utils.givenUser();
-      await api.get(`/users/${user.id}/competition-roles`).expect(401);
+      await api.get(`/users/${user.id}/competitions-roles/999999`).expect(401);
     });
 
     it('returns 403 when getting user competition roles from another user', async () => {
@@ -769,7 +838,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get(`/users/${user.id}/competition-roles`)
+        .get(`/users/${user.id}/competitions-roles/999999`)
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(403);
     });
@@ -779,7 +848,7 @@ describe('User (e2e)', () => {
       const auth = await utils.login(credentials);
 
       await api
-        .get('/users/9999999/competition-roles')
+        .get('/users/9999999/competitions-roles/999999')
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(403);
     });

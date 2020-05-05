@@ -41,10 +41,6 @@ describe('Boulder service (unit)', () => {
     utils = new TestUtils();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('gets a boulder', async () => {
     const boulder = {};
     boulderRepositoryMock.findOne.mockImplementation(async () => boulder);

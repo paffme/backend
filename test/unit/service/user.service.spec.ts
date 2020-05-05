@@ -50,10 +50,6 @@ describe('User service (unit)', () => {
     userService = module.get(UserService);
   });
 
-  afterAll(() => {
-    jest.clearAllMocks();
-  });
-
   it('gets user with pagination, filtering and ordering', async () => {
     const data: unknown[] = [];
     userRepositoryMock.findAndCount.mockImplementation(async () => [data, 0]);
@@ -209,5 +205,61 @@ describe('User service (unit)', () => {
     return expect(userService.getOrganizations(999999)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  it('gets user competition roles', async () => {
+    const initMocks: jest.Mock[] = [];
+
+    const getInitMock = (count: number): jest.Mock => {
+      const mock = jest.fn().mockImplementation(async () => ({
+        count(): number {
+          return count;
+        },
+      }));
+
+      initMocks.push(mock);
+      return mock;
+    };
+
+    userRepositoryMock.findOne.mockImplementation(async () => ({
+      organizations: {
+        init: getInitMock(1),
+      },
+      juryPresidencies: {
+        init: getInitMock(1),
+      },
+      judgements: {
+        init: getInitMock(1),
+      },
+      chiefRouteSettings: {
+        init: getInitMock(1),
+      },
+      routeSettings: {
+        init: getInitMock(1),
+      },
+      technicalDelegations: {
+        init: getInitMock(0),
+      },
+    }));
+
+    const result = await userService.getCompetitionRoles(1, 2);
+
+    expect(result.organizer).toEqual(true);
+    expect(result.juryPresident).toEqual(true);
+    expect(result.judge).toEqual(true);
+    expect(result.chiefRouteSetter).toEqual(true);
+    expect(result.routeSetter).toEqual(true);
+    expect(result.technicalDelegate).toEqual(false);
+    expect(userRepositoryMock.findOne).toHaveBeenCalledTimes(1);
+    expect(userRepositoryMock.findOne).toHaveBeenCalledWith(1, undefined);
+
+    for (const initMock of initMocks) {
+      expect(initMock).toHaveBeenCalledTimes(1);
+      expect(initMock).toHaveBeenCalledWith({
+        where: {
+          id: 2,
+        },
+      });
+    }
   });
 });
