@@ -2,7 +2,8 @@ name: Deploy
 
 on:
  push:
-  branches: [ master ]
+  tags:
+    - '*'
 
 jobs:
   deploy:
@@ -13,13 +14,13 @@ jobs:
     - name: Deploy to Server
       uses: easingthemes/ssh-deploy@v2.0.8
       env:
-          SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
-          ARGS: "-rltgoDzqO --delete"
-          SOURCE: "./"
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: ${{ secrets.REMOTE_TARGET }}
+        SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        ARGS: "-rltgoDzqO --delete"
+        SOURCE: "./"
+        REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+        REMOTE_PORT: ${{ secrets.REMOTE_PORT }}
+        REMOTE_USER: ${{ secrets.REMOTE_USER }}
+        TARGET: ${{ secrets.REMOTE_TARGET }}
     - name: Install dependencies and start
       uses: appleboy/ssh-action@master
       with:
