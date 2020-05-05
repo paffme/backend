@@ -24,7 +24,7 @@ jobs:
           find dist -type f -name '*.dto.d.ts' -exec mv -i {} types \;
           cd types
           npm init -y --scope paffme
-          node -p "fs.writeFileSync('package.json', JSON.stringify({...require('./package.json'), version: $PKG_VERSION}))"
+          node -p "fs.writeFileSync('package.json', JSON.stringify({...require('./package.json'), publishConfig: {registry: 'https://npm.pkg.github.com/'}, version: $PKG_VERSION}))"
           npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
