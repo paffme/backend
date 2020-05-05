@@ -25,4 +25,4 @@ jobs:
           node -p "fs.writeFileSync('package.json', JSON.stringify({...require('./package.json'), version: $PKG_VERSION}))"
           npm publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN_GITHUB: ${{ secrets.GITHUB_TOKEN }}
