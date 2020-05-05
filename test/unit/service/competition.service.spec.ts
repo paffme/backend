@@ -110,10 +110,6 @@ describe('Competition service (unit)', () => {
     utils = new TestUtils(undefined, competitionService);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('gets competitions with filtering, ordering and pagination', async () => {
     const now = new Date();
     const data: unknown[] = [];

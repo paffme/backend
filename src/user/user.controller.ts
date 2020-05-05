@@ -52,8 +52,8 @@ import { AllowedAppRoles } from '../shared/decorators/allowed-app-roles.decorato
 import { OptionalJwtAuthenticationGuard } from '../shared/guards/optional-jwt-authentication.guard';
 import { UserAuthorizationGuard } from '../shared/authorization/user.authorization.guard';
 import { UserMapper } from '../shared/mappers/user.mapper';
-import { UserCompetitionRolesDto } from './dto/out/user-competition-roles.dto';
-import { GetUserCompetitionRolesParamsDto } from './dto/in/params/get-user-competition-roles-params.dto';
+import { UserCompetitionsRolesDto } from './dto/out/user-competitions-roles.dto';
+import { GetUserCompetitionsRolesParamsDto } from './dto/in/params/get-user-competitions-roles-params.dto';
 import { UserLimitedDto } from './dto/out/user-limited.dto';
 import { Search, SearchQuery } from '../shared/decorators/search.decorator';
 import { Request } from 'express';
@@ -64,6 +64,8 @@ import {
 import { LimitedUserMapper } from '../shared/mappers/limited-user.mapper';
 import { Pagination } from '../shared/decorators/pagination.decorator';
 import { SearchUsersDto } from './dto/in/search/search-users.dto';
+import { GetUserCompetitionRolesParamsDto } from './dto/in/params/get-user-competition-roles-params.dto';
+import { UserCompetitionRolesDto } from './dto/out/user-competition-roles.dto';
 
 @Controller('users')
 @ApiTags(User.name)
@@ -281,15 +283,15 @@ export class UserController {
     return this.competitionMapper.mapArray(organizations);
   }
 
-  @Get('/:userId/competition-roles')
+  @Get('/:userId/competitions-roles')
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
-  @ApiOkResponse({ type: UserCompetitionRolesDto })
+  @ApiOkResponse({ type: UserCompetitionsRolesDto })
   @ApiOperation(GetOperationId(User.name, 'GetUserCompetitionsRoles'))
-  async getUserCompetitionRoles(
-    @Param() params: GetUserCompetitionRolesParamsDto,
-  ): Promise<UserCompetitionRolesDto> {
+  async getUserCompetitionsRoles(
+    @Param() params: GetUserCompetitionsRolesParamsDto,
+  ): Promise<UserCompetitionsRolesDto> {
     const [
       organizations,
       juryPresidencies,
@@ -316,5 +318,20 @@ export class UserController {
         technicalDelegations,
       ),
     };
+  }
+
+  @Get('/:userId/competitions-roles/:competitionId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
+  @ApiOkResponse({ type: UserCompetitionRolesDto })
+  @ApiOperation(GetOperationId(User.name, 'GetUserCompetitionRoles'))
+  async getUserCompetitionRole(
+    @Param() params: GetUserCompetitionRolesParamsDto,
+  ): Promise<UserCompetitionRolesDto> {
+    return this.userService.getCompetitionRoles(
+      params.userId,
+      params.competitionId,
+    );
   }
 }

@@ -40,10 +40,6 @@ describe('Bouldering result service (unit)', () => {
     utils = new TestUtils();
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('creates a new instance', () => {
     const group = {} as BoulderingGroup;
     const boulder = {} as Boulder;

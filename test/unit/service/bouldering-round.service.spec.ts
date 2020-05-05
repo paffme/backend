@@ -111,10 +111,6 @@ describe('Bouldering round service (unit)', () => {
     boulderingRoundService = module.get(BoulderingRoundService);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
   it('should get an existing round', async () => {
     const round = {};
     boulderingRoundRepositoryMock.findOne.mockImplementation(async () => round);
