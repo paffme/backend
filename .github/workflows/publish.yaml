@@ -15,10 +15,12 @@ jobs:
         with:
           node-version: '12.x'
           registry-url: 'https://npm.pkg.github.com'
+          scope: 'paffme'
       - run: npm ci
       - run: npm run build
       - name: Publish
         run: |
+          cat .npmrc
           PKG_VERSION='"'`node -p "require('./package.json').version"`'"'
           mkdir types
           find dist -type f -name '*.dto.d.ts' -exec mv -i {} types \;
