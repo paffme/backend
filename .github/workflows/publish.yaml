@@ -17,10 +17,10 @@ jobs:
           registry-url: 'https://npm.pkg.github.com'
       - run: npm ci
       - run: npm run build
-      - run: |
+      - name: Publish
+        run: |
           mkdir types
           find dist -type f -name '*.dto.d.ts' -exec mv -i {} types \;
-          cp .npmrc types
           cd types
           npm init -y --scope paffme
           npm version from-git
