@@ -104,6 +104,11 @@ export class BoulderingRoundUnlimitedContestRankingService
     }
 
     // Compute each group ranking
+    const groups = new Map<
+      typeof BoulderingGroup.prototype.id,
+      BoulderingGroup
+    >();
+
     const groupsRankings = new Map<
       typeof BoulderingGroup.prototype.id,
       RankingsMap
@@ -137,6 +142,7 @@ export class BoulderingRoundUnlimitedContestRankingService
       const groupRankings = this.computeRankings(climberResults);
 
       // Save rankings
+      groups.set(group.id, group);
       groupsBouldersPoint.set(group.id, bouldersPoints);
       groupsResults.set(group.id, climberResults);
       groupsRankings.set(group.id, groupRankings);
@@ -146,6 +152,8 @@ export class BoulderingRoundUnlimitedContestRankingService
     return {
       type: this.rankingType,
       groups: Array.from(groupsRankings, ([groupId, groupRankings]) => {
+        const groupClimbers = groups.get(groupId)!.climbers.getItems();
+
         const rankings = Array.from(
           groupRankings,
           ([climberId, ranking]): BoulderingRoundUnlimitedContestRanking => {
@@ -157,9 +165,16 @@ export class BoulderingRoundUnlimitedContestRankingService
               0,
             );
 
+            const climber = groupClimbers.find((c) => c.id === climberId)!;
+
             return {
               nbTops,
-              climberId,
+              climber: {
+                id: climberId,
+                firstName: climber.firstName,
+                lastName: climber.lastName,
+                club: climber.club,
+              },
               ranking,
               points: climberResults.points,
               tops: climberResults.tops,

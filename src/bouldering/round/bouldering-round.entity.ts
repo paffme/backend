@@ -27,19 +27,26 @@ export enum BoulderingRoundType {
   FINAL = 'FINAL',
 }
 
-interface BaseGroup<RankingType> {
+export interface BaseGroup<RankingType> {
   id: number;
   rankings: RankingType[];
 }
 
+export interface ClimberRankingInfos {
+  id: typeof User.prototype.id;
+  firstName: typeof User.prototype.firstName;
+  lastName: typeof User.prototype.lastName;
+  club: typeof User.prototype.club;
+}
+
 export interface BaseBoulderingRoundRanking {
   ranking: number;
-  climberId: typeof User.prototype.id;
+  tops: boolean[];
+  climber: ClimberRankingInfos;
 }
 
 export interface BoulderingRoundCountedRanking
   extends BaseBoulderingRoundRanking {
-  tops: boolean[];
   topsInTries: number[];
   zones: boolean[];
   zonesInTries: number[];
@@ -57,12 +64,11 @@ export interface BoulderingRoundLimitedContestRankings {
 
 export interface BoulderingRoundUnlimitedContestRanking
   extends BaseBoulderingRoundRanking {
-  tops: boolean[];
   nbTops: number;
   points: number;
 }
 
-interface BoulderingRoundUnlimitedContestGroup<RankingType>
+export interface BoulderingRoundUnlimitedContestGroup<RankingType>
   extends BaseGroup<RankingType> {
   bouldersPoints: number[];
 }

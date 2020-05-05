@@ -85,18 +85,18 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     expect(type).toEqual(BoulderingRoundRankingType.UNLIMITED_CONTEST);
 
     const firstClimberRanking = rankings.find(
-      (r) => r.climberId === firstClimber.id,
+      (r) => r.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
 
     const secondClimberRanking = rankings.find(
-      (r) => r.climberId === secondClimber.id,
+      (r) => r.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
-    expect(firstClimberRanking!.climberId).toEqual(firstClimber.id);
-    expect(secondClimberRanking!.climberId).toEqual(secondClimber.id);
+    expect(firstClimberRanking!.climber.id).toEqual(firstClimber.id);
+    expect(secondClimberRanking!.climber.id).toEqual(secondClimber.id);
 
     expect(firstClimberRanking!.ranking).toEqual(2);
     expect(secondClimberRanking!.ranking).toEqual(1);
@@ -147,18 +147,18 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     expect(bouldersPoints[0]).toEqual(500);
 
     const firstClimberRanking = rankings.find(
-      (r) => r.climberId === firstClimber.id,
+      (r) => r.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
 
     const secondClimberRanking = rankings.find(
-      (r) => r.climberId === secondClimber.id,
+      (r) => r.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
-    expect(firstClimberRanking!.climberId).toEqual(firstClimber.id);
-    expect(secondClimberRanking!.climberId).toEqual(secondClimber.id);
+    expect(firstClimberRanking!.climber.id).toEqual(firstClimber.id);
+    expect(secondClimberRanking!.climber.id).toEqual(secondClimber.id);
 
     expect(firstClimberRanking!.ranking).toEqual(1);
     expect(secondClimberRanking!.ranking).toEqual(1);
@@ -199,11 +199,11 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     expect(bouldersPoints[0]).toEqual(1000);
 
     const firstClimberRanking = rankings.find(
-      (r) => r.climberId === firstClimber.id,
+      (r) => r.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
-    expect(firstClimberRanking!.climberId).toEqual(firstClimber.id);
+    expect(firstClimberRanking!.climber.id).toEqual(firstClimber.id);
     expect(firstClimberRanking!.ranking).toEqual(1);
     expect(firstClimberRanking!.nbTops).toEqual(0);
     expect(firstClimberRanking!.points).toEqual(0);
@@ -250,26 +250,26 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     expect(bouldersPoints[0]).toEqual(500);
 
     const firstClimberRanking = rankings.find(
-      (r) => r.climberId === firstClimber.id,
+      (r) => r.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
 
     const secondClimberRanking = rankings.find(
-      (r) => r.climberId === secondClimber.id,
+      (r) => r.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
 
     const thirdClimberRanking = rankings.find(
-      (r) => r.climberId === thirdClimber.id,
+      (r) => r.climber.id === thirdClimber.id,
     );
 
     expect(thirdClimberRanking).toBeTruthy();
 
-    expect(firstClimberRanking!.climberId).toEqual(firstClimber.id);
-    expect(secondClimberRanking!.climberId).toEqual(secondClimber.id);
-    expect(thirdClimberRanking!.climberId).toEqual(thirdClimber.id);
+    expect(firstClimberRanking!.climber.id).toEqual(firstClimber.id);
+    expect(secondClimberRanking!.climber.id).toEqual(secondClimber.id);
+    expect(thirdClimberRanking!.climber.id).toEqual(thirdClimber.id);
 
     expect(firstClimberRanking!.ranking).toEqual(1);
     expect(secondClimberRanking!.ranking).toEqual(1);
@@ -313,7 +313,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     expect(rankings).toHaveLength(1);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();

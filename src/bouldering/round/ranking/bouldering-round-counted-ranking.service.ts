@@ -399,11 +399,11 @@ export class BoulderingRoundCountedRankingService
     return {
       type: round.rankingType,
       groups: Array.from(groupsRankings, ([groupId, groupRankings]) => {
-        if (round.type !== BoulderingRoundType.QUALIFIER) {
-          const currentGroup = round.groups
-            .getItems()
-            .find((g) => g.id === groupId)!;
+        const currentGroup = round.groups
+          .getItems()
+          .find((g) => g.id === groupId)!;
 
+        if (round.type !== BoulderingRoundType.QUALIFIER) {
           const lastRanking = Array.from(groupRankings).reduce(
             (lastRanking, [, ranking]) =>
               ranking >= lastRanking ? ranking + 1 : lastRanking,
@@ -421,11 +421,22 @@ export class BoulderingRoundCountedRankingService
 
         const rankings = Array.from(
           groupRankings,
-          ([climberId, ranking]): BoulderingRoundCountedRanking => ({
-            ...groupsResults.get(groupId)!.get(climberId)!,
-            climberId,
-            ranking,
-          }),
+          ([climberId, ranking]): BoulderingRoundCountedRanking => {
+            const climber = currentGroup.climbers
+              .getItems()
+              .find((c) => c.id === climberId)!;
+
+            return {
+              ...groupsResults.get(groupId)!.get(climberId)!,
+              climber: {
+                id: climberId,
+                firstName: climber.firstName,
+                lastName: climber.lastName,
+                club: climber.club,
+              },
+              ranking,
+            };
+          },
         );
 
         return {

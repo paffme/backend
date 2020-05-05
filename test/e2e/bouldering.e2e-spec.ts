@@ -22,6 +22,10 @@ import { CompetitionType } from '../../src/competition/types/competition-type.en
 import { Sex } from '../../src/shared/types/sex.enum';
 import { CategoryName } from '../../src/shared/types/category-name.enum';
 import { CreateBoulderDto } from '../../src/competition/dto/in/body/create-boulder.dto';
+import {
+  BoulderingRoundRankingsDto,
+  CountedRankingDto,
+} from '../../src/bouldering/dto/out/bouldering-round-rankings.dto';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -534,6 +538,58 @@ describe('Bouldering (e2e)', () => {
         )
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(403);
+    });
+  });
+
+  describe('GET /competitions/{competitionId}/bouldering-rounds/{roundId}/rankings', () => {
+    it('gets round rankings', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      await utils.addBoulderingResult(
+        competition,
+        round,
+        round.groups[0],
+        boulder,
+        climber,
+        {
+          climberId: climber.id,
+          try: true,
+          zone: true,
+          top: true,
+        },
+      );
+
+      const res = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/rankings`,
+        )
+        .expect(200);
+
+      const body: BoulderingRoundRankingsDto = res.body;
+
+      expect(body.type).toEqual(BoulderingRoundRankingType.CIRCUIT);
+      expect(body.groups).toHaveLength(1);
+
+      const [group] = body.groups;
+
+      expect(group.id).toEqual(round.groups[0].id);
+      expect(group.rankings).toHaveLength(1);
+      const ranking = group.rankings[0] as CountedRankingDto;
+
+      expect(ranking.ranking).toEqual(1);
+      expect(ranking.climber.id).toEqual(climber.id);
+      expect(ranking.climber.club).toEqual(climber.club);
+      expect(ranking.climber.firstName).toEqual(climber.firstName);
+      expect(ranking.climber.lastName).toEqual(climber.lastName);
+      expect(ranking.tops[0]).toEqual(true);
+      expect(ranking.topsInTries[0]).toEqual(1);
+      expect(ranking.zones[0]).toEqual(true);
+      expect(ranking.zonesInTries[0]).toEqual(1);
     });
   });
 });

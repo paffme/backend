@@ -41,7 +41,7 @@ export class BoulderingRankingService {
     for (const group of round.rankings!.groups) {
       for (const climberRanking of group.rankings) {
         const ranking = climberRanking.ranking;
-        groupRankings.set(climberRanking.climberId, ranking);
+        groupRankings.set(climberRanking.climber.id, ranking);
       }
     }
 

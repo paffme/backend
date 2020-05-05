@@ -402,7 +402,7 @@ describe('Bouldering round service (integration)', () => {
     expect(rankings.groups[0].rankings[0].ranking).toEqual(1);
     expect(rankings.groups[0].rankings[0].nbTops).toEqual(0);
     expect(rankings.groups[0].rankings[0].points).toEqual(0);
-    expect(rankings.groups[0].rankings[0].climberId).toEqual(climber.id);
+    expect(rankings.groups[0].rankings[0].climber.id).toEqual(climber.id);
     expect(rankings.groups[0].rankings[0].tops).toHaveLength(
       round.groups[0].boulders.count(),
     );
