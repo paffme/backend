@@ -91,7 +91,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
@@ -102,7 +102,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(firstClimberRanking!.zonesInTries).toEqual([5, 3]);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -165,7 +165,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
@@ -176,7 +176,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(firstClimberRanking!.zonesInTries).toEqual([5, 3]);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -223,14 +223,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -273,14 +273,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(2);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -323,14 +323,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -373,14 +373,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(2);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -423,14 +423,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -473,14 +473,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(2);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -523,14 +523,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -573,14 +573,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(2);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -623,14 +623,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -673,14 +673,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -730,21 +730,21 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(3);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
     expect(secondClimberRanking!.ranking).toEqual(1);
 
     const thirdClimberRanking = rankings.find(
-      (c) => c.climberId === thirdClimber.id,
+      (c) => c.climber.id === thirdClimber.id,
     );
 
     expect(thirdClimberRanking).toBeTruthy();
@@ -920,35 +920,35 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(5);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
     expect(secondClimberRanking!.ranking).toEqual(2);
 
     const thirdClimberRanking = rankings.find(
-      (c) => c.climberId === thirdClimber.id,
+      (c) => c.climber.id === thirdClimber.id,
     );
 
     expect(thirdClimberRanking).toBeTruthy();
     expect(thirdClimberRanking!.ranking).toEqual(3);
 
     const fourthClimberRanking = rankings.find(
-      (c) => c.climberId === fourthClimber.id,
+      (c) => c.climber.id === fourthClimber.id,
     );
 
     expect(fourthClimberRanking).toBeTruthy();
     expect(fourthClimberRanking!.ranking).toEqual(4);
 
     const fifthClimberRanking = rankings.find(
-      (c) => c.climberId === fifthClimber.id,
+      (c) => c.climber.id === fifthClimber.id,
     );
 
     expect(fifthClimberRanking).toBeTruthy();
@@ -1124,35 +1124,35 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(5);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(4);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
     expect(secondClimberRanking!.ranking).toEqual(4);
 
     const thirdClimberRanking = rankings.find(
-      (c) => c.climberId === thirdClimber.id,
+      (c) => c.climber.id === thirdClimber.id,
     );
 
     expect(thirdClimberRanking).toBeTruthy();
     expect(thirdClimberRanking!.ranking).toEqual(3);
 
     const fourthClimberRanking = rankings.find(
-      (c) => c.climberId === fourthClimber.id,
+      (c) => c.climber.id === fourthClimber.id,
     );
 
     expect(fourthClimberRanking).toBeTruthy();
     expect(fourthClimberRanking!.ranking).toEqual(2);
 
     const fifthClimberRanking = rankings.find(
-      (c) => c.climberId === fifthClimber.id,
+      (c) => c.climber.id === fifthClimber.id,
     );
 
     expect(fifthClimberRanking).toBeTruthy();
@@ -1328,35 +1328,35 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(5);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
     expect(secondClimberRanking!.ranking).toEqual(2);
 
     const thirdClimberRanking = rankings.find(
-      (c) => c.climberId === thirdClimber.id,
+      (c) => c.climber.id === thirdClimber.id,
     );
 
     expect(thirdClimberRanking).toBeTruthy();
     expect(thirdClimberRanking!.ranking).toEqual(3);
 
     const fourthClimberRanking = rankings.find(
-      (c) => c.climberId === fourthClimber.id,
+      (c) => c.climber.id === fourthClimber.id,
     );
 
     expect(fourthClimberRanking).toBeTruthy();
     expect(fourthClimberRanking!.ranking).toEqual(4);
 
     const fifthClimberRanking = rankings.find(
-      (c) => c.climberId === fifthClimber.id,
+      (c) => c.climber.id === fifthClimber.id,
     );
 
     expect(fifthClimberRanking).toBeTruthy();
@@ -1532,35 +1532,35 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(5);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(4);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
     expect(secondClimberRanking!.ranking).toEqual(4);
 
     const thirdClimberRanking = rankings.find(
-      (c) => c.climberId === thirdClimber.id,
+      (c) => c.climber.id === thirdClimber.id,
     );
 
     expect(thirdClimberRanking).toBeTruthy();
     expect(thirdClimberRanking!.ranking).toEqual(3);
 
     const fourthClimberRanking = rankings.find(
-      (c) => c.climberId === fourthClimber.id,
+      (c) => c.climber.id === fourthClimber.id,
     );
 
     expect(fourthClimberRanking).toBeTruthy();
     expect(fourthClimberRanking!.ranking).toEqual(2);
 
     const fifthClimberRanking = rankings.find(
-      (c) => c.climberId === fifthClimber.id,
+      (c) => c.climber.id === fifthClimber.id,
     );
 
     expect(fifthClimberRanking).toBeTruthy();
@@ -1609,14 +1609,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -1664,14 +1664,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(2);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -1714,7 +1714,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(1);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
@@ -1757,14 +1757,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();
@@ -1807,14 +1807,14 @@ describe('Bouldering counted ranking service (unit)', () => {
     expect(rankings).toHaveLength(2);
 
     const firstClimberRanking = rankings.find(
-      (c) => c.climberId === firstClimber.id,
+      (c) => c.climber.id === firstClimber.id,
     );
 
     expect(firstClimberRanking).toBeTruthy();
     expect(firstClimberRanking!.ranking).toEqual(1);
 
     const secondClimberRanking = rankings.find(
-      (c) => c.climberId === secondClimber.id,
+      (c) => c.climber.id === secondClimber.id,
     );
 
     expect(secondClimberRanking).toBeTruthy();

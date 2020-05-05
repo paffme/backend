@@ -27,7 +27,10 @@ import { UserService } from '../user/user.service';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
 import { BoulderingRoundService } from '../bouldering/round/bouldering-round.service';
-import { BoulderingRound } from '../bouldering/round/bouldering-round.entity';
+import {
+  BoulderingRound,
+  BoulderingRoundRankings,
+} from '../bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
 import { BoulderingResult } from '../bouldering/result/bouldering-result.entity';
 import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
@@ -547,5 +550,18 @@ export class CompetitionService {
   ): Promise<void> {
     const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
     return this.boulderingRoundService.removeBoulder(round, groupId, boulderId);
+  }
+
+  async getBoulderingRoundRankings(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+  ): Promise<BoulderingRoundRankings> {
+    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+
+    if (!round.rankings) {
+      throw new NotFoundException('No rankings for this round');
+    }
+
+    return round.rankings;
   }
 }

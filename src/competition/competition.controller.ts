@@ -79,7 +79,7 @@ import { CompetitionMapper } from '../shared/mappers/competition.mapper';
 import { BoulderingResultMapper } from '../shared/mappers/bouldering-result.mapper';
 import { GetRankingsParamsDto } from './dto/in/params/get-rankings-params.dto';
 import { RankingsDto } from './dto/out/rankings.dto';
-import { RankingsMapper } from '../shared/mappers/rankings-mapper.service';
+import { RankingsMapper } from '../shared/mappers/rankings.mapper';
 import { GetCompetitionByIdParams } from './dto/in/params/get-competition-by-id.params';
 import { UpdateCompetitionByIdParamsDto } from './dto/in/params/update-competition-by-id-params.dto';
 import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
@@ -94,6 +94,9 @@ import { CreateBoulderParamsDto } from './dto/in/params/create-boulder-params.dt
 import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
 import { BoulderMapper } from '../shared/mappers/boulder.mapper';
 import { DeleteBoulderParamsDto } from './dto/in/params/delete-boulder-params.dto';
+import { GetBoulderingRoundRankingsParamsDto } from './dto/in/params/get-bouldering-round-rankings-params.dto';
+import { BoulderingRoundRankingsMapper } from '../shared/mappers/bouldering-round-rankings.mapper';
+import { BoulderingRoundRankingsDto } from '../bouldering/dto/out/bouldering-round-rankings.dto';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -105,6 +108,7 @@ export class CompetitionController {
     private readonly boulderingRoundMapper: BoulderingRoundMapper,
     private readonly boulderingResultMapper: BoulderingResultMapper,
     private readonly rankingMapper: RankingsMapper,
+    private readonly boulderingRoundRankingMapper: BoulderingRoundRankingsMapper,
     private readonly mapper: CompetitionMapper,
     private readonly paginationService: PaginationService,
     private readonly boulderMapper: BoulderMapper,
@@ -580,6 +584,20 @@ export class CompetitionController {
     );
 
     return this.rankingMapper.map(rankings);
+  }
+
+  @Get('/:competitionId/bouldering-rounds/:roundId/rankings')
+  @ApiOkResponse({ type: BoulderingRoundRankingsDto })
+  @ApiOperation(GetOperationId(Competition.name, 'GetBoulderingRoundRankings'))
+  async getBoulderingRoundRankings(
+    @Param() params: GetBoulderingRoundRankingsParamsDto,
+  ): Promise<BoulderingRoundRankingsDto> {
+    const rankings = await this.competitionService.getBoulderingRoundRankings(
+      params.competitionId,
+      params.roundId,
+    );
+
+    return this.boulderingRoundRankingMapper.map(rankings);
   }
 
   @Post('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders')
