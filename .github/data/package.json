@@ -8,7 +8,7 @@
     "url": "ssh://git@github.com:paffme/backend.git"
   },
   "files": [
-    "./dist/**/*.dto.d.ts"
+    "dist/**/*.dto.d.ts"
   ],
   "dependencies": {
     "class-validator": "^0.12.2"
