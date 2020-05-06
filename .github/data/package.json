@@ -1,0 +1,18 @@
+{
+  "name": "@paffme/types",
+  "version": "0.0.0",
+  "author": "Hugo Da Roit <contact@hdaroit.fr> (https://github.com/Yaty)",
+  "scripts": {
+    "build": "rimraf dist && tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com:paffme/backend.git"
+  },
+  "files": [
+    "/dist/**/*.dto.d.ts"
+  ],
+  "dependencies": {
+    "class-validator": "^0.12.2"
+  }
+}
