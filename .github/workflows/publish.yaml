@@ -15,14 +15,14 @@ jobs:
         with:
           node-version: '12.x'
       - run: npm ci
-      - run: npm run build
       - name: Publish
         run: |
           PKG_VERSION='"'`node -p "require('./package.json').version"`'"'
-          find dist -type f -name '*.dto.d.ts' -exec mv -i {} types \;
-          cd types
-          npm init -y --scope paffme
-          node -p "fs.writeFileSync('package.json', JSON.stringify({...require('./package.json'), repository: { type: 'git', url: 'ssh://git@github.com:paffme/backend.git' }, version: $PKG_VERSION}))"
+          npm run build
+          mv -f .github/data/.npmrc .github/data/package.json .
+          node -p "fs.writeFileSync('package.json', JSON.stringify({...require('./package.json'), version: $PKG_VERSION}))"
+          find dist -name '*.dto.d.ts'
+          cat package.json
           npm publish
         env:
           NPM_TOKEN_GITHUB: ${{ secrets.GITHUB_TOKEN }}
