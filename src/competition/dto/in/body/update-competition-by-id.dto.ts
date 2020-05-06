@@ -10,6 +10,7 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 class UpdateCategoryDto {
   @ApiPropertyOptional({
@@ -71,5 +72,6 @@ export class UpdateCompetitionByIdDto {
   })
   @IsOptional()
   @ValidateNested({ each: true })
+  @Type(() => UpdateCategoryDto)
   categories?: UpdateCategoryDto[];
 }

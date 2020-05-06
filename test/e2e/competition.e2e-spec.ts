@@ -11,6 +11,8 @@ import { CompetitionService } from '../../src/competition/competition.service';
 import { givenCreateCompetitionDto } from '../fixture/competition.fixture';
 import { UpdateCompetitionByIdDto } from '../../src/competition/dto/in/body/update-competition-by-id.dto';
 import LinkHeader from 'http-link-header';
+import { Sex } from '../../src/shared/types/sex.enum';
+import { CategoryName } from '../../src/shared/types/category-name.enum';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -193,6 +195,44 @@ describe('Competition (e2e)', () => {
       expect(body).toHaveProperty('id');
       expect(body).toHaveProperty('createdAt');
       expect(body).toHaveProperty('updatedAt');
+    });
+
+    it('creates a competition with category', async function () {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const competition = givenCreateCompetitionDto({
+        categories: [{ sex: Sex.Female, name: CategoryName.Benjamin }],
+      });
+
+      const { body } = await api
+        .post('/competitions')
+        .set('Authorization', `Bearer ${auth.token}`)
+        .send(competition)
+        .expect(201);
+
+      expect(body.categories[0].sex).toEqual(Sex.Female);
+      expect(body.categories[0].name).toEqual(CategoryName.Benjamin);
+      expect(body).toHaveProperty('id');
+      expect(body).toHaveProperty('createdAt');
+      expect(body).toHaveProperty('updatedAt');
+    });
+
+    it('prevents empty categories', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const competition = givenCreateCompetitionDto({
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        categories: [{}, {}],
+      });
+
+      const { body } = await api
+        .post('/competitions')
+        .set('Authorization', `Bearer ${auth.token}`)
+        .send(competition)
+        .expect(422);
+
+      expect(body.errors[0].property).toEqual('categories');
     });
   });
 

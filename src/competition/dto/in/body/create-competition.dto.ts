@@ -12,6 +12,7 @@ import {
   Length,
   ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 class CategoryDto {
   @ApiProperty({
@@ -82,5 +83,6 @@ export class CreateCompetitionDTO {
   })
   @IsArray()
   @ValidateNested({ each: true })
+  @Type(() => CategoryDto)
   categories!: CategoryDto[];
 }
