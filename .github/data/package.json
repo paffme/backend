@@ -2,6 +2,7 @@
   "name": "@paffme/types",
   "version": "0.0.0",
   "author": "Hugo Da Roit <contact@hdaroit.fr> (https://github.com/Yaty)",
+  "description": "PAFFME types",
   "scripts": {
     "build": "rimraf dist && tsc"
   },
