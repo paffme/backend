@@ -20,8 +20,13 @@ jobs:
           PKG_VERSION='"'`node -p "require('./package.json').version"`'"'
           mv -f .github/data/.npmrc .github/data/package.json .
           npm run build
+          ls
+          ls dist
           node -p "fs.writeFileSync('package.json', JSON.stringify({...require('./package.json'), version: $PKG_VERSION}))"
+          cat package.json
           npm install
+          cat package.json
+          cat package-lock.json
           npm publish
         env:
           NPM_TOKEN_GITHUB: ${{ secrets.GITHUB_TOKEN }}
