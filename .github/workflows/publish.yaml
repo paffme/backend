@@ -21,7 +21,8 @@ jobs:
           npm run build
           mv -f .github/data/.npmrc .github/data/package.json .
           node -p "fs.writeFileSync('package.json', JSON.stringify({...require('./package.json'), version: $PKG_VERSION}))"
-          npm install --package-lock-only
+          find dist -name '*.dto.d.ts'
+          cat package.json
           npm publish
         env:
           NPM_TOKEN_GITHUB: ${{ secrets.GITHUB_TOKEN }}
