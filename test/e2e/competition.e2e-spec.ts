@@ -143,6 +143,26 @@ describe('Competition (e2e)', () => {
       expect(body.name).toEqual(dto.name);
     });
 
+    it('prevents empty categories when updating', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const competition = await utils.givenCompetition(user);
+
+      const dto: UpdateCompetitionByIdDto = {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        categories: [{}, {}],
+      };
+
+      const { body } = await api
+        .patch(`/competitions/${competition.id}`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .send(dto)
+        .expect(422);
+
+      expect(body.errors[0].property).toEqual('categories');
+    });
+
     it('returns 401 when an unauthenticated user try to update a competition', async () => {
       const { user } = await utils.givenUser();
       const competition = await utils.givenCompetition(user);
