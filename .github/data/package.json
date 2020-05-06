@@ -3,9 +3,6 @@
   "version": "0.0.0",
   "author": "Hugo Da Roit <contact@hdaroit.fr> (https://github.com/Yaty)",
   "description": "PAFFME types",
-  "scripts": {
-    "build": "rimraf dist && tsc"
-  },
   "repository": {
     "type": "git",
     "url": "ssh://git@github.com:paffme/backend.git"
