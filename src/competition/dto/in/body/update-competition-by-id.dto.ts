@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { CompetitionType } from '../../../types/competition-type.enum';
 import { Sex } from '../../../../shared/types/sex.enum';
 import { CategoryName } from '../../../../shared/types/category-name.enum';
@@ -10,21 +10,20 @@ import {
   IsString,
   ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 class UpdateCategoryDto {
-  @ApiPropertyOptional({
+  @ApiProperty({
     enum: Sex,
   })
-  @IsOptional()
   @IsEnum(Sex)
-  sex?: Sex;
+  sex!: Sex;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     enum: CategoryName,
   })
-  @IsOptional()
   @IsEnum(CategoryName)
-  name?: CategoryName;
+  name!: CategoryName;
 }
 
 export class UpdateCompetitionByIdDto {
@@ -71,5 +70,6 @@ export class UpdateCompetitionByIdDto {
   })
   @IsOptional()
   @ValidateNested({ each: true })
+  @Type(() => UpdateCategoryDto)
   categories?: UpdateCategoryDto[];
 }
