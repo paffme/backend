@@ -32,6 +32,7 @@ import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.
 import { InitOptions } from 'mikro-orm/dist/entity/Collection';
 import { givenCompetition } from '../../fixture/competition.fixture';
 import { CompetitionType } from '../../../src/competition/types/competition-type.enum';
+import { CreateBoulderingGroupDto } from '../../../src/competition/dto/in/body/create-bouldering-group.dto';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -41,7 +42,10 @@ const boulderingRoundRepositoryMock: RepositoryMock = {
 };
 
 const boulderingResultServiceMock: ServiceMock = {};
-const boulderingGroupServiceMock: ServiceMock = {};
+
+const boulderingGroupServiceMock: ServiceMock = {
+  create: jest.fn(),
+};
 
 const boulderingUnlimitedContestRankingServiceMock: ServiceMock = {
   getRankings: jest.fn(),
@@ -423,5 +427,24 @@ describe('Bouldering round service (unit)', () => {
     return expect(
       boulderingRoundService.createRound(competition, dto),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('creates a group', async () => {
+    const round = givenBoulderingRound();
+    const dto: CreateBoulderingGroupDto = {
+      name: 'anee',
+    };
+    const fakeGroup = {};
+
+    boulderingGroupServiceMock.create.mockImplementation(async () => fakeGroup);
+
+    const result = await boulderingRoundService.createGroup(round, dto);
+
+    expect(result).toBe(fakeGroup);
+    expect(boulderingGroupServiceMock.create).toHaveBeenCalledTimes(1);
+    expect(boulderingGroupServiceMock.create).toHaveBeenCalledWith(
+      dto.name,
+      round,
+    );
   });
 });

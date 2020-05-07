@@ -96,7 +96,14 @@ import { BoulderMapper } from '../shared/mappers/boulder.mapper';
 import { DeleteBoulderParamsDto } from './dto/in/params/delete-boulder-params.dto';
 import { GetBoulderingRoundRankingsParamsDto } from './dto/in/params/get-bouldering-round-rankings-params.dto';
 import { BoulderingRoundRankingsMapper } from '../shared/mappers/bouldering-round-rankings.mapper';
-import { BoulderingRoundRankingsDto } from '../bouldering/dto/out/bouldering-round-rankings.dto';
+import {
+  BoulderingRoundRankingsDto,
+  GroupDto,
+} from '../bouldering/dto/out/bouldering-round-rankings.dto';
+import { CreateBoulderingGroupParamsDto } from './dto/in/params/create-bouldering-group-params.dto';
+import { CreateBoulderingGroupDto } from './dto/in/body/create-bouldering-group.dto';
+import { BoulderingGroupDto } from '../bouldering/dto/out/bouldering-group.dto';
+import { BoulderingGroupMapper } from '../shared/mappers/bouldering-group.mapper';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -112,6 +119,7 @@ export class CompetitionController {
     private readonly mapper: CompetitionMapper,
     private readonly paginationService: PaginationService,
     private readonly boulderMapper: BoulderMapper,
+    private readonly boulderingGroupMapper: BoulderingGroupMapper,
   ) {}
 
   @Get()
@@ -644,5 +652,28 @@ export class CompetitionController {
       params.groupId,
       params.boulderId,
     );
+  }
+
+  @Post('/:competitionId/bouldering-rounds/:roundId/groups')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    JuryPresidentAuthorizationGuard,
+  )
+  @ApiCreatedResponse({ type: BoulderingGroupDto })
+  @ApiOperation(GetOperationId(Competition.name, 'CreateBoulderingGroup'))
+  async createGroup(
+    @Param() params: CreateBoulderingGroupParamsDto,
+    @Body() dto: CreateBoulderingGroupDto,
+  ): Promise<BoulderingGroupDto> {
+    const group = await this.competitionService.createBoulderingGroup(
+      params.competitionId,
+      params.roundId,
+      dto,
+    );
+
+    return this.boulderingGroupMapper.map(group);
   }
 }

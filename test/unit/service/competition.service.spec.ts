@@ -28,6 +28,7 @@ import { BoulderingRound } from '../../../src/bouldering/round/bouldering-round.
 import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
 import { InitOptions } from 'mikro-orm/dist/entity/Collection';
 import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
+import { CreateBoulderingGroupDto } from '../../../src/competition/dto/in/body/create-bouldering-group.dto';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -56,6 +57,7 @@ const boulderingRoundServiceMock: ServiceMock = {
   addClimbers: jest.fn(),
   createBoulder: jest.fn(),
   removeBoulder: jest.fn(),
+  createGroup: jest.fn(),
 };
 
 const boulderingRankingServiceMock: ServiceMock = {
@@ -664,6 +666,50 @@ describe('Competition service (unit)', () => {
 
     return expect(
       competitionService.deleteBoulder(1, 2, 3, 4),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('adds a bouldering group', async () => {
+    const { competition, round } = givenCompetitionWithBoulderingRound();
+    const dto: CreateBoulderingGroupDto = {
+      name: 'supername',
+    };
+    const fakeGroup = {};
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.createGroup.mockImplementation(
+      async () => fakeGroup,
+    );
+
+    const result = await competitionService.createBoulderingGroup(
+      competition.id,
+      round.id,
+      dto,
+    );
+
+    expect(result).toBe(fakeGroup);
+    expect(boulderingRoundServiceMock.createGroup).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundServiceMock.createGroup).toHaveBeenCalledWith(
+      round,
+      dto,
+    );
+  });
+
+  it('throws not found when adding a bouldering group to an unknown round', () => {
+    const competition = givenCompetitionWithNoBoulderingRounds();
+    const dto: CreateBoulderingGroupDto = {
+      name: 'name',
+    };
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(
+      competitionService.createBoulderingGroup(1, 2, dto),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

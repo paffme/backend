@@ -27,6 +27,7 @@ import { BoulderingGroupService } from '../group/bouldering-group.service';
 import { BoulderingGroup } from '../group/bouldering-group.entity';
 import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.dto';
 import { validateIndex } from '../../shared/utils/indexing.helper';
+import { CreateBoulderingGroupDto } from '../../competition/dto/in/body/create-bouldering-group.dto';
 
 @Injectable()
 export class BoulderingRoundService {
@@ -278,5 +279,12 @@ export class BoulderingRoundService {
   ): Promise<void> {
     const group = await this.getGroup(round, groupId);
     return this.boulderService.remove(group, boulderId);
+  }
+
+  async createGroup(
+    round: BoulderingRound,
+    dto: CreateBoulderingGroupDto,
+  ): Promise<BoulderingGroup> {
+    return this.boulderingGroupService.create(dto.name, round);
   }
 }
