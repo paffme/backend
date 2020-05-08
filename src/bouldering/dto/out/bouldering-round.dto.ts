@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
+  BoulderingRoundState,
 } from '../../round/bouldering-round.entity';
 import { Competition } from '../../../competition/competition.entity';
 import { Sex } from '../../../shared/types/sex.enum';
@@ -45,6 +46,11 @@ export class BoulderingRoundDto {
 
   @ApiProperty({ enum: CategoryName })
   readonly category!: CategoryName;
+
+  @ApiProperty({
+    enum: BoulderingRoundState,
+  })
+  readonly state!: BoulderingRoundState;
 
   @ApiPropertyOptional({
     type: Number,

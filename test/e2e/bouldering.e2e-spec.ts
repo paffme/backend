@@ -9,6 +9,7 @@ import { CompetitionService } from '../../src/competition/competition.service';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
+  BoulderingRoundState,
   BoulderingRoundType,
 } from '../../src/bouldering/round/bouldering-round.entity';
 import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
@@ -151,6 +152,7 @@ describe('Bouldering (e2e)', () => {
       expect(body.sex).toEqual(Sex.Female);
       expect(body.category).toEqual(CategoryName.Minime);
       expect(body.groups).toHaveLength(1);
+      expect(body.state).toEqual(BoulderingRoundState.PENDING);
 
       const group = body.groups[0];
       expect(group).toHaveProperty('id');
