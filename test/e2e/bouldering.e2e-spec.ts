@@ -27,7 +27,6 @@ import {
   CountedRankingDto,
 } from '../../src/bouldering/dto/out/bouldering-round-rankings.dto';
 import { CreateBoulderingGroupDto } from '../../src/competition/dto/in/body/create-bouldering-group.dto';
-import { NotFoundException } from '@nestjs/common';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -702,7 +701,7 @@ describe('Bouldering (e2e)', () => {
         .expect(401);
     });
 
-    it('returns 103 when deleting a bouldering round without being jury president', async () => {
+    it('returns 403 when deleting a bouldering round without being jury president', async () => {
       const { competition, round, judgeAuth } = await givenReadyCompetition(
         BoulderingRoundRankingType.CIRCUIT,
       );
@@ -711,6 +710,50 @@ describe('Bouldering (e2e)', () => {
         .delete(
           `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}`,
         )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .expect(403);
+    });
+  });
+
+  describe('DELETE /competitions/{competitionId}/bouldering-rounds/{roundId}', () => {
+    it('deletes a bouldering group', async () => {
+      const { competition, round } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const {
+        user: juryPresident,
+        credentials: juryPresidentCredentials,
+      } = await utils.givenUser();
+
+      const presidentJuryAuth = await utils.login(juryPresidentCredentials);
+      await utils.addJuryPresidentInCompetition(juryPresident, competition);
+
+      await api
+        .delete(`/competitions/${competition.id}/bouldering-rounds/${round.id}`)
+        .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
+        .expect(204);
+
+      expect(await utils.getBoulderingRound(round.id)).toBeNull();
+    });
+
+    it('returns 401 when deleting a bouldering round without auth', async () => {
+      const { competition, round } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      await api
+        .delete(`/competitions/${competition.id}/bouldering-rounds/${round.id}`)
+        .expect(401);
+    });
+
+    it('returns 403 when deleting a bouldering round without being jury president', async () => {
+      const { competition, round, judgeAuth } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      await api
+        .delete(`/competitions/${competition.id}/bouldering-rounds/${round.id}`)
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .expect(403);
     });

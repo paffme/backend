@@ -96,15 +96,13 @@ import { BoulderMapper } from '../shared/mappers/boulder.mapper';
 import { DeleteBoulderParamsDto } from './dto/in/params/delete-boulder-params.dto';
 import { GetBoulderingRoundRankingsParamsDto } from './dto/in/params/get-bouldering-round-rankings-params.dto';
 import { BoulderingRoundRankingsMapper } from '../shared/mappers/bouldering-round-rankings.mapper';
-import {
-  BoulderingRoundRankingsDto,
-  GroupDto,
-} from '../bouldering/dto/out/bouldering-round-rankings.dto';
+import { BoulderingRoundRankingsDto } from '../bouldering/dto/out/bouldering-round-rankings.dto';
 import { CreateBoulderingGroupParamsDto } from './dto/in/params/create-bouldering-group-params.dto';
 import { CreateBoulderingGroupDto } from './dto/in/body/create-bouldering-group.dto';
 import { BoulderingGroupDto } from '../bouldering/dto/out/bouldering-group.dto';
 import { BoulderingGroupMapper } from '../shared/mappers/bouldering-group.mapper';
 import { DeleteBoulderingGroupParamsDto } from './dto/in/params/delete-bouldering-group-params.dto';
+import { DeleteBoulderingRoundParamsDto } from './dto/in/params/delete-bouldering-round-params.dto';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -676,6 +674,26 @@ export class CompetitionController {
     );
 
     return this.boulderingGroupMapper.map(group);
+  }
+
+  @Delete('/:competitionId/bouldering-rounds/:roundId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    JuryPresidentAuthorizationGuard,
+  )
+  @ApiNoContentResponse()
+  @ApiOperation(GetOperationId(Competition.name, 'DeleteBoulderingRound'))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteBoulderingRound(
+    @Param() params: DeleteBoulderingRoundParamsDto,
+  ): Promise<void> {
+    await this.competitionService.deleteBoulderingRound(
+      params.competitionId,
+      params.roundId,
+    );
   }
 
   @Delete('/:competitionId/bouldering-rounds/:roundId/groups/:groupId')

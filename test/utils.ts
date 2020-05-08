@@ -245,4 +245,10 @@ export default class TestUtils {
   ): Promise<BoulderingGroup> {
     return this.orm!.em.findOneOrFail(BoulderingGroup, id);
   }
+
+  getBoulderingRound(
+    id: typeof BoulderingRound.prototype.id,
+  ): Promise<BoulderingRound | null> {
+    return this.orm!.em.findOne(BoulderingRound, id);
+  }
 }
