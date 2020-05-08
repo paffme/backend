@@ -39,6 +39,8 @@ const boulderingRoundRepositoryMock: RepositoryMock = {
   persistLater: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
+  removeLater: jest.fn(),
+  removeAndFlush: jest.fn(),
 };
 
 const boulderingResultServiceMock: ServiceMock = {};
@@ -315,7 +317,9 @@ describe('Bouldering round service (unit)', () => {
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
-  function givenRoundWithOneGroup(): {
+  function givenRoundWithOneGroup(
+    verifyWhere = true,
+  ): {
     group: BoulderingGroup;
     round: BoulderingRound;
   } {
@@ -331,9 +335,11 @@ describe('Bouldering round service (unit)', () => {
         async init(
           options: InitOptions<BoulderingGroup>,
         ): Promise<Partial<Collection<BoulderingGroup>>> {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-          // @ts-ignore
-          expect(options.where.id).toEqual(group.id);
+          if (verifyWhere) {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
+            expect(options.where.id).toEqual(group.id);
+          }
 
           return {
             getItems(): BoulderingGroup[] {
@@ -472,5 +478,35 @@ describe('Bouldering round service (unit)', () => {
     return expect(
       boulderingRoundService.deleteGroup(round, 50000),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('deletes a round', async () => {
+    const { round, group } = givenRoundWithOneGroup(false);
+
+    boulderingRoundRepositoryMock.removeLater.mockImplementation(
+      () => undefined,
+    );
+
+    boulderingRoundRepositoryMock.removeAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    boulderServiceMock.deleteMany.mockImplementation(async () => undefined);
+
+    const result = await boulderingRoundService.delete(round);
+
+    expect(result).toBeUndefined();
+    expect(boulderingRoundRepositoryMock.removeLater).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundRepositoryMock.removeLater).toHaveBeenCalledWith(
+      group,
+    );
+    expect(boulderServiceMock.deleteMany).toHaveBeenCalledTimes(1);
+    expect(boulderServiceMock.deleteMany).toHaveBeenCalledWith(group.boulders);
+    expect(boulderingRoundRepositoryMock.removeAndFlush).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(boulderingRoundRepositoryMock.removeAndFlush).toHaveBeenCalledWith(
+      round,
+    );
   });
 });

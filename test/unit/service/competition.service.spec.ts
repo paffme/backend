@@ -60,6 +60,7 @@ const boulderingRoundServiceMock: ServiceMock = {
   removeBoulder: jest.fn(),
   createGroup: jest.fn(),
   deleteGroup: jest.fn(),
+  delete: jest.fn(),
 };
 
 const boulderingRankingServiceMock: ServiceMock = {
@@ -770,6 +771,46 @@ describe('Competition service (unit)', () => {
 
     return expect(
       competitionService.deleteBoulderingGroup(competition.id, round.id, 3),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('deletes a bouldering round', async () => {
+    const { competition, round } = givenCompetitionWithBoulderingRound();
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.delete.mockImplementation(async () => undefined);
+
+    const result = await competitionService.deleteBoulderingRound(
+      competition.id,
+      round.id,
+    );
+
+    expect(result).toBeUndefined();
+    expect(boulderingRoundServiceMock.delete).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundServiceMock.delete).toHaveBeenCalledWith(round);
+  });
+
+  it('throws not found when removing a unknown bouldering round', () => {
+    const competition = givenCompetitionWithNoBoulderingRounds();
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(
+      competitionService.deleteBoulderingRound(1, 2),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('throws not found when removing a bouldering round to an unknown competition', () => {
+    const { competition, round } = givenCompetitionWithBoulderingRound();
+    competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
+
+    return expect(
+      competitionService.deleteBoulderingRound(competition.id, round.id),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

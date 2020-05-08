@@ -297,4 +297,17 @@ export class BoulderingRoundService {
     await this.boulderService.deleteMany(group.boulders);
     return this.boulderingGroupService.delete(group);
   }
+
+  async delete(round: BoulderingRound): Promise<void> {
+    const groups = await round.groups.init();
+
+    for (const g of groups.getItems()) {
+      // FIXME: cascade remove does not yet works
+      this.boulderingRoundRepository.removeLater(g);
+      // FIXME: cascade remove does not yet works
+      await this.boulderService.deleteMany(g.boulders);
+    }
+
+    return this.boulderingRoundRepository.removeAndFlush(round);
+  }
 }
