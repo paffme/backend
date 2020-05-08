@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 
 import { InjectRepository } from 'nestjs-mikro-orm';
-import { EntityRepository } from 'mikro-orm';
+import { Collection, EntityRepository } from 'mikro-orm';
 import { Boulder } from './boulder.entity';
 import { BoulderingGroup } from '../group/bouldering-group.entity';
 import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.dto';
@@ -88,5 +88,15 @@ export class BoulderService {
     }
 
     await this.boulderRepository.removeAndFlush(boulder);
+  }
+
+  async deleteMany(boulders: Collection<Boulder>): Promise<void> {
+    const bouldersData = await boulders.init();
+
+    for (const b of bouldersData.getItems()) {
+      this.boulderRepository.removeLater(b);
+    }
+
+    return this.boulderRepository.flush();
   }
 }

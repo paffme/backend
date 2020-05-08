@@ -27,4 +27,8 @@ export class BoulderingGroupService {
     await this.boulderingGroupRepository.persistAndFlush(group);
     return group;
   }
+
+  delete(group: BoulderingGroup): Promise<void> {
+    return this.boulderingGroupRepository.removeAndFlush(group);
+  }
 }

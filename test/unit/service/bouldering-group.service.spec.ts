@@ -1,4 +1,3 @@
-import { BoulderingRoundService } from '../../../src/bouldering/round/bouldering-round.service';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { BoulderingGroupService } from '../../../src/bouldering/group/bouldering-group.service';
@@ -9,6 +8,7 @@ import { ConflictException } from '@nestjs/common';
 
 const boulderingGroupRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
+  removeAndFlush: jest.fn(),
   count: jest.fn(),
 };
 
@@ -67,5 +67,22 @@ describe('Bouldering group service (unit)', () => {
     return expect(
       boulderingGroupService.create('0', round),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('deletes a group', async () => {
+    const group = {} as BoulderingGroup;
+    boulderingGroupRepositoryMock.removeAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    const res = await boulderingGroupService.delete(group);
+
+    expect(res).toBeUndefined();
+    expect(boulderingGroupRepositoryMock.removeAndFlush).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(boulderingGroupRepositoryMock.removeAndFlush).toHaveBeenCalledWith(
+      group,
+    );
   });
 });

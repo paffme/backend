@@ -574,4 +574,13 @@ export class CompetitionService {
     const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
     return this.boulderingRoundService.createGroup(round, dto);
   }
+
+  async deleteBoulderingGroup(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<void> {
+    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    return this.boulderingRoundService.deleteGroup(round, groupId);
+  }
 }

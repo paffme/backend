@@ -18,6 +18,7 @@ const boulderRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
   removeAndFlush: jest.fn(),
   persistLater: jest.fn(),
+  removeLater: jest.fn(),
   findOne: jest.fn(),
   flush: jest.fn(),
 };
@@ -232,5 +233,43 @@ describe('Boulder service (unit)', () => {
     return expect(boulderService.remove(group, 123)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+  });
+
+  it('deletes many boulders', async () => {
+    const data = [{}, {}];
+
+    const boulders = {
+      async init(): Promise<unknown> {
+        return {
+          getItems(): unknown[] {
+            return data;
+          },
+        };
+      },
+    };
+
+    boulderRepositoryMock.removeLater.mockImplementation(() => undefined);
+    boulderRepositoryMock.flush.mockImplementation(async () => undefined);
+
+    const res = await boulderService.deleteMany(
+      (boulders as unknown) as Collection<Boulder>,
+    );
+
+    expect(res).toBeUndefined();
+    expect(boulderRepositoryMock.removeLater).toHaveBeenCalledTimes(
+      data.length,
+    );
+
+    expect(boulderRepositoryMock.removeLater).toHaveBeenNthCalledWith(
+      1,
+      data[0],
+    );
+
+    expect(boulderRepositoryMock.removeLater).toHaveBeenNthCalledWith(
+      2,
+      data[1],
+    );
+
+    expect(boulderRepositoryMock.flush).toHaveBeenCalledTimes(1);
   });
 });

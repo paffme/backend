@@ -287,4 +287,14 @@ export class BoulderingRoundService {
   ): Promise<BoulderingGroup> {
     return this.boulderingGroupService.create(dto.name, round);
   }
+
+  async deleteGroup(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<void> {
+    const group = await this.getGroup(round, groupId);
+    // FIXME: cascade remove does not yet works
+    await this.boulderService.deleteMany(group.boulders);
+    return this.boulderingGroupService.delete(group);
+  }
 }

@@ -27,6 +27,7 @@ import {
   CountedRankingDto,
 } from '../../src/bouldering/dto/out/bouldering-round-rankings.dto';
 import { CreateBoulderingGroupDto } from '../../src/competition/dto/in/body/create-bouldering-group.dto';
+import { NotFoundException } from '@nestjs/common';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -659,6 +660,58 @@ describe('Bouldering (e2e)', () => {
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .send(dto)
+        .expect(403);
+    });
+  });
+
+  describe('DELETE /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}', () => {
+    it('deletes a bouldering group', async () => {
+      const { competition, round } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const {
+        user: juryPresident,
+        credentials: juryPresidentCredentials,
+      } = await utils.givenUser();
+
+      const presidentJuryAuth = await utils.login(juryPresidentCredentials);
+      await utils.addJuryPresidentInCompetition(juryPresident, competition);
+
+      await api
+        .delete(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}`,
+        )
+        .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
+        .expect(204);
+
+      return expect(
+        utils.getBoulderingGroup(round.groups[0].id),
+      ).rejects.toBeInstanceOf(Error);
+    });
+
+    it('returns 401 when deleting a bouldering round without auth', async () => {
+      const { competition, round } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      await api
+        .delete(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}`,
+        )
+        .expect(401);
+    });
+
+    it('returns 103 when deleting a bouldering round without being jury president', async () => {
+      const { competition, round, judgeAuth } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      await api
+        .delete(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
         .expect(403);
     });
   });
