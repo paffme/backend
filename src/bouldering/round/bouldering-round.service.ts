@@ -302,7 +302,9 @@ export class BoulderingRoundService {
     const groups = await round.groups.init();
 
     for (const g of groups.getItems()) {
+      // FIXME: cascade remove does not yet works
       this.boulderingRoundRepository.removeLater(g);
+      // FIXME: cascade remove does not yet works
       await this.boulderService.deleteMany(g.boulders);
     }
 
