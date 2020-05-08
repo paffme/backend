@@ -496,7 +496,7 @@ describe('Bouldering round service (integration)', () => {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
     });
 
-    const group = await givenBoulderingGroup('0', round);
+    const group = await givenBoulderingGroup('newgroup', round);
     const [boulder] = await boulderService.createMany(group, 1);
     const dto = {} as CreateBoulderingResultDto;
 

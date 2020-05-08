@@ -32,6 +32,7 @@ import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.
 import { InitOptions } from 'mikro-orm/dist/entity/Collection';
 import { givenCompetition } from '../../fixture/competition.fixture';
 import { CompetitionType } from '../../../src/competition/types/competition-type.enum';
+import { CreateBoulderingGroupDto } from '../../../src/competition/dto/in/body/create-bouldering-group.dto';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -41,7 +42,11 @@ const boulderingRoundRepositoryMock: RepositoryMock = {
 };
 
 const boulderingResultServiceMock: ServiceMock = {};
-const boulderingGroupServiceMock: ServiceMock = {};
+
+const boulderingGroupServiceMock: ServiceMock = {
+  create: jest.fn(),
+  delete: jest.fn(),
+};
 
 const boulderingUnlimitedContestRankingServiceMock: ServiceMock = {
   getRankings: jest.fn(),
@@ -55,6 +60,7 @@ const boulderServiceMock: ServiceMock = {
   createMany: jest.fn(),
   create: jest.fn(),
   remove: jest.fn(),
+  deleteMany: jest.fn(),
 };
 
 describe('Bouldering round service (unit)', () => {
@@ -423,5 +429,48 @@ describe('Bouldering round service (unit)', () => {
     return expect(
       boulderingRoundService.createRound(competition, dto),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('creates a group', async () => {
+    const round = givenBoulderingRound();
+    const dto: CreateBoulderingGroupDto = {
+      name: 'anee',
+    };
+    const fakeGroup = {};
+
+    boulderingGroupServiceMock.create.mockImplementation(async () => fakeGroup);
+
+    const result = await boulderingRoundService.createGroup(round, dto);
+
+    expect(result).toBe(fakeGroup);
+    expect(boulderingGroupServiceMock.create).toHaveBeenCalledTimes(1);
+    expect(boulderingGroupServiceMock.create).toHaveBeenCalledWith(
+      dto.name,
+      round,
+    );
+  });
+
+  it('deletes a group', async () => {
+    const { round, group } = givenRoundWithOneGroup();
+    boulderingGroupServiceMock.delete.mockImplementation(async () => undefined);
+    boulderServiceMock.deleteMany.mockImplementation(async () => undefined);
+
+    const result = await boulderingRoundService.deleteGroup(round, group.id);
+
+    expect(result).toBeUndefined();
+    expect(boulderingGroupServiceMock.delete).toHaveBeenCalledTimes(1);
+    expect(boulderingGroupServiceMock.delete).toHaveBeenCalledWith(group);
+    expect(boulderServiceMock.deleteMany).toHaveBeenCalledTimes(1);
+    expect(boulderServiceMock.deleteMany).toHaveBeenCalledWith(group.boulders);
+  });
+
+  it('throws not found when deleting an unknown group', () => {
+    const round = givenRoundWithNoGroups();
+    boulderingGroupServiceMock.delete.mockImplementation(async () => undefined);
+    boulderServiceMock.deleteMany.mockImplementation(async () => undefined);
+
+    return expect(
+      boulderingRoundService.deleteGroup(round, 50000),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

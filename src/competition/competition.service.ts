@@ -42,6 +42,7 @@ import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id
 import { SearchQuery } from '../shared/decorators/search.decorator';
 import { BoulderingGroup } from '../bouldering/group/bouldering-group.entity';
 import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
+import { CreateBoulderingGroupDto } from './dto/in/body/create-bouldering-group.dto';
 
 @Injectable()
 export class CompetitionService {
@@ -563,5 +564,23 @@ export class CompetitionService {
     }
 
     return round.rankings;
+  }
+
+  async createBoulderingGroup(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    dto: CreateBoulderingGroupDto,
+  ): Promise<BoulderingGroup> {
+    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    return this.boulderingRoundService.createGroup(round, dto);
+  }
+
+  async deleteBoulderingGroup(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<void> {
+    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    return this.boulderingRoundService.deleteGroup(round, groupId);
   }
 }

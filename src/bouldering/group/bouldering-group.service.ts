@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { BoulderingGroup } from './bouldering-group.entity';
@@ -14,8 +14,21 @@ export class BoulderingGroupService {
   ) {}
 
   async create(name: string, round: BoulderingRound): Promise<BoulderingGroup> {
+    const count = await this.boulderingGroupRepository.count({
+      round,
+      name,
+    });
+
+    if (count > 0) {
+      throw new ConflictException('Name already used');
+    }
+
     const group = new BoulderingGroup(name, round);
     await this.boulderingGroupRepository.persistAndFlush(group);
     return group;
+  }
+
+  delete(group: BoulderingGroup): Promise<void> {
+    return this.boulderingGroupRepository.removeAndFlush(group);
   }
 }
