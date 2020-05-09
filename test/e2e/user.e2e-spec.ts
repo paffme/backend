@@ -107,6 +107,14 @@ describe('User (e2e)', () => {
     });
   });
 
+  describe('GET /users/count', () => {
+    it('count users', async () => {
+      await utils.givenUser();
+      const { body } = await api.get('/users/count').expect(200);
+      expect(body.count).toBeGreaterThanOrEqual(1);
+    });
+  });
+
   describe('POST /users', () => {
     it('creates a user', async () => {
       const user: RegisterDto = {

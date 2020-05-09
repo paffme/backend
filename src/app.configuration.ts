@@ -41,6 +41,7 @@ export function configure(app: NestExpressApplication): void {
 
   app.enableCors({
     credentials: true,
+    exposedHeaders: ['Link'],
     origin(requestOrigin: string, cb: (arg1: null, arg2: boolean) => void) {
       cb(null, true);
     },
