@@ -1,17 +1,11 @@
-import { IsDateString, IsOptional, ValidateNested } from 'class-validator';
-
-class StartDate {
-  @IsOptional()
-  @IsDateString()
-  $gte?: Date;
-
-  @IsOptional()
-  @IsDateString()
-  $lte?: Date;
-}
+import { IsOptional, ValidateNested } from 'class-validator';
+import { SearchDto } from '../../../../shared/dto/search.dto';
+import { Competition } from '../../../competition.entity';
+import { Type } from 'class-transformer';
 
 export class SearchCompetitionsDto {
   @IsOptional()
   @ValidateNested()
-  startDate?: StartDate;
+  @Type(() => SearchDto)
+  startDate?: SearchDto<typeof Competition.prototype.startDate>;
 }

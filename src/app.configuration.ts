@@ -32,6 +32,7 @@ export function configure(app: NestExpressApplication): void {
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
+      forbidNonWhitelisted: true,
       exceptionFactory: (errors): CustomValidationError =>
         new CustomValidationError(errors),
     }),

@@ -1,16 +1,16 @@
 import { User } from '../../../user.entity';
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, ValidateNested } from 'class-validator';
+import { SearchDto } from '../../../../shared/dto/search.dto';
+import { Type } from 'class-transformer';
 
-// For now this dto just handles equality
-// but we could go much deeper by allowing
-// to use MikroORM operators
-// https://mikro-orm.io/docs/entity-manager/#conditions-object-filterqueryt
 export class SearchUsersDto {
   @IsOptional()
-  @IsString()
-  firstName?: typeof User.prototype.firstName;
+  @ValidateNested()
+  @Type(() => SearchDto)
+  firstName?: SearchDto<typeof User.prototype.firstName>;
 
   @IsOptional()
-  @IsString()
-  lastName?: typeof User.prototype.firstName;
+  @ValidateNested()
+  @Type(() => SearchDto)
+  lastName?: SearchDto<typeof User.prototype.lastName>;
 }

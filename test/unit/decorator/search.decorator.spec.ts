@@ -6,7 +6,7 @@ import {
 import { BadRequestException, ExecutionContext } from '@nestjs/common';
 import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { ClassType } from 'class-transformer/ClassTransformer';
-import { IsString, Min, ValidationError } from 'class-validator';
+import { IsString, Min } from 'class-validator';
 import { catchErrors } from './decorator.utils';
 import { QueryOrder } from 'mikro-orm';
 
@@ -96,7 +96,7 @@ describe('Search decorator (unit)', () => {
       name!: string;
     }
 
-    const [error] = await catchErrors(
+    const error = await catchErrors(
       givenSearchDecorator(
         {
           q: JSON.stringify({
@@ -107,31 +107,34 @@ describe('Search decorator (unit)', () => {
       ),
     );
 
-    expect(error).toBeInstanceOf(ValidationError);
-    expect(error.value).toEqual('abc');
-    expect(error.property).toEqual('name');
-    expect(error.constraints).toHaveProperty('min');
+    expect(error.getStatus()).toEqual(422);
+    expect(error.errors[0].value).toEqual('abc');
+    expect(error.errors[0].property).toEqual('name');
+    expect(error.errors[0].constraints).toHaveProperty('min');
   });
 
-  it('removes additional properties', async () => {
+  it('throws with additional properties', async () => {
     class Dto {
       @IsString()
       name!: string;
     }
 
-    const result = await givenSearchDecorator(
-      {
-        q: JSON.stringify({
-          name: 'abc',
-          age: 123,
-        }),
-      },
-      Dto,
+    const error = await catchErrors(
+      givenSearchDecorator(
+        {
+          q: JSON.stringify({
+            name: 'abc',
+            age: 123,
+          }),
+        },
+        Dto,
+      ),
     );
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-    // @ts-ignore
-    expect(result.age).toBeUndefined();
+    expect(error.getStatus()).toEqual(422);
+    expect(error.errors[0].value).toEqual(123);
+    expect(error.errors[0].property).toEqual('age');
+    expect(error.errors[0].constraints).toHaveProperty('whitelistValidation');
   });
 
   it('does not validate without a dto', async () => {

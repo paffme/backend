@@ -79,7 +79,9 @@ describe('User (e2e)', () => {
         .get('/users')
         .query({
           q: JSON.stringify({
-            firstName,
+            firstName: {
+              $eq: firstName,
+            },
           }),
           sort: 'lastName',
           order: 'desc',

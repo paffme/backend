@@ -8,7 +8,7 @@ import { FilterQuery, QueryOrder, QueryOrderMap } from 'mikro-orm';
 import { plainToClass } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { ClassType } from 'class-transformer/ClassTransformer';
-import { FilterValue } from 'mikro-orm/dist/typings';
+import { CustomValidationError } from '../errors/custom-validation.error';
 
 export interface SearchOptions {
   mandatoryQuery: boolean;
@@ -46,11 +46,16 @@ async function getFilter<Dto, T>(
 
   const pagination = plainToClass(dto, data);
 
-  await validateOrReject(pagination, {
-    whitelist: true,
-  });
+  try {
+    await validateOrReject(pagination, {
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    });
 
-  return data;
+    return data;
+  } catch (err) {
+    throw new CustomValidationError(err);
+  }
 }
 
 function getOrderKey(key?: string): QueryOrder {
