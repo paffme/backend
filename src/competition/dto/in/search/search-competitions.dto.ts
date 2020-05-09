@@ -8,4 +8,14 @@ export class SearchCompetitionsDto {
   @ValidateNested()
   @Type(() => SearchDto)
   startDate?: SearchDto<typeof Competition.prototype.startDate>;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SearchDto)
+  name?: SearchDto<typeof Competition.prototype.name>;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => SearchDto)
+  city?: SearchDto<typeof Competition.prototype.city>;
 }
