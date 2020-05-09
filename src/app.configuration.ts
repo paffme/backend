@@ -5,6 +5,7 @@ import { CustomValidationError } from './shared/errors/custom-validation.error';
 import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import * as packageJson from '../package.json';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import helmet from 'helmet';
 
 export function configure(app: NestExpressApplication): void {
   const swaggerOptions = new DocumentBuilder()
@@ -28,6 +29,8 @@ export function configure(app: NestExpressApplication): void {
   app.getHttpAdapter().get('/swagger.json', (req, res) => {
     res.json(swaggerDoc);
   });
+
+  app.use(helmet());
 
   app.useGlobalPipes(
     new ValidationPipe({
