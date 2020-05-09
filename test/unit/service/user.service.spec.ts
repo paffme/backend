@@ -262,4 +262,10 @@ describe('User service (unit)', () => {
       });
     }
   });
+
+  it('counts', async () => {
+    userRepositoryMock.count.mockImplementation(async () => 15);
+    const res = await userService.count();
+    expect(res).toEqual(15);
+  });
 });

@@ -103,6 +103,10 @@ export class UserService {
     };
   }
 
+  count(): Promise<number> {
+    return this.userRepository.count();
+  }
+
   async register(dto: RegisterDto): Promise<User> {
     const { email, password } = dto;
 

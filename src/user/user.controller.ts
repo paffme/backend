@@ -66,6 +66,7 @@ import { Pagination } from '../shared/decorators/pagination.decorator';
 import { SearchUsersDto } from './dto/in/search/search-users.dto';
 import { GetUserCompetitionRolesParamsDto } from './dto/in/params/get-user-competition-roles-params.dto';
 import { UserCompetitionRolesDto } from './dto/out/user-competition-roles.dto';
+import { CountUsersDto } from './dto/out/count-users.dto';
 
 @Controller('users')
 @ApiTags(User.name)
@@ -105,6 +106,17 @@ export class UserController {
     );
 
     return this.limitedUserMapper.mapArray(offsetLimitResponse.data);
+  }
+
+  @Get('/count')
+  @ApiOkResponse({ type: CountUsersDto })
+  @ApiOperation(GetOperationId(User.name, 'Count'))
+  async count(): Promise<CountUsersDto> {
+    const count = await this.userService.count();
+
+    return {
+      count,
+    };
   }
 
   @Post()
