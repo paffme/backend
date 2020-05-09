@@ -103,6 +103,7 @@ import { BoulderingGroupDto } from '../bouldering/dto/out/bouldering-group.dto';
 import { BoulderingGroupMapper } from '../shared/mappers/bouldering-group.mapper';
 import { DeleteBoulderingGroupParamsDto } from './dto/in/params/delete-bouldering-group-params.dto';
 import { DeleteBoulderingRoundParamsDto } from './dto/in/params/delete-bouldering-round-params.dto';
+import { CountDto } from '../shared/dto/count.dto';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -123,9 +124,7 @@ export class CompetitionController {
 
   @Get()
   @ApiOkResponse({ type: CompetitionDto, isArray: true })
-  @ApiOperation(
-    GetOperationId(CompetitionDto.constructor.name, 'GetCompetitions'),
-  )
+  @ApiOperation(GetOperationId(Competition.constructor.name, 'GetCompetitions'))
   async getCompetitions(
     @Pagination() offsetLimitRequest: OffsetLimitRequest,
     @Search(SearchCompetitionsDto) search: SearchQuery<Competition>,
@@ -143,6 +142,19 @@ export class CompetitionController {
     );
 
     return this.mapper.mapArray(offsetLimitResponse.data);
+  }
+
+  @Get('/count')
+  @ApiOkResponse({ type: CountDto })
+  @ApiOperation(GetOperationId(Competition.constructor.name, 'Count'))
+  async count(
+    @Search(SearchCompetitionsDto) search: SearchQuery<Competition>,
+  ): Promise<CountDto> {
+    const count = await this.competitionService.count(search);
+
+    return {
+      count,
+    };
   }
 
   @Post()

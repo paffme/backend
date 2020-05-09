@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CountUsersDto {
+export class CountDto {
   @ApiProperty()
   readonly count!: number;
 }

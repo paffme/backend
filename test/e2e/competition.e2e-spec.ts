@@ -13,6 +13,7 @@ import { UpdateCompetitionByIdDto } from '../../src/competition/dto/in/body/upda
 import LinkHeader from 'http-link-header';
 import { Sex } from '../../src/shared/types/sex.enum';
 import { CategoryName } from '../../src/shared/types/category-name.enum';
+import * as uuid from 'uuid';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -93,6 +94,39 @@ describe('Competition (e2e)', () => {
       const rels = linkHeader.refs.map((r) => r.rel);
       expect(rels).toContain('next');
       expect(rels).toContain('last');
+    });
+  });
+
+  describe('GET /competitions/count', () => {
+    it('count competitions', async () => {
+      const { user } = await utils.givenUser();
+      await utils.givenCompetition(user);
+
+      const { body } = await api.get('/competitions/count').expect(200);
+
+      expect(body.count).toBeGreaterThanOrEqual(1);
+    });
+
+    it('count competitions with filtering', async () => {
+      const { user } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user, {
+        name: uuid.v4(),
+      });
+
+      await utils.givenCompetition(user);
+
+      const { body } = await api
+        .get('/competitions/count')
+        .query({
+          q: JSON.stringify({
+            name: {
+              $eq: competition.name,
+            },
+          }),
+        })
+        .expect(200);
+
+      expect(body.count).toEqual(1);
     });
   });
 

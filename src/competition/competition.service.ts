@@ -591,4 +591,8 @@ export class CompetitionService {
     const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
     await this.boulderingRoundService.delete(round);
   }
+
+  count(search: SearchQuery<Competition>): Promise<number> {
+    return this.competitionRepository.count(search.filter);
+  }
 }

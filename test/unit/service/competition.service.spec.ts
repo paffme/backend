@@ -29,13 +29,14 @@ import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
 import { InitOptions } from 'mikro-orm/dist/entity/Collection';
 import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
 import { CreateBoulderingGroupDto } from '../../../src/competition/dto/in/body/create-bouldering-group.dto';
-import { givenCompetition } from '../../fixture/competition.fixture';
+import { SearchQuery } from '../../../src/shared/decorators/search.decorator';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
   findAndCount: jest.fn(),
   find: jest.fn(),
   findOne: jest.fn(),
+  count: jest.fn(),
 };
 
 const competitionRegistrationRepositoryMock: RepositoryMock = {
@@ -812,5 +813,18 @@ describe('Competition service (unit)', () => {
     return expect(
       competitionService.deleteBoulderingRound(competition.id, round.id),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('counts', async () => {
+    const search = {
+      filter: {},
+    } as SearchQuery<Competition>;
+    competitionRepositoryMock.count.mockImplementation(async () => 10);
+
+    const count = await competitionService.count(search);
+
+    expect(count).toEqual(10);
+    expect(competitionRepositoryMock.count).toHaveBeenCalledTimes(1);
+    expect(competitionRepositoryMock.count).toHaveBeenCalledWith(search.filter);
   });
 });
