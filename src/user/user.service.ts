@@ -179,6 +179,16 @@ export class UserService {
       dto.password = await this.hashPassword(dto.password);
     }
 
+    if (dto.email) {
+      const exists = await this.userRepository.count({
+        email: dto.email,
+      });
+
+      if (exists > 0) {
+        throw new ConflictException('email already used');
+      }
+    }
+
     wrap(user).assign(dto);
     await this.userRepository.flush();
     return user;

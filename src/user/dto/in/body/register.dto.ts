@@ -11,6 +11,7 @@ import {
 
 import { ApiProperty } from '@nestjs/swagger';
 import { Sex } from '../../../../shared/types/sex.enum';
+import { Transform } from 'class-transformer';
 
 @ValidatorConstraint({ name: 'BirthYear', async: false })
 export class BirthYear implements ValidatorConstraintInterface {
@@ -28,6 +29,7 @@ export class RegisterDto {
     required: true,
   })
   @IsEmail()
+  @Transform((email) => email.toLowerCase())
   readonly email!: string;
 
   @ApiProperty({

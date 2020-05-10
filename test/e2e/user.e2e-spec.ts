@@ -133,6 +133,23 @@ describe('User (e2e)', () => {
       checkUser(user, body);
     });
 
+    it('creates a user with lower cased email', async () => {
+      const email = `${uuid.v4()}@${uuid.v4()}.fr`;
+
+      const user: RegisterDto = {
+        firstName: uuid.v4().substr(0, 10),
+        lastName: uuid.v4().substr(0, 10),
+        email: email.toUpperCase(),
+        password: uuid.v4().substr(0, 10),
+        sex: Sex.Female,
+        birthYear: 2000,
+        club: uuid.v4().substr(0, 10),
+      };
+
+      const { body } = await api.post('/users').send(user).expect(201);
+      expect(body.email).toEqual(email);
+    });
+
     it('does not creates a user if the mail is already used', async () => {
       const user: RegisterDto = {
         firstName: uuid.v4().substr(0, 10),
@@ -314,22 +331,53 @@ describe('User (e2e)', () => {
     it('updates a user by ID', async () => {
       const { user, credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
+      const newEmail = `${uuid.v4()}@${uuid.v4()}.fr`;
 
       const { body } = await api
         .patch('/users/' + auth.userId)
         .set('Authorization', 'Bearer ' + auth.token)
         .send({
-          email: 'new@email.fr',
+          email: newEmail,
         })
         .expect(200);
 
       checkUser(
         {
           ...user,
-          email: 'new@email.fr',
+          email: newEmail,
         },
         body,
       );
+    });
+
+    it('updates a user with lower cased email', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const newEmail = `${uuid.v4()}@${uuid.v4()}.fr`;
+
+      const { body } = await api
+        .patch('/users/' + auth.userId)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .send({
+          email: newEmail.toUpperCase(),
+        })
+        .expect(200);
+
+      expect(body.email).toEqual(newEmail);
+    });
+
+    it('prevents updating a user with an already used email', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const { user: otherUser } = await utils.givenUser();
+
+      await api
+        .patch('/users/' + auth.userId)
+        .set('Authorization', 'Bearer ' + auth.token)
+        .send({
+          email: otherUser.email,
+        })
+        .expect(409);
     });
 
     it('returns 401 when unauthenticated user do not own the accessed user', async () => {
@@ -350,19 +398,20 @@ describe('User (e2e)', () => {
       const { user } = await utils.givenUser();
       const { credentials } = await utils.givenAdminUser();
       const auth = await utils.login(credentials);
+      const newEmail = `${uuid.v4()}@${uuid.v4()}.fr`;
 
       const { body } = await api
         .patch('/users/' + user.id)
         .set('Authorization', 'Bearer ' + auth.token)
         .send({
-          email: 'new@email.fr',
+          email: newEmail,
         })
         .expect(200);
 
       checkUser(
         {
           ...user,
-          email: 'new@email.fr',
+          email: newEmail,
         },
         body,
       );
