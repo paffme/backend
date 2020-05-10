@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { Collection, EntityRepository } from 'mikro-orm';
@@ -10,6 +6,7 @@ import { Boulder } from './boulder.entity';
 import { BoulderingGroup } from '../group/bouldering-group.entity';
 import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.dto';
 import { validateIndex } from '../../shared/utils/indexing.helper';
+import { BoulderNotFoundError } from '../errors/boulder-not-found.error';
 
 @Injectable()
 export class BoulderService {
@@ -22,7 +19,7 @@ export class BoulderService {
     const boulder = await this.boulderRepository.findOne(boulderId);
 
     if (!boulder) {
-      throw new NotFoundException('Boulder not found');
+      throw new BoulderNotFoundError();
     }
 
     return boulder;
@@ -84,7 +81,7 @@ export class BoulderService {
     const boulder = boulders.getItems()[0];
 
     if (!boulder) {
-      throw new NotFoundException('Boulder not found');
+      throw new BoulderNotFoundError();
     }
 
     await this.boulderRepository.removeAndFlush(boulder);

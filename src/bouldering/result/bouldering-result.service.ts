@@ -1,4 +1,4 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { BoulderingResult } from './bouldering-result.entity';
@@ -6,6 +6,8 @@ import { CreateBoulderingResultDto } from '../../competition/dto/in/body/create-
 import { User } from '../../user/user.entity';
 import { Boulder } from '../boulder/boulder.entity';
 import { BoulderingGroup } from '../group/bouldering-group.entity';
+import { WrongResultForRoundError } from '../errors/wrong-result-for-round.error';
+import { MaxTriesReachedError } from '../errors/max-tries-reached.error';
 
 @Injectable()
 export class BoulderingResultService {
@@ -55,7 +57,7 @@ export class BoulderingResultService {
 
     if (dto.try) {
       if (!group.round.isRankingWithCountedTries()) {
-        throw new UnprocessableEntityException(
+        throw new WrongResultForRoundError(
           "Can't add a try for this kind of round",
         );
       }
@@ -64,7 +66,7 @@ export class BoulderingResultService {
         typeof group.round.maxTries === 'number' &&
         result.tries >= group.round.maxTries
       ) {
-        throw new UnprocessableEntityException('maxTries reached');
+        throw new MaxTriesReachedError();
       }
 
       result.tries++;
@@ -85,7 +87,7 @@ export class BoulderingResultService {
 
     if (typeof dto.zone === 'boolean') {
       if (!group.round.isRankingWithCountedZones()) {
-        throw new UnprocessableEntityException(
+        throw new WrongResultForRoundError(
           "Can't add a zone for this kind of round",
         );
       }

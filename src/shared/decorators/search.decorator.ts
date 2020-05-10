@@ -9,6 +9,7 @@ import { plainToClass } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import { ClassType } from 'class-transformer/ClassTransformer';
 import { CustomValidationError } from '../errors/custom-validation.error';
+import { BaseError } from '../errors/base.error';
 
 export interface SearchOptions {
   mandatoryQuery: boolean;
@@ -17,6 +18,22 @@ export interface SearchOptions {
 export interface SearchQuery<T> {
   filter: FilterQuery<T>;
   order: QueryOrderMap;
+}
+
+class MissingQuery extends BadRequestException implements BaseError {
+  constructor() {
+    super('Missing mandatory query');
+  }
+
+  code = 'MISSING_QUERY';
+}
+
+class InvalidQuery extends BadRequestException implements BaseError {
+  constructor() {
+    super('Invalid query');
+  }
+
+  code = 'INVALID_QUERY';
 }
 
 async function getFilter<Dto, T>(
@@ -30,7 +47,7 @@ async function getFilter<Dto, T>(
 
   if (typeof query === 'undefined') {
     if (options?.mandatoryQuery) {
-      throw new BadRequestException('Missing mandatory query');
+      throw new MissingQuery();
     }
 
     return {};
@@ -41,7 +58,7 @@ async function getFilter<Dto, T>(
   try {
     data = JSON.parse(query);
   } catch (err) {
-    throw new BadRequestException('Invalid query');
+    throw new InvalidQuery();
   }
 
   const pagination = plainToClass(dto, data);

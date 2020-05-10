@@ -12,7 +12,6 @@ import { UnprocessableEntityException } from '@nestjs/common';
 import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
 import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
 import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
-import { givenBoulder } from '../../fixture/boulder.fixture';
 
 const boulderingResultRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),

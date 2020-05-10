@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-  NotImplementedException,
-} from '@nestjs/common';
+import { Injectable, NotImplementedException } from '@nestjs/common';
 
 import {
   Competition,
@@ -46,6 +39,17 @@ import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
 import { CreateBoulderingGroupDto } from './dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from './competition-round-type.enum';
 import { UpdateBoulderingRoundDto } from './dto/in/body/update-bouldering-round.dto';
+import { CompetitionNotFoundError } from './errors/competition-not-found.error';
+import { RegistrationsClosedError } from './errors/registrations-closed.error';
+import { AlreadyRegisteredError } from './errors/already-registered.error';
+import { RegistrationNotFoundError } from './errors/registration-not-found.error';
+import { UserAlreadyHasRoleError } from './errors/user-already-has-role.error';
+import { UserNotFoundWithRoleError } from './errors/user-not-found-with-role.error';
+import { RemoveLastOrganizerError } from './errors/remove-last-organizer.error';
+import { OrganizerNotFoundError } from './errors/organizer-not-found.error';
+import { ClimberNotRegisteredError } from './errors/climber-not-registered.error';
+import { RoundNotFoundError } from '../bouldering/errors/round-not-found.error';
+import { RankingsNotFoundError } from './errors/rankings-not-found.error';
 
 @Injectable()
 export class CompetitionService {
@@ -72,7 +76,7 @@ export class CompetitionService {
     );
 
     if (!competition) {
-      throw new NotFoundException('Competition not found');
+      throw new CompetitionNotFoundError();
     }
 
     return competition;
@@ -136,9 +140,7 @@ export class CompetitionService {
     const competition = await this.getOrFail(competitionId);
 
     if (!competition.takesRegistrations()) {
-      throw new BadRequestException(
-        'Registrations for this competition are closed.',
-      );
+      throw new RegistrationsClosedError();
     }
 
     const user = await this.userService.getOrFail(userId);
@@ -150,7 +152,7 @@ export class CompetitionService {
       })) === 1;
 
     if (registrationExists) {
-      throw new BadRequestException('Already registered');
+      throw new AlreadyRegisteredError();
     }
 
     this.competitionRegistrationRepository.persistLater(
@@ -219,7 +221,7 @@ export class CompetitionService {
     });
 
     if (!registration) {
-      throw new NotFoundException('Registration not found');
+      throw new RegistrationNotFoundError();
     }
 
     await this.competitionRegistrationRepository.removeAndFlush(registration);
@@ -234,7 +236,7 @@ export class CompetitionService {
     const user = await this.userService.getOrFail(userId);
 
     if (competition[relation].contains(user)) {
-      throw new ConflictException('User is already in this relation');
+      throw new UserAlreadyHasRoleError(relation);
     }
 
     competition[relation].add(user);
@@ -263,7 +265,7 @@ export class CompetitionService {
       competition[relation].remove(user);
       await this.competitionRepository.persistAndFlush(competition);
     } else {
-      throw new NotFoundException('User not found in relation');
+      throw new UserNotFoundWithRoleError(relation);
     }
   }
 
@@ -393,12 +395,12 @@ export class CompetitionService {
 
     if (competition.organizers.contains(user)) {
       if (competition.organizers.length === 1) {
-        throw new BadRequestException('The last organizer cannot be removed');
+        throw new RemoveLastOrganizerError();
       } else {
         competition.organizers.remove(user);
       }
     } else {
-      throw new NotFoundException('Organizer not found');
+      throw new OrganizerNotFoundError();
     }
 
     await this.competitionRepository.persistAndFlush(competition);
@@ -434,7 +436,7 @@ export class CompetitionService {
     );
 
     if (!climberRegistered) {
-      throw new ForbiddenException('Climber not registered');
+      throw new ClimberNotRegisteredError();
     }
 
     const result = await this.boulderingRoundService.addResult(
@@ -533,7 +535,7 @@ export class CompetitionService {
     const round = rounds.getItems()[0];
 
     if (!round) {
-      throw new NotFoundException('Unknown bouldering round');
+      throw new RoundNotFoundError();
     }
 
     return {
@@ -580,7 +582,7 @@ export class CompetitionService {
     );
 
     if (!round.rankings) {
-      throw new NotFoundException('No rankings for this round');
+      throw new RankingsNotFoundError();
     }
 
     return round.rankings;

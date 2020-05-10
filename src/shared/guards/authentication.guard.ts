@@ -1,13 +1,8 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { SystemRole } from '../../user/user-role.enum';
 import { User } from '../../user/user.entity';
+import { UnauthorizedError } from '../authentication/unauthorized.error';
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
@@ -30,9 +25,6 @@ export class AuthenticationGuard implements CanActivate {
       return true;
     }
 
-    throw new HttpException(
-      'You do not have permission (AllowedSystemRoles)',
-      HttpStatus.UNAUTHORIZED,
-    );
+    throw new UnauthorizedError();
   }
 }
