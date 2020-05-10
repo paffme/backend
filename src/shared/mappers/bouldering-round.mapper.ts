@@ -14,7 +14,6 @@ export class BoulderingRoundMapper extends BaseMapper<
     super({
       id: 'id',
       name: 'name',
-      index: 'index',
       quota: 'quota',
       type: 'type',
       competitionId: 'competition.id',

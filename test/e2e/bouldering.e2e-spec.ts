@@ -28,6 +28,8 @@ import {
 } from '../../src/bouldering/dto/out/bouldering-round-rankings.dto';
 import { CreateBoulderingGroupDto } from '../../src/competition/dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
+import { UpdateBoulderingRoundDto } from '../../src/competition/dto/in/body/update-bouldering-round.dto';
+import * as uuid from 'uuid';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -125,7 +127,6 @@ describe('Bouldering (e2e)', () => {
       utils.clearORM();
 
       const dto: CreateBoulderingRoundDto = {
-        index: 0,
         boulders: 5,
         name: 'Super Round',
         quota: 0,
@@ -146,7 +147,6 @@ describe('Bouldering (e2e)', () => {
       expect(body.name).toEqual(dto.name);
       expect(body.type).toEqual(dto.type);
       expect(body.quota).toEqual(dto.quota);
-      expect(body.index).toEqual(dto.index);
       expect(body.maxTries).toEqual(dto.maxTries);
       expect(body.competitionId).toEqual(competition.id);
       expect(body.sex).toEqual(Sex.Female);
@@ -756,6 +756,56 @@ describe('Bouldering (e2e)', () => {
 
       await api
         .delete(`/competitions/${competition.id}/bouldering-rounds/${round.id}`)
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .expect(403);
+    });
+  });
+
+  describe('PATCH /competitions/{competitionId}/bouldering-rounds/{roundId}', () => {
+    it('updates a bouldering group', async () => {
+      const { competition, round } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const {
+        user: juryPresident,
+        credentials: juryPresidentCredentials,
+      } = await utils.givenUser();
+
+      const presidentJuryAuth = await utils.login(juryPresidentCredentials);
+      await utils.addJuryPresidentInCompetition(juryPresident, competition);
+
+      const dto: UpdateBoulderingRoundDto = {
+        name: uuid.v4(),
+      };
+
+      const { body } = await api
+        .patch(`/competitions/${competition.id}/bouldering-rounds/${round.id}`)
+        .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
+        .send(dto)
+        .expect(200);
+
+      expect(body.id).toEqual(round.id);
+      expect(body.name).toEqual(dto.name);
+    });
+
+    it('returns 401 when updating a bouldering round without auth', async () => {
+      const { competition, round } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      await api
+        .patch(`/competitions/${competition.id}/bouldering-rounds/${round.id}`)
+        .expect(401);
+    });
+
+    it('returns 403 when updating a bouldering round without being jury president', async () => {
+      const { competition, round, judgeAuth } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      await api
+        .patch(`/competitions/${competition.id}/bouldering-rounds/${round.id}`)
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .expect(403);
     });

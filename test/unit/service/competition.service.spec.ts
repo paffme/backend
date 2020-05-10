@@ -348,12 +348,12 @@ describe('Competition service (unit)', () => {
 
     const rounds = [
       {
-        index: 1,
+        type: CompetitionRoundType.FINAL,
         category: CategoryName.Minime,
         sex: Sex.Female,
       },
       {
-        index: 0,
+        type: CompetitionRoundType.QUALIFIER,
         category: CategoryName.Minime,
         sex: Sex.Female,
         takesNewClimbers(): boolean {
@@ -403,7 +403,7 @@ describe('Competition service (unit)', () => {
 
     const rounds = [
       {
-        index: 0,
+        type: CompetitionRoundType.QUALIFIER,
         category: CategoryName.Minime,
         sex: Sex.Female,
         takesNewClimbers(): boolean {
@@ -449,7 +449,6 @@ describe('Competition service (unit)', () => {
 
     const rounds = [
       {
-        index: 0,
         category: CategoryName.Minime,
         sex: Sex.Female,
         takesNewClimbers(): boolean {

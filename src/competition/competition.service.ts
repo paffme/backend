@@ -45,6 +45,7 @@ import { BoulderingGroup } from '../bouldering/group/bouldering-group.entity';
 import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
 import { CreateBoulderingGroupDto } from './dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from './competition-round-type.enum';
+import { UpdateBoulderingRoundDto } from './dto/in/body/update-bouldering-round.dto';
 
 @Injectable()
 export class CompetitionService {
@@ -164,7 +165,7 @@ export class CompetitionService {
         const climberCategory = user.getCategory(season);
 
         return (
-          r.index === 0 &&
+          r.type === CompetitionRoundType.QUALIFIER &&
           r.category === climberCategory.name &&
           r.sex === climberCategory.sex
         );
@@ -517,10 +518,13 @@ export class CompetitionService {
   private async getBoulderingRoundOrFail(
     competitionId: typeof Competition.prototype.id,
     roundId: typeof BoulderingRound.prototype.id,
-  ): Promise<BoulderingRound> {
-    const { boulderingRounds } = await this.getOrFail(competitionId);
+  ): Promise<{
+    round: BoulderingRound;
+    competition: Competition;
+  }> {
+    const competition = await this.getOrFail(competitionId);
 
-    const rounds = await boulderingRounds.init({
+    const rounds = await competition.boulderingRounds.init({
       where: {
         id: roundId,
       },
@@ -532,7 +536,10 @@ export class CompetitionService {
       throw new NotFoundException('Unknown bouldering round');
     }
 
-    return round;
+    return {
+      competition,
+      round,
+    };
   }
 
   async createBoulder(
@@ -541,7 +548,11 @@ export class CompetitionService {
     groupId: typeof BoulderingGroup.prototype.id,
     dto: CreateBoulderDto,
   ): Promise<Boulder> {
-    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
     return this.boulderingRoundService.createBoulder(round, groupId, dto);
   }
 
@@ -551,7 +562,11 @@ export class CompetitionService {
     groupId: typeof BoulderingGroup.prototype.id,
     boulderId: typeof Boulder.prototype.id,
   ): Promise<void> {
-    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
     return this.boulderingRoundService.removeBoulder(round, groupId, boulderId);
   }
 
@@ -559,7 +574,10 @@ export class CompetitionService {
     competitionId: typeof Competition.prototype.id,
     roundId: typeof BoulderingRound.prototype.id,
   ): Promise<BoulderingRoundRankings> {
-    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
 
     if (!round.rankings) {
       throw new NotFoundException('No rankings for this round');
@@ -573,7 +591,11 @@ export class CompetitionService {
     roundId: typeof BoulderingRound.prototype.id,
     dto: CreateBoulderingGroupDto,
   ): Promise<BoulderingGroup> {
-    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
     return this.boulderingRoundService.createGroup(round, dto);
   }
 
@@ -582,7 +604,11 @@ export class CompetitionService {
     roundId: typeof BoulderingRound.prototype.id,
     groupId: typeof BoulderingGroup.prototype.id,
   ): Promise<void> {
-    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
     return this.boulderingRoundService.deleteGroup(round, groupId);
   }
 
@@ -590,7 +616,11 @@ export class CompetitionService {
     competitionId: typeof Competition.prototype.id,
     roundId: typeof BoulderingRound.prototype.id,
   ): Promise<void> {
-    const round = await this.getBoulderingRoundOrFail(competitionId, roundId);
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
     await this.boulderingRoundService.delete(round);
   }
 
@@ -642,5 +672,18 @@ export class CompetitionService {
     competitionId: typeof Competition.prototype.id,
   ): Promise<BoulderingRound[]> {
     return this.startRoundsByType(competitionId, CompetitionRoundType.FINAL);
+  }
+
+  async updateBoulderingRound(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    dto: UpdateBoulderingRoundDto,
+  ): Promise<BoulderingRound> {
+    const { competition, round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return this.boulderingRoundService.update(competition, round, dto);
   }
 }

@@ -36,6 +36,9 @@ import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.ent
 import { BoulderingGroupService } from '../../src/bouldering/group/bouldering-group.service';
 import { CreateCompetitionDTO } from '../../src/competition/dto/in/body/create-competition.dto';
 import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
+import { UpdateBoulderingRoundDto } from '../../src/competition/dto/in/body/update-bouldering-round.dto';
+import * as uuid from 'uuid';
+import { givenCompetition } from '../fixture/competition.fixture';
 
 describe('Bouldering round service (integration)', () => {
   let boulderingRoundService: BoulderingRoundService;
@@ -136,75 +139,8 @@ describe('Bouldering round service (integration)', () => {
     };
 
     const round = await boulderingRoundService.createRound(competition, dto);
-    expect(round.index).toEqual(0);
     expect(round.name).toEqual(dto.name);
     expect(round).toHaveProperty('id');
-  });
-
-  it('should create a round and put it at the last one if no index is specified', async () => {
-    const { user: organizer } = await utils.givenUser();
-
-    const competition = await utils.givenCompetition(organizer, {
-      type: CompetitionType.Bouldering,
-    });
-
-    const firstRound = await boulderingRoundService.createRound(competition, {
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
-      name: 'SuperRound1',
-      boulders: 4,
-      category: CategoryName.Minime,
-      sex: Sex.Female,
-    });
-
-    expect(firstRound.index).toEqual(0);
-
-    const secondRound = await boulderingRoundService.createRound(competition, {
-      rankingType: BoulderingRoundRankingType.CIRCUIT,
-      type: CompetitionRoundType.FINAL,
-      quota: 0,
-      name: 'SuperRound2',
-      boulders: 4,
-      category: CategoryName.Minime,
-      sex: Sex.Female,
-    });
-
-    expect(secondRound.index).toEqual(1);
-  });
-
-  it('should create a round and shift other rounds', async () => {
-    const { user: organizer } = await utils.givenUser();
-
-    const competition = await utils.givenCompetition(organizer, {
-      type: CompetitionType.Bouldering,
-    });
-
-    const firstRound = await boulderingRoundService.createRound(competition, {
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
-      name: 'SuperRound1',
-      boulders: 4,
-      category: CategoryName.Minime,
-      sex: Sex.Female,
-    });
-
-    expect(firstRound.index).toEqual(0);
-
-    const secondRound = await boulderingRoundService.createRound(competition, {
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
-      name: 'SuperRound',
-      boulders: 4,
-      index: 0,
-      category: CategoryName.Minime,
-      sex: Sex.Female,
-    });
-
-    expect(firstRound.index).toEqual(1);
-    expect(secondRound.index).toEqual(0);
   });
 
   it('adds the registered climbers if the round if the first one', async () => {
@@ -235,39 +171,6 @@ describe('Bouldering round service (integration)', () => {
 
     expect(climbers).toHaveLength(1);
     expect(climbers[0]).toBe(climber);
-  });
-
-  it('throws when adding a round with an index to far', async () => {
-    const { user: organizer } = await utils.givenUser();
-
-    const competition = await utils.givenCompetition(organizer, {
-      type: CompetitionType.Bouldering,
-    });
-
-    const firstRound = await boulderingRoundService.createRound(competition, {
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
-      name: 'SuperRound1',
-      boulders: 4,
-      category: CategoryName.Minime,
-      sex: Sex.Female,
-    });
-
-    expect(firstRound.index).toEqual(0);
-
-    return expect(
-      boulderingRoundService.createRound(competition, {
-        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-        type: CompetitionRoundType.QUALIFIER,
-        quota: 0,
-        name: 'SuperRound',
-        boulders: 4,
-        index: 2,
-        category: CategoryName.Minime,
-        sex: Sex.Female,
-      }),
-    ).rejects.toBeInstanceOf(UnprocessableEntityException);
   });
 
   it('adds a climber when is in pending state', async () => {
@@ -526,5 +429,18 @@ describe('Bouldering round service (integration)', () => {
     return expect(
       boulderingRoundService.addClimbers(round, climber),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('updates a bouldering round', async () => {
+    const competition = givenCompetition();
+    const round = await givenBoulderingRound();
+
+    const dto: UpdateBoulderingRoundDto = {
+      name: uuid.v4(),
+    };
+
+    const result = await boulderingRoundService.update(competition, round, dto);
+    expect(result).toBe(round);
+    expect(result.name).toEqual(dto.name);
   });
 });

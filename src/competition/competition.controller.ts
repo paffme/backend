@@ -107,6 +107,8 @@ import { CountDto } from '../shared/dto/count.dto';
 import { StartRoundsByTypeParamsDto } from './dto/in/params/start-rounds-by-type-params.dto';
 import { BoulderingLimitedRoundMapper } from '../shared/mappers/bouldering-limited-round.mapper';
 import { BoulderingLimitedRoundDto } from '../bouldering/dto/out/bouldering-limited-round.dto';
+import { UpdateBoulderingRoundParamsDto } from './dto/in/params/update-bouldering-round-params.dto';
+import { UpdateBoulderingRoundDto } from './dto/in/body/update-bouldering-round.dto';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -555,6 +557,29 @@ export class CompetitionController {
     );
 
     return this.boulderingRoundMapper.map(round);
+  }
+
+  @Patch('/:competitionId/bouldering-rounds/:roundId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    JuryPresidentAuthorizationGuard,
+  )
+  @ApiOkResponse({ type: BoulderingLimitedRoundDto })
+  @ApiOperation(GetOperationId(Competition.name, 'AddRound'))
+  async updateBoulderingRound(
+    @Param() params: UpdateBoulderingRoundParamsDto,
+    @Body() dto: UpdateBoulderingRoundDto,
+  ): Promise<BoulderingLimitedRoundDto> {
+    const updatedRound = await this.competitionService.updateBoulderingRound(
+      params.competitionId,
+      params.roundId,
+      dto,
+    );
+
+    return this.boulderingLimitedRoundMapper.map(updatedRound);
   }
 
   @Post(

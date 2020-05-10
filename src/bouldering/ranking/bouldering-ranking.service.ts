@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { BoulderingRound } from '../round/bouldering-round.entity';
 import { getExAequoClimbers, handleExAequosRankings } from './ranking.utils';
 import { RankingsMap } from '../types/rankings-map';
+import { CompetitionRoundTypeOrdering } from '../../competition/competition-round-type.enum';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -60,15 +61,19 @@ export class BoulderingRankingService {
       return new Map();
     }
 
-    const sortedRoundsByReverseIndex = rounds.sort((a, b) => b.index - a.index);
+    const sortedRoundsByReverseOrder = rounds.sort(
+      (a, b) =>
+        CompetitionRoundTypeOrdering[b.type] -
+        CompetitionRoundTypeOrdering[a.type],
+    );
 
-    const climbers = sortedRoundsByReverseIndex[
-      sortedRoundsByReverseIndex.length - 1
+    const climbers = sortedRoundsByReverseOrder[
+      sortedRoundsByReverseOrder.length - 1
     ].groups
       .getItems()
       .reduce((count, g) => count + g.climbers.count(), 0);
 
-    for (const round of sortedRoundsByReverseIndex) {
+    for (const round of sortedRoundsByReverseOrder) {
       if (!round.rankings) {
         continue;
       }

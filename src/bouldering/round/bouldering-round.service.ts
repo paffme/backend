@@ -1,11 +1,12 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
-import { EntityRepository } from 'mikro-orm';
+import { EntityRepository, wrap } from 'mikro-orm';
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
@@ -25,9 +26,9 @@ import { BoulderingRoundCountedRankingService } from './ranking/bouldering-round
 import { BoulderingGroupService } from '../group/bouldering-group.service';
 import { BoulderingGroup } from '../group/bouldering-group.entity';
 import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.dto';
-import { validateIndex } from '../../shared/utils/indexing.helper';
 import { CreateBoulderingGroupDto } from '../../competition/dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from '../../competition/competition-round-type.enum';
+import { UpdateBoulderingRoundDto } from '../../competition/dto/in/body/update-bouldering-round.dto';
 
 @Injectable()
 export class BoulderingRoundService {
@@ -116,13 +117,25 @@ export class BoulderingRoundService {
         (round) => round.category === dto.category && round.sex === dto.sex,
       );
 
-    const roundIndex = rounds.length === 0 ? 0 : dto.index ?? rounds.length;
+    if (rounds.length >= 3) {
+      throw new BadRequestException(
+        'You cannot create more than 3 rounds for a category',
+      );
+    }
+
+    // Verify round type uniqueness
+    const roundWithTypeExists = rounds.some((r) => r.type === dto.type);
+
+    if (roundWithTypeExists) {
+      throw new ConflictException(
+        `Round with type ${dto.type} already exists.`,
+      );
+    }
 
     const round = new BoulderingRound(
       dto.category,
       dto.sex,
       dto.name,
-      roundIndex,
       dto.maxTries,
       dto.quota,
       dto.rankingType,
@@ -136,26 +149,11 @@ export class BoulderingRoundService {
       await this.boulderService.createMany(group, dto.boulders);
     }
 
-    // Add registrations if this is the first round
-    if (round.index === 0) {
+    // Add registrations if this is the qualfiers
+    if (round.type === CompetitionRoundType.QUALIFIER) {
       const registrations = competition.registrations.getItems();
       const climbersRegistered = registrations.map((r) => r.climber);
       await this.addClimbers(round, ...climbersRegistered);
-    }
-
-    if (rounds.length > 0) {
-      validateIndex(rounds, roundIndex);
-
-      // Shift other rounds indexes if necessary
-      for (const r of rounds) {
-        if (r.index >= roundIndex) {
-          r.index++;
-          // Remove climbers in this round because when we add a round before it
-          // then it has no sense to already have climbers in this round
-          r.groups.removeAll();
-          this.boulderingRoundRepository.persistLater(r);
-        }
-      }
     }
 
     await this.boulderingRoundRepository.persistAndFlush(round);
@@ -309,5 +307,29 @@ export class BoulderingRoundService {
     }
 
     return this.boulderingRoundRepository.removeAndFlush(round);
+  }
+
+  async update(
+    competition: Competition,
+    round: BoulderingRound,
+    dto: UpdateBoulderingRoundDto,
+  ): Promise<BoulderingRound> {
+    const otherRounds = competition.boulderingRounds
+      .getItems()
+      .filter((r) => r !== round);
+
+    if (dto.type) {
+      const roundWithTypeExists = otherRounds.some((r) => r.type === dto.type);
+
+      if (roundWithTypeExists) {
+        throw new ConflictException(
+          `Round with type ${dto.type} already exists.`,
+        );
+      }
+    }
+
+    wrap(round).assign(dto);
+    await this.boulderingRoundRepository.persistAndFlush(round);
+    return round;
   }
 }

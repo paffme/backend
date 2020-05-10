@@ -28,11 +28,6 @@ export class BoulderingRoundDto {
   @ApiProperty({
     type: Number,
   })
-  readonly index!: typeof BoulderingRound.prototype.index;
-
-  @ApiProperty({
-    type: Number,
-  })
   readonly quota!: typeof BoulderingRound.prototype.quota;
 
   @ApiProperty({ enum: BoulderingRoundRankingType })

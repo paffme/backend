@@ -14,6 +14,8 @@ import { BoulderService } from '../../../src/bouldering/boulder/boulder.service'
 import { BoulderingResultService } from '../../../src/bouldering/result/bouldering-result.service';
 import { BoulderMapper } from '../../../src/shared/mappers/boulder.mapper';
 import {
+  BadRequestException,
+  ConflictException,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -33,6 +35,7 @@ import { givenCompetition } from '../../fixture/competition.fixture';
 import { CompetitionType } from '../../../src/competition/types/competition-type.enum';
 import { CreateBoulderingGroupDto } from '../../../src/competition/dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
+import { UpdateBoulderingRoundDto } from '../../../src/competition/dto/in/body/update-bouldering-round.dto';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -152,7 +155,6 @@ describe('Bouldering round service (unit)', () => {
       quota: 0,
       name: 'SuperRound',
       boulders: 4,
-      index: 0,
       sex: Sex.Female,
       category: CategoryName.Minime,
     };
@@ -171,7 +173,6 @@ describe('Bouldering round service (unit)', () => {
       quota: 0,
       name: 'SuperRound',
       boulders: 4,
-      index: 0,
       sex: Sex.Female,
       category: CategoryName.Minime,
     };
@@ -179,6 +180,81 @@ describe('Bouldering round service (unit)', () => {
     return expect(
       boulderingRoundService.createRound(competition, dto),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('should not create more than 3 rounds for the same category', () => {
+    const competition = {
+      boulderingRounds: {
+        getItems(): BoulderingRound[] {
+          return [
+            givenBoulderingRound({
+              category: CategoryName.Benjamin,
+              sex: Sex.Female,
+              type: CompetitionRoundType.QUALIFIER,
+            }),
+            givenBoulderingRound({
+              category: CategoryName.Benjamin,
+              sex: Sex.Female,
+              type: CompetitionRoundType.SEMI_FINAL,
+            }),
+            givenBoulderingRound({
+              category: CategoryName.Benjamin,
+              sex: Sex.Female,
+              type: CompetitionRoundType.FINAL,
+            }),
+            givenBoulderingRound({
+              category: CategoryName.Benjamin,
+              sex: Sex.Male,
+              type: CompetitionRoundType.QUALIFIER,
+            }),
+          ];
+        },
+      },
+    } as Competition;
+
+    const dto: CreateBoulderingRoundDto = {
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      type: CompetitionRoundType.QUALIFIER,
+      quota: 0,
+      name: 'SuperRound',
+      boulders: 4,
+      sex: Sex.Female,
+      category: CategoryName.Benjamin,
+    };
+
+    return expect(
+      boulderingRoundService.createRound(competition, dto),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('should not create two times the same round', () => {
+    const competition = {
+      boulderingRounds: {
+        getItems(): BoulderingRound[] {
+          return [
+            givenBoulderingRound({
+              category: CategoryName.Benjamin,
+              sex: Sex.Female,
+              type: CompetitionRoundType.QUALIFIER,
+            }),
+          ];
+        },
+      },
+    } as Competition;
+
+    const dto: CreateBoulderingRoundDto = {
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      type: CompetitionRoundType.QUALIFIER,
+      quota: 0,
+      name: 'SuperRound',
+      boulders: 4,
+      sex: Sex.Female,
+      category: CategoryName.Benjamin,
+    };
+
+    return expect(
+      boulderingRoundService.createRound(competition, dto),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it('updates rankings for an unlimited contest', async () => {
@@ -426,7 +502,6 @@ describe('Bouldering round service (unit)', () => {
       quota: 0,
       name: 'SuperRound',
       boulders: 4,
-      index: 0,
       sex: Sex.Female,
       category: CategoryName.Minime,
       maxTries: undefined,
@@ -508,5 +583,35 @@ describe('Bouldering round service (unit)', () => {
     expect(boulderingRoundRepositoryMock.removeAndFlush).toHaveBeenCalledWith(
       round,
     );
+  });
+
+  it('throws when updating a round if another round with same type for the same category exists', () => {
+    const competition = {
+      boulderingRounds: {
+        getItems(): Partial<BoulderingRound>[] {
+          return [
+            {
+              type: CompetitionRoundType.QUALIFIER,
+              category: CategoryName.Benjamin,
+              sex: Sex.Female,
+            },
+          ];
+        },
+      },
+    } as Competition;
+
+    const round = {
+      type: CompetitionRoundType.SEMI_FINAL,
+      category: CategoryName.Benjamin,
+      sex: Sex.Female,
+    } as BoulderingRound;
+
+    const dto: UpdateBoulderingRoundDto = {
+      type: CompetitionRoundType.QUALIFIER,
+    };
+
+    return expect(
+      boulderingRoundService.update(competition, round, dto),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 });

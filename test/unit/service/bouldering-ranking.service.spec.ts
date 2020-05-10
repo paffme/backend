@@ -43,7 +43,6 @@ describe('Bouldering round service (unit)', () => {
         CategoryName.Minime,
         Sex.Female,
         uuid.v4(),
-        i,
         5,
         0,
         d[1].type,
@@ -811,7 +810,6 @@ describe('Bouldering round service (unit)', () => {
 
     rounds.push(({
       type: CompetitionRoundType.FINAL,
-      index: 1,
       climbers: {
         count: (): number => 0,
       },
