@@ -10,7 +10,6 @@ import {
   BoulderingRound,
   BoulderingRoundRankingType,
   BoulderingRoundState,
-  BoulderingRoundType,
 } from '../../src/bouldering/round/bouldering-round.entity';
 import { CreateBoulderingRoundDto } from '../../src/competition/dto/in/body/create-bouldering-round.dto';
 import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
@@ -28,6 +27,7 @@ import {
   CountedRankingDto,
 } from '../../src/bouldering/dto/out/bouldering-round-rankings.dto';
 import { CreateBoulderingGroupDto } from '../../src/competition/dto/in/body/create-bouldering-group.dto';
+import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -95,7 +95,7 @@ describe('Bouldering (e2e)', () => {
 
     const round = await utils.addBoulderingRound(competition, {
       rankingType,
-      type: BoulderingRoundType.QUALIFIER,
+      type: CompetitionRoundType.QUALIFIER,
       boulders: 1,
       sex: Sex.Female,
       category: CategoryName.Minime,
@@ -130,7 +130,7 @@ describe('Bouldering (e2e)', () => {
         name: 'Super Round',
         quota: 0,
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-        type: BoulderingRoundType.QUALIFIER,
+        type: CompetitionRoundType.QUALIFIER,
         sex: Sex.Female,
         category: CategoryName.Minime,
         maxTries: 5,

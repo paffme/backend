@@ -10,7 +10,6 @@ import {
   BoulderingRound,
   BoulderingRoundRankingType,
   BoulderingRoundRelation,
-  BoulderingRoundType,
 } from './bouldering-round.entity';
 import { BoulderingResult } from '../result/bouldering-result.entity';
 import { Competition } from '../../competition/competition.entity';
@@ -28,6 +27,7 @@ import { BoulderingGroup } from '../group/bouldering-group.entity';
 import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.dto';
 import { validateIndex } from '../../shared/utils/indexing.helper';
 import { CreateBoulderingGroupDto } from '../../competition/dto/in/body/create-bouldering-group.dto';
+import { CompetitionRoundType } from '../../competition/competition-round-type.enum';
 
 @Injectable()
 export class BoulderingRoundService {
@@ -76,8 +76,8 @@ export class BoulderingRoundService {
     dto: CreateBoulderingRoundDto,
   ): Promise<BoulderingRound> {
     if (
-      (dto.type === BoulderingRoundType.SEMI_FINAL ||
-        dto.type === BoulderingRoundType.FINAL) &&
+      (dto.type === CompetitionRoundType.SEMI_FINAL ||
+        dto.type === CompetitionRoundType.FINAL) &&
       dto.rankingType !== BoulderingRoundRankingType.CIRCUIT
     ) {
       throw new UnprocessableEntityException(
@@ -97,7 +97,7 @@ export class BoulderingRoundService {
     const groups = dto.groups ?? 1;
 
     if (groups > 1) {
-      if (dto.type !== BoulderingRoundType.QUALIFIER) {
+      if (dto.type !== CompetitionRoundType.QUALIFIER) {
         throw new UnprocessableEntityException(
           'No more than one group for a non qualifier round',
         );

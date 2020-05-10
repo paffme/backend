@@ -1,7 +1,6 @@
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
-  BoulderingRoundType,
 } from '../../src/bouldering/round/bouldering-round.entity';
 import * as uuid from 'uuid';
 import { Competition } from '../../src/competition/competition.entity';
@@ -13,6 +12,7 @@ import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.ent
 import { User } from '../../src/user/user.entity';
 import { Collection } from 'mikro-orm';
 import TestUtils from '../utils';
+import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
 
 const utils = new TestUtils();
 
@@ -31,7 +31,7 @@ export function givenBoulderingRound(
     data?.maxTries ?? 5,
     data?.quota ?? 0,
     data?.rankingType ?? BoulderingRoundRankingType.CIRCUIT,
-    data?.type ?? BoulderingRoundType.QUALIFIER,
+    data?.type ?? CompetitionRoundType.QUALIFIER,
     data?.competition ?? ({} as Competition),
   );
 

@@ -14,6 +14,8 @@ import LinkHeader from 'http-link-header';
 import { Sex } from '../../src/shared/types/sex.enum';
 import { CategoryName } from '../../src/shared/types/category-name.enum';
 import * as uuid from 'uuid';
+import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
+import { CompetitionState } from '../../src/competition/competition.entity';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -1162,6 +1164,156 @@ describe('Competition (e2e)', () => {
           .set('Authorization', `Bearer ${secondAuth.token}`)
           .expect(403);
       });
+    });
+  });
+
+  describe('PATCH /competitions/{competitionId}/start-qualifiers', () => {
+    it('starts qualifiers rounds', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const auth = await utils.login(credentials);
+      await utils.addJuryPresidentInCompetition(user, competition);
+
+      const qRound = await utils.addBoulderingRound(competition, {
+        type: CompetitionRoundType.QUALIFIER,
+      });
+
+      await utils.addBoulderingRound(competition, {
+        type: CompetitionRoundType.SEMI_FINAL,
+      });
+
+      await utils.addBoulderingRound(competition, {
+        type: CompetitionRoundType.FINAL,
+      });
+
+      const { body } = await api
+        .patch(`/competitions/${competition.id}/start-qualifiers`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(200);
+
+      expect(body).toHaveLength(1);
+      expect(body[0].id).toEqual(qRound.id);
+      expect(body[0].state).toEqual(CompetitionState.ONGOING);
+    });
+
+    it('returns 401 when trying to start qualifiers without auth', async () => {
+      const { user } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+
+      await api
+        .patch(`/competitions/${competition.id}/start-qualifiers`)
+        .expect(401);
+    });
+
+    it('returns 403 when starting qualifiers without being jury president', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const auth = await utils.login(credentials);
+
+      await api
+        .patch(`/competitions/${competition.id}/start-qualifiers`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
+    });
+  });
+
+  describe('PATCH /competitions/{competitionId}/start-semi-finals', () => {
+    it('starts semi finals rounds', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const auth = await utils.login(credentials);
+      await utils.addJuryPresidentInCompetition(user, competition);
+
+      await utils.addBoulderingRound(competition, {
+        type: CompetitionRoundType.QUALIFIER,
+      });
+
+      const sRound = await utils.addBoulderingRound(competition, {
+        type: CompetitionRoundType.SEMI_FINAL,
+      });
+
+      await utils.addBoulderingRound(competition, {
+        type: CompetitionRoundType.FINAL,
+      });
+
+      const { body } = await api
+        .patch(`/competitions/${competition.id}/start-semi-finals`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(200);
+
+      expect(body).toHaveLength(1);
+      expect(body[0].id).toEqual(sRound.id);
+      expect(body[0].state).toEqual(CompetitionState.ONGOING);
+    });
+
+    it('returns 401 when trying to start semi-finals without auth', async () => {
+      const { user } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+
+      await api
+        .patch(`/competitions/${competition.id}/start-semi-finals`)
+        .expect(401);
+    });
+
+    it('returns 403 when starting semi-finals without being jury president', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const auth = await utils.login(credentials);
+
+      await api
+        .patch(`/competitions/${competition.id}/start-semi-finals`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
+    });
+  });
+
+  describe('PATCH /competitions/{competitionId}/start-finals', () => {
+    it('starts semi finals rounds', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const auth = await utils.login(credentials);
+      await utils.addJuryPresidentInCompetition(user, competition);
+
+      await utils.addBoulderingRound(competition, {
+        type: CompetitionRoundType.QUALIFIER,
+      });
+
+      await utils.addBoulderingRound(competition, {
+        type: CompetitionRoundType.SEMI_FINAL,
+      });
+
+      const fRound = await utils.addBoulderingRound(competition, {
+        type: CompetitionRoundType.FINAL,
+      });
+
+      const { body } = await api
+        .patch(`/competitions/${competition.id}/start-finals`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(200);
+
+      expect(body).toHaveLength(1);
+      expect(body[0].id).toEqual(fRound.id);
+      expect(body[0].state).toEqual(CompetitionState.ONGOING);
+    });
+
+    it('returns 401 when trying to start finals without auth', async () => {
+      const { user } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+
+      await api
+        .patch(`/competitions/${competition.id}/start-finals`)
+        .expect(401);
+    });
+
+    it('returns 403 when starting finals without being jury president', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const auth = await utils.login(credentials);
+
+      await api
+        .patch(`/competitions/${competition.id}/start-finals`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
     });
   });
 });

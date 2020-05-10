@@ -6,7 +6,6 @@ import {
   BoulderingRoundCountedRanking,
   BoulderingRoundLimitedContestRankings,
   BoulderingRoundRankingType,
-  BoulderingRoundType,
 } from '../bouldering-round.entity';
 
 import { InternalServerErrorException } from '@nestjs/common';
@@ -19,6 +18,7 @@ import {
 } from '../../ranking/ranking.utils';
 import { RankingsMap } from '../../types/rankings-map';
 import { BoulderingGroup } from '../../group/bouldering-group.entity';
+import { CompetitionRoundType } from '../../../competition/competition-round-type.enum';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -386,7 +386,7 @@ export class BoulderingRoundCountedRankingService
       const groupRankings = this.computeRankings(climberResults);
 
       // Handle equality in the podium for the final
-      if (round.type === BoulderingRoundType.FINAL) {
+      if (round.type === CompetitionRoundType.FINAL) {
         this.handlePodiumExAequos(groupRankings, climberResults);
       }
 
@@ -403,7 +403,7 @@ export class BoulderingRoundCountedRankingService
           .getItems()
           .find((g) => g.id === groupId)!;
 
-        if (round.type !== BoulderingRoundType.QUALIFIER) {
+        if (round.type !== CompetitionRoundType.QUALIFIER) {
           const lastRanking = Array.from(groupRankings).reduce(
             (lastRanking, [, ranking]) =>
               ranking >= lastRanking ? ranking + 1 : lastRanking,

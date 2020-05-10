@@ -30,6 +30,7 @@ import { BoulderingRoundService } from '../bouldering/round/bouldering-round.ser
 import {
   BoulderingRound,
   BoulderingRoundRankings,
+  BoulderingRoundState,
 } from '../bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
 import { BoulderingResult } from '../bouldering/result/bouldering-result.entity';
@@ -43,6 +44,7 @@ import { SearchQuery } from '../shared/decorators/search.decorator';
 import { BoulderingGroup } from '../bouldering/group/bouldering-group.entity';
 import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
 import { CreateBoulderingGroupDto } from './dto/in/body/create-bouldering-group.dto';
+import { CompetitionRoundType } from './competition-round-type.enum';
 
 @Injectable()
 export class CompetitionService {
@@ -594,5 +596,51 @@ export class CompetitionService {
 
   count(search: SearchQuery<Competition>): Promise<number> {
     return this.competitionRepository.count(search.filter);
+  }
+
+  private async startRoundsByType(
+    competitionId: typeof Competition.prototype.id,
+    type: CompetitionRoundType,
+  ): Promise<BoulderingRound[]> {
+    const competition = await this.getOrFail(competitionId, [
+      'boulderingRounds',
+    ]);
+
+    const startedRounds = [];
+
+    for (const r of competition.boulderingRounds.getItems()) {
+      if (r.type === type && r.state === BoulderingRoundState.PENDING) {
+        r.state = BoulderingRoundState.ONGOING;
+        this.competitionRepository.persistLater(r);
+        startedRounds.push(r);
+      }
+    }
+
+    await this.competitionRepository.flush();
+    return startedRounds;
+  }
+
+  startQualifiers(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<BoulderingRound[]> {
+    return this.startRoundsByType(
+      competitionId,
+      CompetitionRoundType.QUALIFIER,
+    );
+  }
+
+  startSemiFinals(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<BoulderingRound[]> {
+    return this.startRoundsByType(
+      competitionId,
+      CompetitionRoundType.SEMI_FINAL,
+    );
+  }
+
+  startFinals(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<BoulderingRound[]> {
+    return this.startRoundsByType(competitionId, CompetitionRoundType.FINAL);
   }
 }

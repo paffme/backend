@@ -13,7 +13,6 @@ import { CreateBoulderingRoundDto } from '../src/competition/dto/in/body/create-
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
-  BoulderingRoundType,
 } from '../src/bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from '../src/competition/dto/in/body/create-bouldering-result.dto';
 import { Boulder } from '../src/bouldering/boulder/boulder.entity';
@@ -21,6 +20,7 @@ import { givenCreateCompetitionDto } from './fixture/competition.fixture';
 import { Sex } from '../src/shared/types/sex.enum';
 import { CategoryName } from '../src/shared/types/category-name.enum';
 import { BoulderingGroup } from '../src/bouldering/group/bouldering-group.entity';
+import { CompetitionRoundType } from '../src/competition/competition-round-type.enum';
 
 // FIXME, cut this utils in multiple parts to remove ! assertions
 
@@ -207,7 +207,7 @@ export default class TestUtils {
       quota: partialDto?.quota ?? 5,
       rankingType:
         partialDto?.rankingType ?? BoulderingRoundRankingType.CIRCUIT,
-      type: partialDto?.type ?? BoulderingRoundType.QUALIFIER,
+      type: partialDto?.type ?? CompetitionRoundType.QUALIFIER,
       category: partialDto?.category ?? CategoryName.Minime,
       sex: partialDto?.sex ?? Sex.Female,
       maxTries: partialDto?.maxTries,

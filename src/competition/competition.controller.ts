@@ -104,6 +104,9 @@ import { BoulderingGroupMapper } from '../shared/mappers/bouldering-group.mapper
 import { DeleteBoulderingGroupParamsDto } from './dto/in/params/delete-bouldering-group-params.dto';
 import { DeleteBoulderingRoundParamsDto } from './dto/in/params/delete-bouldering-round-params.dto';
 import { CountDto } from '../shared/dto/count.dto';
+import { StartRoundsByTypeParamsDto } from './dto/in/params/start-rounds-by-type-params.dto';
+import { BoulderingLimitedRoundMapper } from '../shared/mappers/bouldering-limited-round.mapper';
+import { BoulderingLimitedRoundDto } from '../bouldering/dto/out/bouldering-limited-round.dto';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -113,6 +116,7 @@ export class CompetitionController {
     private readonly competitionRegistrationMapper: CompetitionRegistrationMapper,
     private readonly userMapper: UserMapper,
     private readonly boulderingRoundMapper: BoulderingRoundMapper,
+    private readonly boulderingLimitedRoundMapper: BoulderingLimitedRoundMapper,
     private readonly boulderingResultMapper: BoulderingResultMapper,
     private readonly rankingMapper: RankingsMapper,
     private readonly boulderingRoundRankingMapper: BoulderingRoundRankingsMapper,
@@ -727,5 +731,65 @@ export class CompetitionController {
       params.roundId,
       params.groupId,
     );
+  }
+
+  @Patch('/:competitionId/start-qualifiers')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    JuryPresidentAuthorizationGuard,
+  )
+  @ApiOkResponse({ type: BoulderingLimitedRoundDto, isArray: true })
+  @ApiOperation(GetOperationId(Competition.name, 'StartQualifiers'))
+  async startQualifiers(
+    @Param() params: StartRoundsByTypeParamsDto,
+  ): Promise<BoulderingLimitedRoundDto[]> {
+    const rounds = await this.competitionService.startQualifiers(
+      params.competitionId,
+    );
+
+    return this.boulderingLimitedRoundMapper.mapArray(rounds);
+  }
+
+  @Patch('/:competitionId/start-semi-finals')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    JuryPresidentAuthorizationGuard,
+  )
+  @ApiOkResponse({ type: BoulderingLimitedRoundDto, isArray: true })
+  @ApiOperation(GetOperationId(Competition.name, 'StartSemiFinals'))
+  async startSemiFinals(
+    @Param() params: StartRoundsByTypeParamsDto,
+  ): Promise<BoulderingLimitedRoundDto[]> {
+    const rounds = await this.competitionService.startSemiFinals(
+      params.competitionId,
+    );
+
+    return this.boulderingLimitedRoundMapper.mapArray(rounds);
+  }
+
+  @Patch('/:competitionId/start-finals')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    JuryPresidentAuthorizationGuard,
+  )
+  @ApiOkResponse({ type: BoulderingLimitedRoundDto, isArray: true })
+  @ApiOperation(GetOperationId(Competition.name, 'StartFinals'))
+  async startFinals(
+    @Param() params: StartRoundsByTypeParamsDto,
+  ): Promise<BoulderingLimitedRoundDto[]> {
+    const rounds = await this.competitionService.startFinals(
+      params.competitionId,
+    );
+
+    return this.boulderingLimitedRoundMapper.mapArray(rounds);
   }
 }

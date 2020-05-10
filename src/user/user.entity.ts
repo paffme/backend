@@ -5,6 +5,7 @@ import {
   ManyToMany,
   OneToMany,
   Property,
+  Unique,
 } from 'mikro-orm';
 
 import { SystemRole } from './user-role.enum';
@@ -19,6 +20,7 @@ import { Category } from '../shared/types/category.interface';
 @Entity()
 export class User extends BaseEntity {
   @Property({ hidden: true })
+  @Unique()
   email: string;
 
   @Property()

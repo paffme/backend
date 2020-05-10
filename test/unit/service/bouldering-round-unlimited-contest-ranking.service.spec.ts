@@ -1,14 +1,12 @@
 import { Test } from '@nestjs/testing';
 import { BoulderingRoundUnlimitedContestRankingService } from '../../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
-import {
-  BoulderingRoundRankingType,
-  BoulderingRoundType,
-} from '../../../src/bouldering/round/bouldering-round.entity';
+import { BoulderingRoundRankingType } from '../../../src/bouldering/round/bouldering-round.entity';
 import { InternalServerErrorException } from '@nestjs/common';
 import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
 import { givenUser } from '../../fixture/user.fixture';
 import { givenBoulder } from '../../fixture/boulder.fixture';
 import { givenResult } from '../../fixture/bouldering-result.fixture';
+import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -62,7 +60,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
 
     const round = givenBoulderingRound(
       {
-        type: BoulderingRoundType.QUALIFIER,
+        type: CompetitionRoundType.QUALIFIER,
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       },
       boulders,
@@ -128,7 +126,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
 
     const round = givenBoulderingRound(
       {
-        type: BoulderingRoundType.QUALIFIER,
+        type: CompetitionRoundType.QUALIFIER,
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       },
       boulders,
@@ -180,7 +178,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
 
     const round = givenBoulderingRound(
       {
-        type: BoulderingRoundType.QUALIFIER,
+        type: CompetitionRoundType.QUALIFIER,
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       },
       boulders,
@@ -231,7 +229,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
 
     const round = givenBoulderingRound(
       {
-        type: BoulderingRoundType.QUALIFIER,
+        type: CompetitionRoundType.QUALIFIER,
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       },
       boulders,
@@ -294,7 +292,7 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     const round = givenBoulderingRound(
       {
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-        type: BoulderingRoundType.QUALIFIER,
+        type: CompetitionRoundType.QUALIFIER,
       },
       boulders,
       results,

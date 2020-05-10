@@ -133,6 +133,23 @@ describe('User (e2e)', () => {
       checkUser(user, body);
     });
 
+    it('does not creates a user if the mail is already used', async () => {
+      const user: RegisterDto = {
+        firstName: uuid.v4().substr(0, 10),
+        lastName: uuid.v4().substr(0, 10),
+        email: `${uuid.v4()}@${uuid.v4()}.fr`,
+        password: uuid.v4().substr(0, 10),
+        sex: Sex.Female,
+        birthYear: 2000,
+        club: uuid.v4().substr(0, 10),
+      };
+
+      const { body } = await api.post('/users').send(user).expect(201);
+      checkUser(user, body);
+
+      await api.post('/users').send(user).expect(409);
+    });
+
     it('validates user creation', async () => {
       const user = {
         email: uuid.v4(),

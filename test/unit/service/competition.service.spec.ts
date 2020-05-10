@@ -30,13 +30,17 @@ import { InitOptions } from 'mikro-orm/dist/entity/Collection';
 import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
 import { CreateBoulderingGroupDto } from '../../../src/competition/dto/in/body/create-bouldering-group.dto';
 import { SearchQuery } from '../../../src/shared/decorators/search.decorator';
+import { givenCompetition } from '../../fixture/competition.fixture';
+import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
+  persistLater: jest.fn(),
   findAndCount: jest.fn(),
-  find: jest.fn(),
   findOne: jest.fn(),
+  find: jest.fn(),
   count: jest.fn(),
+  flush: jest.fn(),
 };
 
 const competitionRegistrationRepositoryMock: RepositoryMock = {
@@ -826,5 +830,122 @@ describe('Competition service (unit)', () => {
     expect(count).toEqual(10);
     expect(competitionRepositoryMock.count).toHaveBeenCalledTimes(1);
     expect(competitionRepositoryMock.count).toHaveBeenCalledWith(search.filter);
+  });
+
+  it('starts qualifiers', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.SEMI_FINAL,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.FINAL,
+      }),
+    ];
+
+    competition.boulderingRounds = {
+      getItems(): typeof competitionRounds {
+        return competitionRounds;
+      },
+    } as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    competitionRepositoryMock.persistLater.mockImplementation(() => undefined);
+    competitionRepositoryMock.flush.mockImplementation(async () => undefined);
+
+    const rounds = await competitionService.startQualifiers(1);
+
+    expect(rounds).toHaveLength(1);
+    expect(rounds[0]).toBe(competitionRounds[0]);
+    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledTimes(1);
+    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledWith(
+      competitionRounds[0],
+    );
+    expect(competitionRepositoryMock.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts semi finals', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.SEMI_FINAL,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.FINAL,
+      }),
+    ];
+
+    competition.boulderingRounds = {
+      getItems(): typeof competitionRounds {
+        return competitionRounds;
+      },
+    } as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    competitionRepositoryMock.persistLater.mockImplementation(() => undefined);
+    competitionRepositoryMock.flush.mockImplementation(async () => undefined);
+
+    const rounds = await competitionService.startSemiFinals(1);
+
+    expect(rounds).toHaveLength(1);
+    expect(rounds[0]).toBe(competitionRounds[1]);
+    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledTimes(1);
+    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledWith(
+      competitionRounds[1],
+    );
+    expect(competitionRepositoryMock.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts finals', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.SEMI_FINAL,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.FINAL,
+      }),
+    ];
+
+    competition.boulderingRounds = {
+      getItems(): typeof competitionRounds {
+        return competitionRounds;
+      },
+    } as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    competitionRepositoryMock.persistLater.mockImplementation(() => undefined);
+    competitionRepositoryMock.flush.mockImplementation(async () => undefined);
+
+    const rounds = await competitionService.startFinals(1);
+
+    expect(rounds).toHaveLength(1);
+    expect(rounds[0]).toBe(competitionRounds[2]);
+    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledTimes(1);
+    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledWith(
+      competitionRounds[2],
+    );
+    expect(competitionRepositoryMock.flush).toHaveBeenCalledTimes(1);
   });
 });

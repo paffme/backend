@@ -14,17 +14,12 @@ import { BaseEntity } from '../../shared/base.entity';
 import { CategoryName } from '../../shared/types/category-name.enum';
 import { Sex } from '../../shared/types/sex.enum';
 import { BoulderingGroup } from '../group/bouldering-group.entity';
+import { CompetitionRoundType } from '../../competition/competition-round-type.enum';
 
 export enum BoulderingRoundRankingType {
   CIRCUIT = 'CIRCUIT',
   UNLIMITED_CONTEST = 'UNLIMITED_CONTEST',
   LIMITED_CONTEST = 'LIMITED_CONTEST',
-}
-
-export enum BoulderingRoundType {
-  QUALIFIER = 'QUALIFIER',
-  SEMI_FINAL = 'SEMI_FINAL',
-  FINAL = 'FINAL',
 }
 
 export interface BaseGroup<RankingType> {
@@ -124,8 +119,8 @@ export class BoulderingRound extends BaseEntity
   @Enum(() => BoulderingRoundRankingType)
   rankingType: BoulderingRoundRankingType;
 
-  @Enum(() => BoulderingRoundType)
-  type: BoulderingRoundType;
+  @Enum(() => CompetitionRoundType)
+  type: CompetitionRoundType;
 
   @OneToMany(() => BoulderingGroup, (group) => group.round, {
     orphanRemoval: true,
@@ -169,7 +164,7 @@ export class BoulderingRound extends BaseEntity
     maxTries: number | undefined,
     quota: number,
     rankingType: BoulderingRoundRankingType,
-    type: BoulderingRoundType,
+    type: CompetitionRoundType,
     competition: Competition,
   ) {
     super();

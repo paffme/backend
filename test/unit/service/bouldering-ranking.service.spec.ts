@@ -4,7 +4,6 @@ import {
   BoulderingRound,
   BoulderingRoundRankings,
   BoulderingRoundRankingType,
-  BoulderingRoundType,
 } from '../../../src/bouldering/round/bouldering-round.entity';
 import TestUtils from '../../utils';
 import { CategoryName } from '../../../src/shared/types/category-name.enum';
@@ -17,6 +16,7 @@ import { BoulderingResult } from '../../../src/bouldering/result/bouldering-resu
 import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
 import { User } from '../../../src/user/user.entity';
 import { givenClimberRankingInfos } from '../../fixture/climber-ranking-infos.fixture';
+import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
 
 describe('Bouldering round service (unit)', () => {
   let utils: TestUtils;
@@ -32,7 +32,7 @@ describe('Bouldering round service (unit)', () => {
   });
 
   function givenBoulderingRounds(
-    ...data: [BoulderingRoundType, BoulderingRoundRankings][]
+    ...data: [CompetitionRoundType, BoulderingRoundRankings][]
   ): BoulderingRound[] {
     const rounds = [];
 
@@ -91,7 +91,7 @@ describe('Bouldering round service (unit)', () => {
   it('returns a ranking with multiple rounds without ex-aequos', () => {
     const rounds = givenBoulderingRounds(
       [
-        BoulderingRoundType.QUALIFIER,
+        CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
           groups: [
@@ -133,7 +133,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.SEMI_FINAL,
+        CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -170,7 +170,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.FINAL,
+        CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -213,7 +213,7 @@ describe('Bouldering round service (unit)', () => {
   it('returns a ranking with multiple rounds with ex-aequos (1)', () => {
     const rounds = givenBoulderingRounds(
       [
-        BoulderingRoundType.QUALIFIER,
+        CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
           groups: [
@@ -255,7 +255,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.SEMI_FINAL,
+        CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -292,7 +292,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.FINAL,
+        CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -335,7 +335,7 @@ describe('Bouldering round service (unit)', () => {
   it('returns a ranking with multiple rounds with ex-aequos (2)', () => {
     const rounds = givenBoulderingRounds(
       [
-        BoulderingRoundType.QUALIFIER,
+        CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
           groups: [
@@ -377,7 +377,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.SEMI_FINAL,
+        CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -414,7 +414,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.FINAL,
+        CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -457,7 +457,7 @@ describe('Bouldering round service (unit)', () => {
   it('returns a ranking with multiple rounds with ex-aequos at the end', () => {
     const rounds = givenBoulderingRounds(
       [
-        BoulderingRoundType.QUALIFIER,
+        CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
           groups: [
@@ -499,7 +499,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.FINAL,
+        CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -550,7 +550,7 @@ describe('Bouldering round service (unit)', () => {
   it('returns a ranking with multiple rounds with multiple different ex-aequos', () => {
     const rounds = givenBoulderingRounds(
       [
-        BoulderingRoundType.QUALIFIER,
+        CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
           groups: [
@@ -599,7 +599,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.FINAL,
+        CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -651,7 +651,7 @@ describe('Bouldering round service (unit)', () => {
   it('handles ex-aequos after a semi-final by using qualifier results', async () => {
     const rounds = givenBoulderingRounds(
       [
-        BoulderingRoundType.QUALIFIER,
+        CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
           groups: [
@@ -679,7 +679,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.SEMI_FINAL,
+        CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -719,7 +719,7 @@ describe('Bouldering round service (unit)', () => {
 
   it('handles more than 2 ex-aequos', async () => {
     const rounds = givenBoulderingRounds([
-      BoulderingRoundType.QUALIFIER,
+      CompetitionRoundType.QUALIFIER,
       {
         type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
         groups: [
@@ -788,7 +788,7 @@ describe('Bouldering round service (unit)', () => {
 
   it('ignores a round if it has no rankings', () => {
     const rounds = givenBoulderingRounds([
-      BoulderingRoundType.QUALIFIER,
+      CompetitionRoundType.QUALIFIER,
       {
         type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
         groups: [
@@ -810,7 +810,7 @@ describe('Bouldering round service (unit)', () => {
     ]);
 
     rounds.push(({
-      type: BoulderingRoundType.FINAL,
+      type: CompetitionRoundType.FINAL,
       index: 1,
       climbers: {
         count: (): number => 0,
@@ -827,7 +827,7 @@ describe('Bouldering round service (unit)', () => {
   it('should get results when the rankings does not change between rounds', async () => {
     const rounds = givenBoulderingRounds(
       [
-        BoulderingRoundType.QUALIFIER,
+        CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
           groups: [
@@ -855,7 +855,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.FINAL,
+        CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -895,7 +895,7 @@ describe('Bouldering round service (unit)', () => {
 
   it('handles a competition with multiple qualifiers groups and only one round', () => {
     const rounds = givenBoulderingRounds([
-      BoulderingRoundType.QUALIFIER,
+      CompetitionRoundType.QUALIFIER,
       {
         type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
         groups: [
@@ -956,7 +956,7 @@ describe('Bouldering round service (unit)', () => {
   it('handles a competition with multiple qualifiers groups for the qualifications and one semi-final round', () => {
     const rounds = givenBoulderingRounds(
       [
-        BoulderingRoundType.QUALIFIER,
+        CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
           groups: [
@@ -1011,7 +1011,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.SEMI_FINAL,
+        CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -1055,7 +1055,7 @@ describe('Bouldering round service (unit)', () => {
   it('handles a competition with multiple qualifiers groups for the qualifications, one semi-final round and one final round', () => {
     const rounds = givenBoulderingRounds(
       [
-        BoulderingRoundType.QUALIFIER,
+        CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
           groups: [
@@ -1110,7 +1110,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.SEMI_FINAL,
+        CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [
@@ -1139,7 +1139,7 @@ describe('Bouldering round service (unit)', () => {
         },
       ],
       [
-        BoulderingRoundType.FINAL,
+        CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
           groups: [

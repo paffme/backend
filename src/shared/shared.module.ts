@@ -17,6 +17,7 @@ import { BoulderingGroupMapper } from './mappers/bouldering-group.mapper';
 import { PaginationService } from './pagination/pagination.service';
 import { LimitedUserMapper } from './mappers/limited-user.mapper';
 import { BoulderingRoundRankingsMapper } from './mappers/bouldering-round-rankings.mapper';
+import { BoulderingLimitedRoundMapper } from './mappers/bouldering-limited-round.mapper';
 
 @Global()
 @Module({
@@ -34,6 +35,7 @@ import { BoulderingRoundRankingsMapper } from './mappers/bouldering-round-rankin
     RankingsMapper,
     BoulderingGroupMapper,
     BoulderingRoundRankingsMapper,
+    BoulderingLimitedRoundMapper,
     UserAuthorizationService,
     PaginationService,
   ],
@@ -50,6 +52,7 @@ import { BoulderingRoundRankingsMapper } from './mappers/bouldering-round-rankin
     RankingsMapper,
     BoulderingGroupMapper,
     BoulderingRoundRankingsMapper,
+    BoulderingLimitedRoundMapper,
     UserAuthorizationService,
     PaginationService,
   ],

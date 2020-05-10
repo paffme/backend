@@ -4,7 +4,6 @@ import {
   BoulderingRound,
   BoulderingRoundRankingType,
   BoulderingRoundState,
-  BoulderingRoundType,
   BoulderingRoundUnlimitedContestRankings,
 } from '../../src/bouldering/round/bouldering-round.entity';
 import { BoulderingRoundService } from '../../src/bouldering/round/bouldering-round.service';
@@ -36,6 +35,7 @@ import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/cre
 import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.entity';
 import { BoulderingGroupService } from '../../src/bouldering/group/bouldering-group.service';
 import { CreateCompetitionDTO } from '../../src/competition/dto/in/body/create-competition.dto';
+import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
 
 describe('Bouldering round service (integration)', () => {
   let boulderingRoundService: BoulderingRoundService;
@@ -98,7 +98,7 @@ describe('Bouldering round service (integration)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType:
         partialDto?.rankingType ?? BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: partialDto?.type ?? BoulderingRoundType.QUALIFIER,
+      type: partialDto?.type ?? CompetitionRoundType.QUALIFIER,
       quota: partialDto?.quota ?? 0,
       name: partialDto?.name ?? 'SuperRound',
       boulders: partialDto?.boulders ?? 4,
@@ -127,7 +127,7 @@ describe('Bouldering round service (integration)', () => {
 
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.QUALIFIER,
+      type: CompetitionRoundType.QUALIFIER,
       quota: 0,
       name: 'SuperRound',
       boulders: 4,
@@ -150,7 +150,7 @@ describe('Bouldering round service (integration)', () => {
 
     const firstRound = await boulderingRoundService.createRound(competition, {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.QUALIFIER,
+      type: CompetitionRoundType.QUALIFIER,
       quota: 0,
       name: 'SuperRound1',
       boulders: 4,
@@ -162,7 +162,7 @@ describe('Bouldering round service (integration)', () => {
 
     const secondRound = await boulderingRoundService.createRound(competition, {
       rankingType: BoulderingRoundRankingType.CIRCUIT,
-      type: BoulderingRoundType.FINAL,
+      type: CompetitionRoundType.FINAL,
       quota: 0,
       name: 'SuperRound2',
       boulders: 4,
@@ -182,7 +182,7 @@ describe('Bouldering round service (integration)', () => {
 
     const firstRound = await boulderingRoundService.createRound(competition, {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.QUALIFIER,
+      type: CompetitionRoundType.QUALIFIER,
       quota: 0,
       name: 'SuperRound1',
       boulders: 4,
@@ -194,7 +194,7 @@ describe('Bouldering round service (integration)', () => {
 
     const secondRound = await boulderingRoundService.createRound(competition, {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.QUALIFIER,
+      type: CompetitionRoundType.QUALIFIER,
       quota: 0,
       name: 'SuperRound',
       boulders: 4,
@@ -223,7 +223,7 @@ describe('Bouldering round service (integration)', () => {
 
     const round = await boulderingRoundService.createRound(competition, {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.QUALIFIER,
+      type: CompetitionRoundType.QUALIFIER,
       quota: 0,
       name: 'SuperRound1',
       boulders: 4,
@@ -246,7 +246,7 @@ describe('Bouldering round service (integration)', () => {
 
     const firstRound = await boulderingRoundService.createRound(competition, {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.QUALIFIER,
+      type: CompetitionRoundType.QUALIFIER,
       quota: 0,
       name: 'SuperRound1',
       boulders: 4,
@@ -259,7 +259,7 @@ describe('Bouldering round service (integration)', () => {
     return expect(
       boulderingRoundService.createRound(competition, {
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-        type: BoulderingRoundType.QUALIFIER,
+        type: CompetitionRoundType.QUALIFIER,
         quota: 0,
         name: 'SuperRound',
         boulders: 4,

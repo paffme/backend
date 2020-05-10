@@ -1,14 +1,12 @@
 import { Test } from '@nestjs/testing';
-import {
-  BoulderingRoundRankingType,
-  BoulderingRoundType,
-} from '../../../src/bouldering/round/bouldering-round.entity';
+import { BoulderingRoundRankingType } from '../../../src/bouldering/round/bouldering-round.entity';
 import { InternalServerErrorException } from '@nestjs/common';
 import { BoulderingRoundCountedRankingService } from '../../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
 import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
 import { givenUser } from '../../fixture/user.fixture';
 import { givenBoulder } from '../../fixture/boulder.fixture';
 import { givenResult } from '../../fixture/bouldering-result.fixture';
+import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -906,7 +904,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     const round = givenBoulderingRound(
       {
         rankingType: BoulderingRoundRankingType.CIRCUIT,
-        type: BoulderingRoundType.FINAL,
+        type: CompetitionRoundType.FINAL,
       },
       boulders,
       results,
@@ -1110,7 +1108,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     const round = givenBoulderingRound(
       {
         rankingType: BoulderingRoundRankingType.CIRCUIT,
-        type: BoulderingRoundType.FINAL,
+        type: CompetitionRoundType.FINAL,
       },
       boulders,
       results,
@@ -1314,7 +1312,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     const round = givenBoulderingRound(
       {
         rankingType: BoulderingRoundRankingType.CIRCUIT,
-        type: BoulderingRoundType.FINAL,
+        type: CompetitionRoundType.FINAL,
       },
       boulders,
       results,
@@ -1518,7 +1516,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     const round = givenBoulderingRound(
       {
         rankingType: BoulderingRoundRankingType.CIRCUIT,
-        type: BoulderingRoundType.FINAL,
+        type: CompetitionRoundType.FINAL,
       },
       boulders,
       results,
@@ -1595,7 +1593,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     const round = givenBoulderingRound(
       {
         rankingType: BoulderingRoundRankingType.CIRCUIT,
-        type: BoulderingRoundType.FINAL,
+        type: CompetitionRoundType.FINAL,
       },
       boulders,
       results,
@@ -1647,7 +1645,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     const round = givenBoulderingRound(
       {
         rankingType: BoulderingRoundRankingType.CIRCUIT,
-        type: BoulderingRoundType.FINAL,
+        type: CompetitionRoundType.FINAL,
       },
       boulders,
       results,
@@ -1696,7 +1694,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     const round = givenBoulderingRound(
       {
         rankingType: BoulderingRoundRankingType.CIRCUIT,
-        type: BoulderingRoundType.QUALIFIER,
+        type: CompetitionRoundType.QUALIFIER,
       },
       boulders,
       results,
@@ -1739,7 +1737,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     const round = givenBoulderingRound(
       {
         rankingType: BoulderingRoundRankingType.CIRCUIT,
-        type: BoulderingRoundType.SEMI_FINAL,
+        type: CompetitionRoundType.SEMI_FINAL,
       },
       boulders,
       results,
@@ -1789,7 +1787,7 @@ describe('Bouldering counted ranking service (unit)', () => {
     const round = givenBoulderingRound(
       {
         rankingType: BoulderingRoundRankingType.CIRCUIT,
-        type: BoulderingRoundType.FINAL,
+        type: CompetitionRoundType.FINAL,
       },
       boulders,
       results,

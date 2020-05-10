@@ -4,7 +4,6 @@ import { BoulderingRoundService } from '../../../src/bouldering/round/bouldering
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
-  BoulderingRoundType,
   BoulderingRoundUnlimitedContestRankings,
 } from '../../../src/bouldering/round/bouldering-round.entity';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
@@ -33,6 +32,7 @@ import { InitOptions } from 'mikro-orm/dist/entity/Collection';
 import { givenCompetition } from '../../fixture/competition.fixture';
 import { CompetitionType } from '../../../src/competition/types/competition-type.enum';
 import { CreateBoulderingGroupDto } from '../../../src/competition/dto/in/body/create-bouldering-group.dto';
+import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -148,7 +148,7 @@ describe('Bouldering round service (unit)', () => {
 
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.SEMI_FINAL,
+      type: CompetitionRoundType.SEMI_FINAL,
       quota: 0,
       name: 'SuperRound',
       boulders: 4,
@@ -167,7 +167,7 @@ describe('Bouldering round service (unit)', () => {
 
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      type: BoulderingRoundType.FINAL,
+      type: CompetitionRoundType.FINAL,
       quota: 0,
       name: 'SuperRound',
       boulders: 4,
@@ -293,7 +293,7 @@ describe('Bouldering round service (unit)', () => {
     const competition = {} as Competition;
 
     const dto = {
-      type: BoulderingRoundType.QUALIFIER,
+      type: CompetitionRoundType.QUALIFIER,
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       groups: 2,
     } as CreateBoulderingRoundDto;
@@ -307,7 +307,7 @@ describe('Bouldering round service (unit)', () => {
     const competition = {} as Competition;
 
     const dto = {
-      type: BoulderingRoundType.FINAL,
+      type: CompetitionRoundType.FINAL,
       rankingType: BoulderingRoundRankingType.CIRCUIT,
       groups: 2,
     } as CreateBoulderingRoundDto;
@@ -422,7 +422,7 @@ describe('Bouldering round service (unit)', () => {
 
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
-      type: BoulderingRoundType.QUALIFIER,
+      type: CompetitionRoundType.QUALIFIER,
       quota: 0,
       name: 'SuperRound',
       boulders: 4,
