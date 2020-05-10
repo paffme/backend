@@ -1,6 +1,16 @@
 import { UnprocessableEntityException } from '@nestjs/common';
+import { BaseError } from '../errors/base.error';
 
 type CollectionWithIndex = { index: number }[];
+
+class InvalidIndexError extends UnprocessableEntityException
+  implements BaseError {
+  constructor() {
+    super('Invalid index');
+  }
+
+  code = 'INVALID_INDEX';
+}
 
 /**
  * Verify that the given index will be next to another index in a collection
@@ -19,6 +29,6 @@ export function validateIndex(
   }, Number.MAX_SAFE_INTEGER);
 
   if (minDistance > 1) {
-    throw new UnprocessableEntityException('Invalid index');
+    throw new InvalidIndexError();
   }
 }

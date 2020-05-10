@@ -32,6 +32,7 @@ import { CreateBoulderingGroupDto } from '../../../src/competition/dto/in/body/c
 import { SearchQuery } from '../../../src/shared/decorators/search.decorator';
 import { givenCompetition } from '../../fixture/competition.fixture';
 import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
+import { AlreadyRegisteredError } from '../../../src/competition/errors/already-registered.error';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -487,7 +488,7 @@ describe('Competition service (unit)', () => {
     userServiceMock.getOrFail.mockImplementation(async () => user);
 
     return expect(competitionService.register(123, 456)).rejects.toBeInstanceOf(
-      BadRequestException,
+      AlreadyRegisteredError,
     );
   });
 

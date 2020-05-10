@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { randomBytes, scrypt } from 'crypto';
 import { EntityRepository, wrap } from 'mikro-orm';
 import { InjectRepository } from 'nestjs-mikro-orm';
@@ -23,6 +18,9 @@ import {
 } from '../shared/pagination/pagination.service';
 import { SearchQuery } from '../shared/decorators/search.decorator';
 import { UserCompetitionRolesDto } from './dto/out/user-competition-roles.dto';
+import { EmailAlreadyUsedError } from './errors/email-already-used.error';
+import { InvalidCredentialsError } from './errors/invalid-credentials.error';
+import { UserNotFoundError } from './errors/user-not-found.error';
 
 @Injectable()
 export class UserService {
@@ -115,7 +113,7 @@ export class UserService {
     });
 
     if (exists > 0) {
-      throw new ConflictException('email already used');
+      throw new EmailAlreadyUsedError();
     }
 
     const hashedPassword = await this.hashPassword(password);
@@ -142,13 +140,13 @@ export class UserService {
     });
 
     if (!user) {
-      throw new BadRequestException('Invalid credentials');
+      throw new InvalidCredentialsError();
     }
 
     const isMatch = await this.checkPassword(user.password, password);
 
     if (!isMatch) {
-      throw new BadRequestException('Invalid credentials');
+      throw new InvalidCredentialsError();
     }
 
     const payload: JwtPayload = {
@@ -185,7 +183,7 @@ export class UserService {
       });
 
       if (exists > 0) {
-        throw new ConflictException('email already used');
+        throw new EmailAlreadyUsedError();
       }
     }
 
@@ -201,7 +199,7 @@ export class UserService {
     const user = await this.userRepository.findOne(userId, populate);
 
     if (!user) {
-      throw new NotFoundException('User not found');
+      throw new UserNotFoundError();
     }
 
     return user;

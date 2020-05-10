@@ -1,8 +1,9 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { BoulderingGroup } from './bouldering-group.entity';
 import { BoulderingRound } from '../round/bouldering-round.entity';
+import { GroupNameConflictError } from '../errors/group-name-conflict.error';
 
 @Injectable()
 export class BoulderingGroupService {
@@ -20,7 +21,7 @@ export class BoulderingGroupService {
     });
 
     if (count > 0) {
-      throw new ConflictException('Name already used');
+      throw new GroupNameConflictError();
     }
 
     const group = new BoulderingGroup(name, round);

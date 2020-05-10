@@ -10,7 +10,6 @@ import {
   Post,
   Put,
   Req,
-  UnprocessableEntityException,
   UseGuards,
 } from '@nestjs/common';
 
@@ -109,6 +108,7 @@ import { BoulderingLimitedRoundMapper } from '../shared/mappers/bouldering-limit
 import { BoulderingLimitedRoundDto } from '../bouldering/dto/out/bouldering-limited-round.dto';
 import { UpdateBoulderingRoundParamsDto } from './dto/in/params/update-bouldering-round-params.dto';
 import { UpdateBoulderingRoundDto } from './dto/in/body/update-bouldering-round.dto';
+import { InvalidResultError } from './errors/invalid-result.error';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -605,9 +605,7 @@ export class CompetitionController {
       typeof dto.zone === 'undefined' &&
       typeof dto.top === 'undefined'
     ) {
-      throw new UnprocessableEntityException(
-        'At least one element in the body is required among try, zone and top',
-      );
+      throw new InvalidResultError();
     }
 
     const result = await this.competitionService.addBoulderingResult(

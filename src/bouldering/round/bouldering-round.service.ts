@@ -1,10 +1,4 @@
-import {
-  BadRequestException,
-  ConflictException,
-  Injectable,
-  NotFoundException,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository, wrap } from 'mikro-orm';
 import {
@@ -29,6 +23,13 @@ import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.d
 import { CreateBoulderingGroupDto } from '../../competition/dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from '../../competition/competition-round-type.enum';
 import { UpdateBoulderingRoundDto } from '../../competition/dto/in/body/update-bouldering-round.dto';
+import { RoundNotFoundError } from '../errors/round-not-found.error';
+import { InvalidRoundError } from '../errors/invalid-round.error';
+import { RoundTypeConflictError } from '../errors/round-type-conflict.error';
+import { GroupNotFoundError } from '../errors/group-not-found.error';
+import { ClimberNotInRoundError } from '../errors/climber-not-in-round.error';
+import { BoulderNotInRoundError } from '../errors/boulder-not-in-round.error';
+import { MaxClimbersReachedError } from '../errors/max-climbers-reached.error';
 
 @Injectable()
 export class BoulderingRoundService {
@@ -65,7 +66,7 @@ export class BoulderingRoundService {
     );
 
     if (!round) {
-      throw new NotFoundException('Round not found');
+      throw new RoundNotFoundError();
     }
 
     return round;
@@ -81,7 +82,7 @@ export class BoulderingRoundService {
         dto.type === CompetitionRoundType.FINAL) &&
       dto.rankingType !== BoulderingRoundRankingType.CIRCUIT
     ) {
-      throw new UnprocessableEntityException(
+      throw new InvalidRoundError(
         "Can't create a non circuit round for a semi final or final",
       );
     }
@@ -90,7 +91,7 @@ export class BoulderingRoundService {
       dto.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST &&
       typeof dto.maxTries !== 'number'
     ) {
-      throw new UnprocessableEntityException(
+      throw new InvalidRoundError(
         'maxTries is mandatory for a limited contest',
       );
     }
@@ -99,13 +100,13 @@ export class BoulderingRoundService {
 
     if (groups > 1) {
       if (dto.type !== CompetitionRoundType.QUALIFIER) {
-        throw new UnprocessableEntityException(
+        throw new InvalidRoundError(
           'No more than one group for a non qualifier round',
         );
       }
 
       if (dto.rankingType !== BoulderingRoundRankingType.CIRCUIT) {
-        throw new UnprocessableEntityException(
+        throw new InvalidRoundError(
           'No more than one group for a non circuit round',
         );
       }
@@ -118,7 +119,7 @@ export class BoulderingRoundService {
       );
 
     if (rounds.length >= 3) {
-      throw new BadRequestException(
+      throw new InvalidRoundError(
         'You cannot create more than 3 rounds for a category',
       );
     }
@@ -127,9 +128,7 @@ export class BoulderingRoundService {
     const roundWithTypeExists = rounds.some((r) => r.type === dto.type);
 
     if (roundWithTypeExists) {
-      throw new ConflictException(
-        `Round with type ${dto.type} already exists.`,
-      );
+      throw new RoundTypeConflictError(dto.type);
     }
 
     const round = new BoulderingRound(
@@ -181,7 +180,7 @@ export class BoulderingRoundService {
     const group = round.groups.getItems().find((g) => g.id === groupId);
 
     if (!group) {
-      throw new NotFoundException('Unknown group');
+      throw new GroupNotFoundError();
     }
 
     await Promise.all([
@@ -191,11 +190,11 @@ export class BoulderingRoundService {
     ]);
 
     if (!group.climbers.contains(climber)) {
-      throw new BadRequestException('Climber not in round');
+      throw new ClimberNotInRoundError();
     }
 
     if (!group.boulders.contains(boulder)) {
-      throw new BadRequestException('Boulder not in round');
+      throw new BoulderNotInRoundError();
     }
 
     const result = await this.boulderingResultService.addResult(
@@ -214,32 +213,30 @@ export class BoulderingRoundService {
     round: BoulderingRound,
     ...climbers: User[]
   ): Promise<void> {
-    if (round.takesNewClimbers()) {
-      const season = round.competition.getSeason();
-      const groups = round.groups.getItems();
-      let currentGroupIndex = 0;
-
-      for (let i = 0; i < climbers.length; i++) {
-        const climber = climbers[i];
-        const climberCategory = climber.getCategory(season);
-
-        if (
-          round.category === climberCategory.name &&
-          round.sex === climberCategory.sex
-        ) {
-          groups[currentGroupIndex].climbers.add(climber);
-          currentGroupIndex = (currentGroupIndex + 1) % groups.length;
-        } else {
-          throw new UnprocessableEntityException(
-            'This round is not handling this category',
-          );
-        }
-      }
-
-      await this.boulderingRoundRepository.persistAndFlush(round);
-    } else {
-      throw new BadRequestException('This round cannot take new climbers');
+    if (!round.takesNewClimbers()) {
+      throw new MaxClimbersReachedError();
     }
+
+    const season = round.competition.getSeason();
+    const groups = round.groups.getItems();
+    let currentGroupIndex = 0;
+
+    for (let i = 0; i < climbers.length; i++) {
+      const climber = climbers[i];
+      const climberCategory = climber.getCategory(season);
+
+      if (
+        round.category === climberCategory.name &&
+        round.sex === climberCategory.sex
+      ) {
+        groups[currentGroupIndex].climbers.add(climber);
+        currentGroupIndex = (currentGroupIndex + 1) % groups.length;
+      } else {
+        throw new InvalidRoundError('This round is not handling this category');
+      }
+    }
+
+    await this.boulderingRoundRepository.persistAndFlush(round);
   }
 
   private async getGroup(
@@ -255,7 +252,7 @@ export class BoulderingRoundService {
     const group = groups.getItems()[0];
 
     if (!group) {
-      throw new NotFoundException('Unknown group in bouldering round');
+      throw new GroupNotFoundError();
     }
 
     return group;
@@ -322,9 +319,7 @@ export class BoulderingRoundService {
       const roundWithTypeExists = otherRounds.some((r) => r.type === dto.type);
 
       if (roundWithTypeExists) {
-        throw new ConflictException(
-          `Round with type ${dto.type} already exists.`,
-        );
+        throw new RoundTypeConflictError(dto.type);
       }
     }
 

@@ -14,7 +14,6 @@ import { BoulderService } from '../../../src/bouldering/boulder/boulder.service'
 import { BoulderingResultService } from '../../../src/bouldering/result/bouldering-result.service';
 import { BoulderMapper } from '../../../src/shared/mappers/boulder.mapper';
 import {
-  BadRequestException,
   ConflictException,
   NotFoundException,
   UnprocessableEntityException,
@@ -36,6 +35,7 @@ import { CompetitionType } from '../../../src/competition/types/competition-type
 import { CreateBoulderingGroupDto } from '../../../src/competition/dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
 import { UpdateBoulderingRoundDto } from '../../../src/competition/dto/in/body/update-bouldering-round.dto';
+import { InvalidRoundError } from '../../../src/bouldering/errors/invalid-round.error';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -224,7 +224,7 @@ describe('Bouldering round service (unit)', () => {
 
     return expect(
       boulderingRoundService.createRound(competition, dto),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).rejects.toBeInstanceOf(InvalidRoundError);
   });
 
   it('should not create two times the same round', () => {

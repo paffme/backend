@@ -1,9 +1,10 @@
 import { BaseAuthorizationService } from '../../shared/authorization/base.authorization.service';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import type { User } from '../../user/user.entity';
 import { Competition } from '../competition.entity';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
+import { CompetitionNotFoundError } from '../errors/competition-not-found.error';
 
 @Injectable()
 export class JuryPresidentAuthorizationService extends BaseAuthorizationService {
@@ -24,7 +25,7 @@ export class JuryPresidentAuthorizationService extends BaseAuthorizationService 
     );
 
     if (!competition) {
-      throw new NotFoundException('Competition not found');
+      throw new CompetitionNotFoundError();
     }
 
     return (
