@@ -50,6 +50,7 @@ import { OrganizerNotFoundError } from './errors/organizer-not-found.error';
 import { ClimberNotRegisteredError } from './errors/climber-not-registered.error';
 import { RoundNotFoundError } from '../bouldering/errors/round-not-found.error';
 import { RankingsNotFoundError } from './errors/rankings-not-found.error';
+import { RoundByCategoryByType } from './types/round-by-category-by-type.type';
 
 @Injectable()
 export class CompetitionService {
@@ -687,5 +688,27 @@ export class CompetitionService {
     );
 
     return this.boulderingRoundService.update(competition, round, dto);
+  }
+
+  async getBoulderingRoundsByCategoryByType(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<RoundByCategoryByType<BoulderingRound>> {
+    const { boulderingRounds } = await this.getOrFail(competitionId, [
+      'boulderingRounds',
+    ]);
+
+    const roundsByCategoryByType: RoundByCategoryByType<BoulderingRound> = {};
+
+    for (const round of boulderingRounds.getItems()) {
+      const roundByCategoryName = (roundsByCategoryByType[round.category] =
+        roundsByCategoryByType[round.category] ?? {});
+
+      const roundByCategory = (roundByCategoryName[round.sex] =
+        roundByCategoryName[round.sex] ?? {});
+
+      roundByCategory[round.type] = round;
+    }
+
+    return roundsByCategoryByType;
   }
 }

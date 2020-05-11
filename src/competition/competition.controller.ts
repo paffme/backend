@@ -109,6 +109,10 @@ import { BoulderingLimitedRoundDto } from '../bouldering/dto/out/bouldering-limi
 import { UpdateBoulderingRoundParamsDto } from './dto/in/params/update-bouldering-round-params.dto';
 import { UpdateBoulderingRoundDto } from './dto/in/body/update-bouldering-round.dto';
 import { InvalidResultError } from './errors/invalid-result.error';
+import { RoundByCategoryByType } from './types/round-by-category-by-type.type';
+import { GetBoulderingRoundsParamsDto } from './dto/in/params/get-bouldering-rounds-params.dto';
+import { BoulderingRoundsByCategoryByTypeMapper } from '../shared/mappers/bouldering-rounds-by-category-by-type.mapper';
+import { RoundByCategoryByTypeDto } from './dto/out/round-by-category-by-type.dto';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -122,6 +126,7 @@ export class CompetitionController {
     private readonly boulderingResultMapper: BoulderingResultMapper,
     private readonly rankingMapper: RankingsMapper,
     private readonly boulderingRoundRankingMapper: BoulderingRoundRankingsMapper,
+    private readonly boulderingRoundsByCategoryByTypeMapper: BoulderingRoundsByCategoryByTypeMapper,
     private readonly mapper: CompetitionMapper,
     private readonly paginationService: PaginationService,
     private readonly boulderMapper: BoulderMapper,
@@ -557,6 +562,23 @@ export class CompetitionController {
     );
 
     return this.boulderingRoundMapper.map(round);
+  }
+
+  @Get('/:competitionId/bouldering-rounds')
+  @ApiOkResponse({ type: RoundByCategoryByTypeDto })
+  @ApiOperation(
+    GetOperationId(Competition.name, 'GetBoulderingRoundsByCategoryByType'),
+  )
+  async getBoulderingRoundsByCategoryByType(
+    @Param() params: GetBoulderingRoundsParamsDto,
+  ): Promise<RoundByCategoryByType<BoulderingLimitedRoundDto>> {
+    const roundsByCategoryByType = await this.competitionService.getBoulderingRoundsByCategoryByType(
+      params.competitionId,
+    );
+
+    return this.boulderingRoundsByCategoryByTypeMapper.map(
+      roundsByCategoryByType,
+    );
   }
 
   @Patch('/:competitionId/bouldering-rounds/:roundId')

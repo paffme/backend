@@ -948,4 +948,92 @@ describe('Competition service (unit)', () => {
     );
     expect(competitionRepositoryMock.flush).toHaveBeenCalledTimes(1);
   });
+
+  it('gets bouldering rounds by category by type', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+        category: CategoryName.Poussin,
+        sex: Sex.Female,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.SEMI_FINAL,
+        category: CategoryName.Poussin,
+        sex: Sex.Female,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.FINAL,
+        category: CategoryName.Poussin,
+        sex: Sex.Male,
+      }),
+    ];
+
+    competition.boulderingRounds = {
+      getItems(): typeof competitionRounds {
+        return competitionRounds;
+      },
+    } as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    const result = await competitionService.getBoulderingRoundsByCategoryByType(
+      competition.id,
+    );
+
+    expect(result).toHaveProperty(CategoryName.Poussin);
+    expect(result[CategoryName.Poussin]).toHaveProperty(Sex.Male);
+    expect(result[CategoryName.Poussin]).toHaveProperty(Sex.Female);
+
+    expect(result[CategoryName.Poussin]![Sex.Male]).toHaveProperty(
+      CompetitionRoundType.FINAL,
+    );
+
+    expect(
+      result[CategoryName.Poussin]![Sex.Male]![CompetitionRoundType.FINAL]!.id,
+    ).toEqual(competitionRounds[2].id);
+
+    expect(result[CategoryName.Poussin]![Sex.Male]).not.toHaveProperty(
+      CompetitionRoundType.QUALIFIER,
+    );
+
+    expect(result[CategoryName.Poussin]![Sex.Male]).not.toHaveProperty(
+      CompetitionRoundType.SEMI_FINAL,
+    );
+
+    expect(result[CategoryName.Poussin]![Sex.Female]).toHaveProperty(
+      CompetitionRoundType.QUALIFIER,
+    );
+
+    expect(
+      result[CategoryName.Poussin]![Sex.Female]![
+        CompetitionRoundType.QUALIFIER
+      ]!.id,
+    ).toEqual(competitionRounds[0].id);
+
+    expect(result[CategoryName.Poussin]![Sex.Female]).toHaveProperty(
+      CompetitionRoundType.SEMI_FINAL,
+    );
+
+    expect(
+      result[CategoryName.Poussin]![Sex.Female]![
+        CompetitionRoundType.SEMI_FINAL
+      ]!.id,
+    ).toEqual(competitionRounds[1].id);
+
+    expect(result[CategoryName.Poussin]![Sex.Female]).not.toHaveProperty(
+      CompetitionRoundType.FINAL,
+    );
+
+    expect(result).not.toHaveProperty(CategoryName.Microbe);
+    expect(result).not.toHaveProperty(CategoryName.Benjamin);
+    expect(result).not.toHaveProperty(CategoryName.Minime);
+    expect(result).not.toHaveProperty(CategoryName.Cadet);
+    expect(result).not.toHaveProperty(CategoryName.Junior);
+    expect(result).not.toHaveProperty(CategoryName.Senior);
+    expect(result).not.toHaveProperty(CategoryName.Veteran);
+  });
 });
