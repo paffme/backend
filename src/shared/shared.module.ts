@@ -19,6 +19,12 @@ import { LimitedUserMapper } from './mappers/limited-user.mapper';
 import { BoulderingRoundRankingsMapper } from './mappers/bouldering-round-rankings.mapper';
 import { BoulderingLimitedRoundMapper } from './mappers/bouldering-limited-round.mapper';
 
+import {
+  BoulderingRoundsByCategoryByTypeMapper,
+  RoundBySexMapper,
+  RoundByTypeMapper,
+} from './mappers/bouldering-rounds-by-category-by-type.mapper';
+
 @Global()
 @Module({
   providers: [
@@ -36,6 +42,9 @@ import { BoulderingLimitedRoundMapper } from './mappers/bouldering-limited-round
     BoulderingGroupMapper,
     BoulderingRoundRankingsMapper,
     BoulderingLimitedRoundMapper,
+    BoulderingRoundsByCategoryByTypeMapper,
+    RoundBySexMapper,
+    RoundByTypeMapper,
     UserAuthorizationService,
     PaginationService,
   ],
@@ -53,6 +62,9 @@ import { BoulderingLimitedRoundMapper } from './mappers/bouldering-limited-round
     BoulderingGroupMapper,
     BoulderingRoundRankingsMapper,
     BoulderingLimitedRoundMapper,
+    BoulderingRoundsByCategoryByTypeMapper,
+    RoundBySexMapper,
+    RoundByTypeMapper,
     UserAuthorizationService,
     PaginationService,
   ],
