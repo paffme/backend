@@ -2,17 +2,29 @@ import { CategoryName } from '../../../shared/types/category-name.enum';
 import { ApiExtraModels, ApiPropertyOptional } from '@nestjs/swagger';
 import { Sex } from '../../../shared/types/sex.enum';
 import { BoulderingLimitedRoundDto } from '../../../bouldering/dto/out/bouldering-limited-round.dto';
+import { CompetitionRoundType } from '../../competition-round-type.enum';
 
 @ApiExtraModels(BoulderingLimitedRoundDto)
-class RoundBySexDto {
+class RoundByTypeDto {
   @ApiPropertyOptional()
-  readonly [Sex.Female]?: BoulderingLimitedRoundDto;
+  readonly [CompetitionRoundType.QUALIFIER]?: BoulderingLimitedRoundDto;
 
   @ApiPropertyOptional()
-  readonly [Sex.Male]?: BoulderingLimitedRoundDto;
+  readonly [CompetitionRoundType.SEMI_FINAL]?: BoulderingLimitedRoundDto;
+
+  @ApiPropertyOptional()
+  readonly [CompetitionRoundType.FINAL]?: BoulderingLimitedRoundDto;
 }
 
-// For documentation purposes only
+@ApiExtraModels(RoundByTypeDto)
+class RoundBySexDto {
+  @ApiPropertyOptional()
+  readonly [Sex.Female]?: RoundByTypeDto;
+
+  @ApiPropertyOptional()
+  readonly [Sex.Male]?: RoundByTypeDto;
+}
+
 @ApiExtraModels(RoundBySexDto)
 export class RoundByCategoryByTypeDto {
   @ApiPropertyOptional()

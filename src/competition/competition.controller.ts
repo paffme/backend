@@ -571,7 +571,7 @@ export class CompetitionController {
   )
   async getBoulderingRoundsByCategoryByType(
     @Param() params: GetBoulderingRoundsParamsDto,
-  ): Promise<RoundByCategoryByType<BoulderingLimitedRoundDto>> {
+  ): Promise<RoundByCategoryByTypeDto> {
     const roundsByCategoryByType = await this.competitionService.getBoulderingRoundsByCategoryByType(
       params.competitionId,
     );
