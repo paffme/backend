@@ -14,11 +14,18 @@ import { JuryPresidentAuthorizationGuard } from './authorization/jury-president.
 import { ChiefRouteSetterAuthorizationGuard } from './authorization/chief-route-setter.authorization.guard';
 import { ChiefRouteSetterAuthorizationService } from './authorization/chief-route-setter.authorization.service';
 import { JudgeAuthorizationGuard } from './authorization/judge.authorization.guard';
+import { BoulderJudgeAuthorizationService } from './authorization/boulder-judge.authorization.service';
+import { BoulderJudgeAuthorizationGuard } from './authorization/boulder-judge.authorization.guard';
+import { Boulder } from '../bouldering/boulder/boulder.entity';
 
 @Module({
   imports: [
     MikroOrmModule.forFeature({
-      entities: [Competition, CompetitionRegistration],
+      entities: [
+        Competition,
+        CompetitionRegistration,
+        Boulder, // For authorization
+      ],
     }),
     UserModule,
     BoulderingModule,
@@ -29,11 +36,13 @@ import { JudgeAuthorizationGuard } from './authorization/judge.authorization.gua
     JuryPresidentAuthorizationGuard,
     ChiefRouteSetterAuthorizationGuard,
     JudgeAuthorizationGuard,
+    BoulderJudgeAuthorizationGuard,
     CompetitionService,
     OrganizerAuthorizationService,
     JuryPresidentAuthorizationService,
     JudgeAuthorizationService,
     ChiefRouteSetterAuthorizationService,
+    BoulderJudgeAuthorizationService,
   ],
 })
 export class CompetitionModule {}

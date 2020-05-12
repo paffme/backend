@@ -4,13 +4,16 @@ import { morphism } from 'morphism';
 
 import { Boulder } from '../../bouldering/boulder/boulder.entity';
 import { BoulderDto } from '../../bouldering/dto/out/boulder.dto';
+import { LimitedUserMapper } from './limited-user.mapper';
 
 @Injectable()
 export class BoulderMapper extends BaseMapper<BoulderDto, Boulder> {
-  constructor() {
+  constructor(limitedUserMapper: LimitedUserMapper) {
     super({
       id: 'id',
       index: 'index',
+      judges: (boulder) =>
+        limitedUserMapper.mapArray(boulder.judges.getItems()),
     });
   }
 

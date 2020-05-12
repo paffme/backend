@@ -251,4 +251,14 @@ export default class TestUtils {
   ): Promise<BoulderingRound | null> {
     return this.orm!.em.findOne(BoulderingRound, id);
   }
+
+  async getBoulderJudges(
+    boulderId: typeof Boulder.prototype.id,
+  ): Promise<User[]> {
+    const boulder = await this.orm!.em.findOneOrFail(Boulder, boulderId, [
+      'judges',
+    ]);
+
+    return boulder.judges.getItems();
+  }
 }
