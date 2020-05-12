@@ -36,6 +36,8 @@ import { CreateBoulderingGroupDto } from '../../../src/competition/dto/in/body/c
 import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
 import { UpdateBoulderingRoundDto } from '../../../src/competition/dto/in/body/update-bouldering-round.dto';
 import { InvalidRoundError } from '../../../src/bouldering/errors/invalid-round.error';
+import { LimitedUserMapper } from '../../../src/shared/mappers/limited-user.mapper';
+import { GroupNotFoundError } from '../../../src/bouldering/errors/group-not-found.error';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -51,6 +53,8 @@ const boulderingResultServiceMock: ServiceMock = {};
 const boulderingGroupServiceMock: ServiceMock = {
   create: jest.fn(),
   delete: jest.fn(),
+  assignJudgeToBoulder: jest.fn(),
+  removeJudgeAssignmentToBoulder: jest.fn(),
 };
 
 const boulderingUnlimitedContestRankingServiceMock: ServiceMock = {
@@ -115,6 +119,10 @@ describe('Bouldering round service (unit)', () => {
         {
           provide: BoulderingGroupMapper,
           useClass: BoulderingGroupMapper,
+        },
+        {
+          provide: LimitedUserMapper,
+          useClass: LimitedUserMapper,
         },
       ],
     }).compile();
@@ -613,5 +621,62 @@ describe('Bouldering round service (unit)', () => {
     return expect(
       boulderingRoundService.update(competition, round, dto),
     ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it('assigns a judge to a boulder', async () => {
+    const { round, group } = givenRoundWithOneGroup();
+
+    boulderingGroupServiceMock.assignJudgeToBoulder.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderingRoundService.assignJudgeToBoulder(round, group.id, 1, 2);
+
+    expect(
+      boulderingGroupServiceMock.assignJudgeToBoulder,
+    ).toHaveBeenCalledTimes(1);
+
+    expect(
+      boulderingGroupServiceMock.assignJudgeToBoulder,
+    ).toHaveBeenCalledWith(group, 1, 2);
+  });
+
+  it('throws not found when assigning a judge to a boulder of an unknown group', () => {
+    const round = givenRoundWithNoGroups();
+
+    return expect(
+      boulderingRoundService.assignJudgeToBoulder(round, 0, 1, 2),
+    ).rejects.toBeInstanceOf(GroupNotFoundError);
+  });
+
+  it('removes assignment of a judge to a boulder', async () => {
+    const { round, group } = givenRoundWithOneGroup();
+
+    boulderingGroupServiceMock.removeJudgeAssignmentToBoulder.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderingRoundService.removeJudgeAssignmentToBoulder(
+      round,
+      group.id,
+      1,
+      2,
+    );
+
+    expect(
+      boulderingGroupServiceMock.removeJudgeAssignmentToBoulder,
+    ).toHaveBeenCalledTimes(1);
+
+    expect(
+      boulderingGroupServiceMock.removeJudgeAssignmentToBoulder,
+    ).toHaveBeenCalledWith(group, 1, 2);
+  });
+
+  it('throws not found when removing assignment of a judge to a boulder of an unknown group', () => {
+    const round = givenRoundWithNoGroups();
+
+    return expect(
+      boulderingRoundService.removeJudgeAssignmentToBoulder(round, 0, 1, 2),
+    ).rejects.toBeInstanceOf(GroupNotFoundError);
   });
 });

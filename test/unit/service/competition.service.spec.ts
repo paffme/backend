@@ -33,6 +33,8 @@ import { SearchQuery } from '../../../src/shared/decorators/search.decorator';
 import { givenCompetition } from '../../fixture/competition.fixture';
 import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
 import { AlreadyRegisteredError } from '../../../src/competition/errors/already-registered.error';
+import { CompetitionNotFoundError } from '../../../src/competition/errors/competition-not-found.error';
+import { RoundNotFoundError } from '../../../src/bouldering/errors/round-not-found.error';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -67,6 +69,8 @@ const boulderingRoundServiceMock: ServiceMock = {
   createGroup: jest.fn(),
   deleteGroup: jest.fn(),
   delete: jest.fn(),
+  assignJudgeToBoulder: jest.fn(),
+  removeJudgeAssignmentToBoulder: jest.fn(),
 };
 
 const boulderingRankingServiceMock: ServiceMock = {
@@ -1035,5 +1039,152 @@ describe('Competition service (unit)', () => {
     expect(result).not.toHaveProperty(CategoryName.Junior);
     expect(result).not.toHaveProperty(CategoryName.Senior);
     expect(result).not.toHaveProperty(CategoryName.Veteran);
+  });
+
+  it('assigns a judge to a boulder', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+      }),
+    ];
+
+    competition.boulderingRounds = ({
+      async init(): Promise<Collection<BoulderingRound>> {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        return {
+          getItems(): typeof competitionRounds {
+            return competitionRounds;
+          },
+        };
+      },
+    } as unknown) as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.assignJudgeToBoulder.mockImplementation(
+      async () => undefined,
+    );
+
+    await competitionService.assignJudgeToBoulder(1, 2, 3, 4, 5);
+
+    expect(
+      boulderingRoundServiceMock.assignJudgeToBoulder,
+    ).toHaveBeenCalledTimes(1);
+
+    expect(
+      boulderingRoundServiceMock.assignJudgeToBoulder,
+    ).toHaveBeenCalledWith(competitionRounds[0], 3, 4, 5);
+  });
+
+  it('throws not found when assigning a judge to a boulder with an inexistant competition', () => {
+    competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
+
+    return expect(
+      competitionService.assignJudgeToBoulder(1, 2, 3, 4, 5),
+    ).rejects.toBeInstanceOf(CompetitionNotFoundError);
+  });
+
+  it('throws not found when assigning a judge to a boulder with an inexistant round', () => {
+    const competition = givenCompetition();
+
+    competition.boulderingRounds = ({
+      // eslint-disable-next-line sonarjs/no-identical-functions
+      async init(): Promise<Collection<BoulderingRound>> {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        return {
+          getItems(): BoulderingRound[] {
+            return [];
+          },
+        };
+      },
+    } as unknown) as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(
+      competitionService.assignJudgeToBoulder(1, 2, 3, 4, 5),
+    ).rejects.toBeInstanceOf(RoundNotFoundError);
+  });
+
+  it('deletes assignment of a judge to a boulder', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+      }),
+    ];
+
+    competition.boulderingRounds = ({
+      // eslint-disable-next-line sonarjs/no-identical-functions
+      async init(): Promise<Collection<BoulderingRound>> {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        return {
+          getItems(): typeof competitionRounds {
+            return competitionRounds;
+          },
+        };
+      },
+    } as unknown) as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.removeJudgeAssignmentToBoulder.mockImplementation(
+      async () => undefined,
+    );
+
+    await competitionService.removeJudgeAssignmentToBoulder(1, 2, 3, 4, 5);
+
+    expect(
+      boulderingRoundServiceMock.removeJudgeAssignmentToBoulder,
+    ).toHaveBeenCalledTimes(1);
+
+    expect(
+      boulderingRoundServiceMock.removeJudgeAssignmentToBoulder,
+    ).toHaveBeenCalledWith(competitionRounds[0], 3, 4, 5);
+  });
+
+  it('throws not found when removing assignment of a judge to a boulder with an inexistant competition', () => {
+    competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
+
+    return expect(
+      competitionService.removeJudgeAssignmentToBoulder(1, 2, 3, 4, 5),
+    ).rejects.toBeInstanceOf(CompetitionNotFoundError);
+  });
+
+  it('throws not found when removing assignment of a judge to a boulder with an inexistant round', () => {
+    const competition = givenCompetition();
+
+    competition.boulderingRounds = ({
+      // eslint-disable-next-line sonarjs/no-identical-functions
+      async init(): Promise<Collection<BoulderingRound>> {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        return {
+          getItems(): BoulderingRound[] {
+            return [];
+          },
+        };
+      },
+    } as unknown) as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(
+      competitionService.removeJudgeAssignmentToBoulder(1, 2, 3, 4, 5),
+    ).rejects.toBeInstanceOf(RoundNotFoundError);
   });
 });

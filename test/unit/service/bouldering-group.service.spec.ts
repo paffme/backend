@@ -2,14 +2,22 @@ import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { BoulderingGroupService } from '../../../src/bouldering/group/bouldering-group.service';
 import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
-import { RepositoryMock } from '../mocks/types';
+import { RepositoryMock, ServiceMock } from '../mocks/types';
 import { BoulderingRound } from '../../../src/bouldering/round/bouldering-round.entity';
 import { ConflictException } from '@nestjs/common';
+import { BoulderService } from '../../../src/bouldering/boulder/boulder.service';
+import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
+import { BoulderNotFoundError } from '../../../src/bouldering/errors/boulder-not-found.error';
 
 const boulderingGroupRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
   removeAndFlush: jest.fn(),
   count: jest.fn(),
+};
+
+const boulderServiceMock: ServiceMock = {
+  assignJudge: jest.fn(),
+  removeJudgeAssignment: jest.fn(),
 };
 
 describe('Bouldering group service (unit)', () => {
@@ -23,6 +31,10 @@ describe('Bouldering group service (unit)', () => {
           provide: getRepositoryToken(BoulderingGroup),
           useFactory: (): typeof boulderingGroupRepositoryMock =>
             boulderingGroupRepositoryMock,
+        },
+        {
+          provide: BoulderService,
+          useValue: boulderServiceMock,
         },
       ],
     }).compile();
@@ -84,5 +96,118 @@ describe('Bouldering group service (unit)', () => {
     expect(boulderingGroupRepositoryMock.removeAndFlush).toHaveBeenCalledWith(
       group,
     );
+  });
+
+  it('assigns a judge to a boulder', async () => {
+    const boulder = {} as Boulder;
+
+    const group = ({
+      boulders: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+        async init(opts) {
+          expect(opts.where?.id).toEqual(1);
+
+          return {
+            getItems(): Boulder[] {
+              return [boulder];
+            },
+          };
+        },
+      },
+    } as unknown) as BoulderingGroup;
+
+    boulderServiceMock.assignJudge.mockImplementation(async () => undefined);
+
+    await boulderingGroupService.assignJudgeToBoulder(group, 1, 2);
+
+    expect(boulderServiceMock.assignJudge).toHaveBeenCalledTimes(1);
+    expect(boulderServiceMock.assignJudge).toHaveBeenCalledWith(boulder, 2);
+  });
+
+  it('throws 404 when trying to assign a judge to a boulder on an non-existant boulder', () => {
+    const group = ({
+      boulders: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+        async init(opts) {
+          expect(opts.where?.id).toEqual(1);
+
+          return {
+            getItems(): Boulder[] {
+              return [];
+            },
+          };
+        },
+      },
+    } as unknown) as BoulderingGroup;
+
+    boulderServiceMock.assignJudge.mockImplementation(async () => undefined);
+
+    return expect(
+      boulderingGroupService.assignJudgeToBoulder(group, 1, 2),
+    ).rejects.toBeInstanceOf(BoulderNotFoundError);
+  });
+
+  it('removes assignment of a judge to a boulder', async () => {
+    const boulder = {} as Boulder;
+
+    const group = ({
+      boulders: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type,sonarjs/no-identical-functions
+        async init(opts) {
+          expect(opts.where?.id).toEqual(1);
+
+          return {
+            getItems(): Boulder[] {
+              return [boulder];
+            },
+          };
+        },
+      },
+    } as unknown) as BoulderingGroup;
+
+    boulderServiceMock.removeJudgeAssignment.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderingGroupService.removeJudgeAssignmentToBoulder(group, 1, 2);
+
+    expect(boulderServiceMock.removeJudgeAssignment).toHaveBeenCalledTimes(1);
+    expect(boulderServiceMock.removeJudgeAssignment).toHaveBeenCalledWith(
+      boulder,
+      2,
+    );
+  });
+
+  it('throws 404 when trying to remove assignment of a judge to a boulder on an non-existant boulder', () => {
+    const group = ({
+      boulders: {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type,sonarjs/no-identical-functions
+        async init(opts) {
+          expect(opts.where?.id).toEqual(1);
+
+          return {
+            getItems(): Boulder[] {
+              return [];
+            },
+          };
+        },
+      },
+    } as unknown) as BoulderingGroup;
+
+    boulderServiceMock.removeJudgeAssignment.mockImplementation(
+      async () => undefined,
+    );
+
+    return expect(
+      boulderingGroupService.removeJudgeAssignmentToBoulder(group, 1, 2),
+    ).rejects.toBeInstanceOf(BoulderNotFoundError);
   });
 });

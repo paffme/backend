@@ -239,7 +239,7 @@ export class BoulderingRoundService {
     await this.boulderingRoundRepository.persistAndFlush(round);
   }
 
-  private async getGroup(
+  private async getGroupOrFail(
     round: BoulderingRound,
     groupId: typeof BoulderingGroup.prototype.id,
   ): Promise<BoulderingGroup> {
@@ -263,7 +263,7 @@ export class BoulderingRoundService {
     groupId: typeof BoulderingGroup.prototype.id,
     dto: CreateBoulderDto,
   ): Promise<Boulder> {
-    const group = await this.getGroup(round, groupId);
+    const group = await this.getGroupOrFail(round, groupId);
     return this.boulderService.create(group, dto);
   }
 
@@ -272,7 +272,7 @@ export class BoulderingRoundService {
     groupId: typeof BoulderingGroup.prototype.id,
     boulderId: typeof Boulder.prototype.id,
   ): Promise<void> {
-    const group = await this.getGroup(round, groupId);
+    const group = await this.getGroupOrFail(round, groupId);
     return this.boulderService.remove(group, boulderId);
   }
 
@@ -287,7 +287,7 @@ export class BoulderingRoundService {
     round: BoulderingRound,
     groupId: typeof BoulderingGroup.prototype.id,
   ): Promise<void> {
-    const group = await this.getGroup(round, groupId);
+    const group = await this.getGroupOrFail(round, groupId);
     // FIXME: cascade remove does not yet works
     await this.boulderService.deleteMany(group.boulders);
     return this.boulderingGroupService.delete(group);
@@ -326,5 +326,35 @@ export class BoulderingRoundService {
     wrap(round).assign(dto);
     await this.boulderingRoundRepository.persistAndFlush(round);
     return round;
+  }
+
+  async assignJudgeToBoulder(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    judgeId: typeof User.prototype.id,
+  ): Promise<void> {
+    const group = await this.getGroupOrFail(round, groupId);
+
+    await this.boulderingGroupService.assignJudgeToBoulder(
+      group,
+      boulderId,
+      judgeId,
+    );
+  }
+
+  async removeJudgeAssignmentToBoulder(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    judgeId: typeof User.prototype.id,
+  ): Promise<void> {
+    const group = await this.getGroupOrFail(round, groupId);
+
+    await this.boulderingGroupService.removeJudgeAssignmentToBoulder(
+      group,
+      boulderId,
+      judgeId,
+    );
   }
 }

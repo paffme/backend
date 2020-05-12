@@ -7,12 +7,17 @@ import { BoulderingGroup } from '../group/bouldering-group.entity';
 import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.dto';
 import { validateIndex } from '../../shared/utils/indexing.helper';
 import { BoulderNotFoundError } from '../errors/boulder-not-found.error';
+import { User } from '../../user/user.entity';
+import { AlreadyJudgingBoulderConflictError } from '../errors/already-judging-boulder-conflict.error';
+import { UserService } from '../../user/user.service';
+import { JudgeNotAssignedError } from '../errors/judge-not-found.error';
 
 @Injectable()
 export class BoulderService {
   constructor(
     @InjectRepository(Boulder)
     private readonly boulderRepository: EntityRepository<Boulder>,
+    private readonly userService: UserService,
   ) {}
 
   async getOrFail(boulderId: typeof Boulder.prototype.id): Promise<Boulder> {
@@ -95,5 +100,39 @@ export class BoulderService {
     }
 
     return this.boulderRepository.flush();
+  }
+
+  async assignJudge(
+    boulder: Boulder,
+    judgeId: typeof User.prototype.id,
+  ): Promise<void> {
+    const [judge, judges] = await Promise.all([
+      this.userService.getOrFail(judgeId),
+      boulder.judges.init(),
+    ]);
+
+    if (judges.contains(judge)) {
+      throw new AlreadyJudgingBoulderConflictError();
+    }
+
+    judges.add(judge);
+    await this.boulderRepository.persistAndFlush(boulder);
+  }
+
+  async removeJudgeAssignment(
+    boulder: Boulder,
+    judgeId: typeof User.prototype.id,
+  ): Promise<void> {
+    const [judge, judges] = await Promise.all([
+      this.userService.getOrFail(judgeId),
+      boulder.judges.init(),
+    ]);
+
+    if (judges.contains(judge)) {
+      judges.remove(judge);
+      await this.boulderRepository.persistAndFlush(boulder);
+    } else {
+      throw new JudgeNotAssignedError();
+    }
   }
 }

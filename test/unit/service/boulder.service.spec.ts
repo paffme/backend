@@ -1,5 +1,5 @@
 import { BoulderService } from '../../../src/bouldering/boulder/boulder.service';
-import { RepositoryMock } from '../mocks/types';
+import { RepositoryMock, ServiceMock } from '../mocks/types';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
 import { Test } from '@nestjs/testing';
@@ -13,6 +13,10 @@ import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
 import { CreateBoulderDto } from '../../../src/competition/dto/in/body/create-boulder.dto';
 import { Collection, InitOptions } from 'mikro-orm';
 import TestUtils from '../../utils';
+import { UserService } from '../../../src/user/user.service';
+import { User } from '../../../src/user/user.entity';
+import { AlreadyJudgingBoulderConflictError } from '../../../src/bouldering/errors/already-judging-boulder-conflict.error';
+import { JudgeNotAssignedError } from '../../../src/bouldering/errors/judge-not-found.error';
 
 const boulderRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -21,6 +25,10 @@ const boulderRepositoryMock: RepositoryMock = {
   removeLater: jest.fn(),
   findOne: jest.fn(),
   flush: jest.fn(),
+};
+
+const userServiceMock: ServiceMock = {
+  getOrFail: jest.fn(),
 };
 
 describe('Boulder service (unit)', () => {
@@ -34,6 +42,10 @@ describe('Boulder service (unit)', () => {
         {
           provide: getRepositoryToken(Boulder),
           useFactory: (): typeof boulderRepositoryMock => boulderRepositoryMock,
+        },
+        {
+          provide: UserService,
+          useValue: userServiceMock,
         },
       ],
     }).compile();
@@ -271,5 +283,123 @@ describe('Boulder service (unit)', () => {
     );
 
     expect(boulderRepositoryMock.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it('assigns a judge', async () => {
+    const judge = {} as User;
+    const contains = jest.fn().mockImplementation(() => false);
+    const add = jest.fn().mockImplementation(() => undefined);
+
+    const boulder = ({
+      judges: {
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+        async init() {
+          return {
+            contains,
+            add,
+          };
+        },
+      },
+    } as unknown) as Boulder;
+
+    userServiceMock.getOrFail.mockImplementation(async () => judge);
+    boulderRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderService.assignJudge(boulder, 1);
+
+    expect(userServiceMock.getOrFail).toHaveBeenCalledTimes(1);
+    expect(userServiceMock.getOrFail).toHaveBeenCalledWith(1);
+
+    expect(contains).toHaveBeenCalledTimes(1);
+    expect(contains).toHaveBeenCalledWith(judge);
+
+    expect(add).toHaveBeenCalledTimes(1);
+    expect(add).toHaveBeenCalledWith(judge);
+
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(1);
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenCalledWith(boulder);
+  });
+
+  it('throws AlreadyJudgingBoulderConflictError when assigning an already assigned judge to a boulder', () => {
+    const judge = {} as User;
+    const contains = jest.fn().mockImplementation(() => true);
+
+    const boulder = ({
+      judges: {
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+        async init() {
+          return {
+            contains,
+          };
+        },
+      },
+    } as unknown) as Boulder;
+
+    userServiceMock.getOrFail.mockImplementation(async () => judge);
+
+    return expect(
+      boulderService.assignJudge(boulder, 1),
+    ).rejects.toBeInstanceOf(AlreadyJudgingBoulderConflictError);
+  });
+
+  it('removes a judge assignment', async () => {
+    const judge = {} as User;
+    const contains = jest.fn().mockImplementation(() => true);
+    const remove = jest.fn().mockImplementation(() => undefined);
+
+    const boulder = ({
+      judges: {
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+        async init() {
+          return {
+            contains,
+            remove,
+          };
+        },
+      },
+    } as unknown) as Boulder;
+
+    userServiceMock.getOrFail.mockImplementation(async () => judge);
+    boulderRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderService.removeJudgeAssignment(boulder, 1);
+
+    expect(userServiceMock.getOrFail).toHaveBeenCalledTimes(1);
+    expect(userServiceMock.getOrFail).toHaveBeenCalledWith(1);
+
+    expect(contains).toHaveBeenCalledTimes(1);
+    expect(contains).toHaveBeenCalledWith(judge);
+
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(remove).toHaveBeenCalledWith(judge);
+
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(1);
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenCalledWith(boulder);
+  });
+
+  it('throws JudgeNotAssignedError when trying to remove a non-existant judge assignment', () => {
+    const judge = {} as User;
+    const contains = jest.fn().mockImplementation(() => false);
+
+    const boulder = ({
+      judges: {
+        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type,sonarjs/no-identical-functions
+        async init() {
+          return {
+            contains,
+          };
+        },
+      },
+    } as unknown) as Boulder;
+
+    userServiceMock.getOrFail.mockImplementation(async () => judge);
+
+    return expect(
+      boulderService.removeJudgeAssignment(boulder, 1),
+    ).rejects.toBeInstanceOf(JudgeNotAssignedError);
   });
 });

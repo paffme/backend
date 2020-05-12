@@ -11,9 +11,11 @@ import { BoulderingRoundCountedRankingService } from './round/ranking/bouldering
 import { BoulderingRankingService } from './ranking/bouldering-ranking.service';
 import { BoulderingGroup } from './group/bouldering-group.entity';
 import { BoulderingGroupService } from './group/bouldering-group.service';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
+    UserModule,
     MikroOrmModule.forFeature({
       entities: [BoulderingResult, BoulderingRound, Boulder, BoulderingGroup],
     }),

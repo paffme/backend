@@ -711,4 +711,44 @@ export class CompetitionService {
 
     return roundsByCategoryByType;
   }
+
+  async assignJudgeToBoulder(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    judgeId: typeof User.prototype.id,
+  ): Promise<void> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return this.boulderingRoundService.assignJudgeToBoulder(
+      round,
+      groupId,
+      boulderId,
+      judgeId,
+    );
+  }
+
+  async removeJudgeAssignmentToBoulder(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    judgeId: typeof User.prototype.id,
+  ): Promise<void> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return this.boulderingRoundService.removeJudgeAssignmentToBoulder(
+      round,
+      groupId,
+      boulderId,
+      judgeId,
+    );
+  }
 }

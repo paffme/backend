@@ -16,6 +16,7 @@ import { CategoryName } from '../shared/types/category-name.enum';
 import { Sex } from '../shared/types/sex.enum';
 import { InternalServerErrorException } from '@nestjs/common';
 import { Category } from '../shared/types/category.interface';
+import { Boulder } from '../bouldering/boulder/boulder.entity';
 
 @Entity()
 export class User extends BaseEntity {
@@ -73,6 +74,9 @@ export class User extends BaseEntity {
 
   @ManyToMany(() => Competition, (competition) => competition.organizers)
   organizations: Collection<Competition> = new Collection<Competition>(this);
+
+  @ManyToMany(() => Boulder, (boulder) => boulder.judges)
+  boulders: Collection<Boulder> = new Collection<Boulder>(this);
 
   getCategory(season: number): Category {
     const delta = season - this.birthYear;
