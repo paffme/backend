@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpStatus,
   Param,
   Patch,
   Post,
@@ -14,7 +13,6 @@ import {
 } from '@nestjs/common';
 
 import {
-  ApiCreatedResponse,
   ApiNoContentResponse,
   ApiOkResponse,
   ApiOperation,
@@ -65,17 +63,8 @@ import { AddOrganizerParamsDto } from './dto/in/params/add-organizer-params.dto'
 import { RemoveOrganizerParamsDto } from './dto/in/params/remove-organizer-params.dto';
 import { OrganizerAuthorizationGuard } from './authorization/organizer.authorization.guard';
 import { RemoveChiefRouteSetterParamsDto } from './dto/in/params/remove-chief-route-setter-params.dto';
-import { AddRoundParamsDto } from './dto/in/params/add-round-params.dto';
 import { JuryPresidentAuthorizationGuard } from './authorization/jury-president.authorization.guard';
-import { BoulderingRoundDto } from '../bouldering/dto/out/bouldering-round.dto';
-import { AddBoulderingResultParamsDto } from './dto/in/params/add-bouldering-result-params.dto';
-import { BoulderingResultDto } from '../bouldering/dto/out/bouldering-result.dto';
-import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
-import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
-import { JudgeAuthorizationGuard } from './authorization/judge.authorization.guard';
-import { BoulderingRoundMapper } from '../shared/mappers/bouldering-round.mapper';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
-import { BoulderingResultMapper } from '../shared/mappers/bouldering-result.mapper';
 import { GetRankingsParamsDto } from './dto/in/params/get-rankings-params.dto';
 import { RankingsDto } from './dto/out/rankings.dto';
 import { RankingsMapper } from '../shared/mappers/rankings.mapper';
@@ -88,33 +77,10 @@ import { Pagination } from '../shared/decorators/pagination.decorator';
 import { Request } from 'express';
 import { Search, SearchQuery } from '../shared/decorators/search.decorator';
 import { SearchCompetitionsDto } from './dto/in/search/search-competitions.dto';
-import { BoulderDto } from '../bouldering/dto/out/boulder.dto';
-import { CreateBoulderParamsDto } from './dto/in/params/create-boulder-params.dto';
-import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
-import { BoulderMapper } from '../shared/mappers/boulder.mapper';
-import { DeleteBoulderParamsDto } from './dto/in/params/delete-boulder-params.dto';
-import { GetBoulderingRoundRankingsParamsDto } from './dto/in/params/get-bouldering-round-rankings-params.dto';
-import { BoulderingRoundRankingsMapper } from '../shared/mappers/bouldering-round-rankings.mapper';
-import { BoulderingRoundRankingsDto } from '../bouldering/dto/out/bouldering-round-rankings.dto';
-import { CreateBoulderingGroupParamsDto } from './dto/in/params/create-bouldering-group-params.dto';
-import { CreateBoulderingGroupDto } from './dto/in/body/create-bouldering-group.dto';
-import { BoulderingGroupDto } from '../bouldering/dto/out/bouldering-group.dto';
-import { BoulderingGroupMapper } from '../shared/mappers/bouldering-group.mapper';
-import { DeleteBoulderingGroupParamsDto } from './dto/in/params/delete-bouldering-group-params.dto';
-import { DeleteBoulderingRoundParamsDto } from './dto/in/params/delete-bouldering-round-params.dto';
 import { CountDto } from '../shared/dto/count.dto';
 import { StartRoundsByTypeParamsDto } from './dto/in/params/start-rounds-by-type-params.dto';
 import { BoulderingLimitedRoundMapper } from '../shared/mappers/bouldering-limited-round.mapper';
 import { BoulderingLimitedRoundDto } from '../bouldering/dto/out/bouldering-limited-round.dto';
-import { UpdateBoulderingRoundParamsDto } from './dto/in/params/update-bouldering-round-params.dto';
-import { UpdateBoulderingRoundDto } from './dto/in/body/update-bouldering-round.dto';
-import { InvalidResultError } from './errors/invalid-result.error';
-import { GetBoulderingRoundsParamsDto } from './dto/in/params/get-bouldering-rounds-params.dto';
-import { BoulderingRoundsByCategoryByTypeMapper } from '../shared/mappers/bouldering-rounds-by-category-by-type.mapper';
-import { RoundByCategoryByTypeDto } from './dto/out/round-by-category-by-type.dto';
-import { AssignJudgeToBoulderParamsDto } from './dto/in/params/assign-judge-to-boulder-params.dto';
-import { RemoveJudgeAssignmentToBoulderParamsDto } from './dto/in/params/remove-judge-assignment-to-boulder-params.dto';
-import { BoulderJudgeAuthorizationGuard } from './authorization/boulder-judge.authorization.guard';
 
 @Controller('competitions')
 @ApiTags('Competition')
@@ -123,16 +89,10 @@ export class CompetitionController {
     private readonly competitionService: CompetitionService,
     private readonly competitionRegistrationMapper: CompetitionRegistrationMapper,
     private readonly userMapper: UserMapper,
-    private readonly boulderingRoundMapper: BoulderingRoundMapper,
     private readonly boulderingLimitedRoundMapper: BoulderingLimitedRoundMapper,
-    private readonly boulderingResultMapper: BoulderingResultMapper,
     private readonly rankingMapper: RankingsMapper,
-    private readonly boulderingRoundRankingMapper: BoulderingRoundRankingsMapper,
-    private readonly boulderingRoundsByCategoryByTypeMapper: BoulderingRoundsByCategoryByTypeMapper,
     private readonly mapper: CompetitionMapper,
     private readonly paginationService: PaginationService,
-    private readonly boulderMapper: BoulderMapper,
-    private readonly boulderingGroupMapper: BoulderingGroupMapper,
   ) {}
 
   @Get()
@@ -542,107 +502,6 @@ export class CompetitionController {
     );
   }
 
-  @Post('/:competitionId/bouldering-rounds')
-  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    JuryPresidentAuthorizationGuard,
-  )
-  @ApiCreatedResponse({
-    type: BoulderingRoundDto,
-  })
-  @ApiOperation(GetOperationId(Competition.name, 'AddRound'))
-  async addBoulderingRound(
-    @Param() params: AddRoundParamsDto,
-    @Body() dto: CreateBoulderingRoundDto,
-  ): Promise<BoulderingRoundDto> {
-    const round = await this.competitionService.addBoulderingRound(
-      params.competitionId,
-      dto,
-    );
-
-    return this.boulderingRoundMapper.map(round);
-  }
-
-  @Get('/:competitionId/bouldering-rounds')
-  @ApiOkResponse({ type: RoundByCategoryByTypeDto })
-  @ApiOperation(
-    GetOperationId(Competition.name, 'GetBoulderingRoundsByCategoryByType'),
-  )
-  async getBoulderingRoundsByCategoryByType(
-    @Param() params: GetBoulderingRoundsParamsDto,
-  ): Promise<RoundByCategoryByTypeDto> {
-    const roundsByCategoryByType = await this.competitionService.getBoulderingRoundsByCategoryByType(
-      params.competitionId,
-    );
-
-    return this.boulderingRoundsByCategoryByTypeMapper.map(
-      roundsByCategoryByType,
-    );
-  }
-
-  @Patch('/:competitionId/bouldering-rounds/:roundId')
-  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    JuryPresidentAuthorizationGuard,
-  )
-  @ApiOkResponse({ type: BoulderingLimitedRoundDto })
-  @ApiOperation(GetOperationId(Competition.name, 'AddRound'))
-  async updateBoulderingRound(
-    @Param() params: UpdateBoulderingRoundParamsDto,
-    @Body() dto: UpdateBoulderingRoundDto,
-  ): Promise<BoulderingLimitedRoundDto> {
-    const updatedRound = await this.competitionService.updateBoulderingRound(
-      params.competitionId,
-      params.roundId,
-      dto,
-    );
-
-    return this.boulderingLimitedRoundMapper.map(updatedRound);
-  }
-
-  @Post(
-    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/results',
-  )
-  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    OrGuard(BoulderJudgeAuthorizationGuard, JuryPresidentAuthorizationGuard),
-  )
-  @ApiCreatedResponse({
-    type: BoulderingResultDto,
-  })
-  @ApiOperation(GetOperationId(Competition.name, 'AddBoulderingResult'))
-  async addResult(
-    @Param() params: AddBoulderingResultParamsDto,
-    @Body() dto: CreateBoulderingResultDto,
-  ): Promise<BoulderingResultDto> {
-    if (
-      typeof dto.try === 'undefined' &&
-      typeof dto.zone === 'undefined' &&
-      typeof dto.top === 'undefined'
-    ) {
-      throw new InvalidResultError();
-    }
-
-    const result = await this.competitionService.addBoulderingResult(
-      params.competitionId,
-      params.roundId,
-      params.groupId,
-      params.boulderId,
-      dto,
-    );
-
-    return this.boulderingResultMapper.map(result);
-  }
-
   @Get('/:competitionId/rankings')
   @ApiOkResponse({ type: RankingsDto })
   @ApiOperation(GetOperationId(Competition.name, 'GetCompetitionRankings'))
@@ -654,130 +513,6 @@ export class CompetitionController {
     );
 
     return this.rankingMapper.map(rankings);
-  }
-
-  @Get('/:competitionId/bouldering-rounds/:roundId/rankings')
-  @ApiOkResponse({ type: BoulderingRoundRankingsDto })
-  @ApiOperation(GetOperationId(Competition.name, 'GetBoulderingRoundRankings'))
-  async getBoulderingRoundRankings(
-    @Param() params: GetBoulderingRoundRankingsParamsDto,
-  ): Promise<BoulderingRoundRankingsDto> {
-    const rankings = await this.competitionService.getBoulderingRoundRankings(
-      params.competitionId,
-      params.roundId,
-    );
-
-    return this.boulderingRoundRankingMapper.map(rankings);
-  }
-
-  @Post('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders')
-  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    JuryPresidentAuthorizationGuard,
-  )
-  @ApiCreatedResponse({ type: BoulderDto })
-  @ApiOperation(GetOperationId(Competition.name, 'CreateBoulder'))
-  async createBoulder(
-    @Param() params: CreateBoulderParamsDto,
-    @Body() dto: CreateBoulderDto,
-  ): Promise<BoulderDto> {
-    const boulder = await this.competitionService.createBoulder(
-      params.competitionId,
-      params.roundId,
-      params.groupId,
-      dto,
-    );
-
-    return this.boulderMapper.map(boulder);
-  }
-
-  @Delete(
-    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId',
-  )
-  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    JuryPresidentAuthorizationGuard,
-  )
-  @ApiNoContentResponse()
-  @ApiOperation(GetOperationId(Competition.name, 'DeleteBoulder'))
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteBoulder(@Param() params: DeleteBoulderParamsDto): Promise<void> {
-    await this.competitionService.deleteBoulder(
-      params.competitionId,
-      params.roundId,
-      params.groupId,
-      params.boulderId,
-    );
-  }
-
-  @Post('/:competitionId/bouldering-rounds/:roundId/groups')
-  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    JuryPresidentAuthorizationGuard,
-  )
-  @ApiCreatedResponse({ type: BoulderingGroupDto })
-  @ApiOperation(GetOperationId(Competition.name, 'CreateBoulderingGroup'))
-  async createGroup(
-    @Param() params: CreateBoulderingGroupParamsDto,
-    @Body() dto: CreateBoulderingGroupDto,
-  ): Promise<BoulderingGroupDto> {
-    const group = await this.competitionService.createBoulderingGroup(
-      params.competitionId,
-      params.roundId,
-      dto,
-    );
-
-    return this.boulderingGroupMapper.map(group);
-  }
-
-  @Delete('/:competitionId/bouldering-rounds/:roundId')
-  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    JuryPresidentAuthorizationGuard,
-  )
-  @ApiNoContentResponse()
-  @ApiOperation(GetOperationId(Competition.name, 'DeleteBoulderingRound'))
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteBoulderingRound(
-    @Param() params: DeleteBoulderingRoundParamsDto,
-  ): Promise<void> {
-    await this.competitionService.deleteBoulderingRound(
-      params.competitionId,
-      params.roundId,
-    );
-  }
-
-  @Delete('/:competitionId/bouldering-rounds/:roundId/groups/:groupId')
-  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    JuryPresidentAuthorizationGuard,
-  )
-  @ApiNoContentResponse()
-  @ApiOperation(GetOperationId(Competition.name, 'DeleteBoulderingGroup'))
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteBoulderingGroup(
-    @Param() params: DeleteBoulderingGroupParamsDto,
-  ): Promise<void> {
-    await this.competitionService.deleteBoulderingGroup(
-      params.competitionId,
-      params.roundId,
-      params.groupId,
-    );
   }
 
   @Patch('/:competitionId/start-qualifiers')
@@ -838,57 +573,5 @@ export class CompetitionController {
     );
 
     return this.boulderingLimitedRoundMapper.mapArray(rounds);
-  }
-
-  @Put(
-    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/judges/:userId',
-  )
-  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    JuryPresidentAuthorizationGuard,
-  )
-  @ApiNoContentResponse()
-  @ApiOperation(GetOperationId(Competition.name, 'AssignJudgeToBoulder'))
-  @HttpCode(204)
-  async assignJudgeToBoulder(
-    @Param() params: AssignJudgeToBoulderParamsDto,
-  ): Promise<void> {
-    await this.competitionService.assignJudgeToBoulder(
-      params.competitionId,
-      params.roundId,
-      params.groupId,
-      params.boulderId,
-      params.userId,
-    );
-  }
-
-  @Delete(
-    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/judges/:userId',
-  )
-  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
-  @AllowedAppRoles(AppRoles.OWNER)
-  @UseGuards(
-    AuthGuard('jwt'),
-    AuthenticationGuard,
-    JuryPresidentAuthorizationGuard,
-  )
-  @ApiNoContentResponse()
-  @ApiOperation(
-    GetOperationId(Competition.name, 'RemoveJudgeAssignmentToBoulder'),
-  )
-  @HttpCode(204)
-  async removeJudgeAssignmentToBoulder(
-    @Param() params: RemoveJudgeAssignmentToBoulderParamsDto,
-  ): Promise<void> {
-    await this.competitionService.removeJudgeAssignmentToBoulder(
-      params.competitionId,
-      params.roundId,
-      params.groupId,
-      params.boulderId,
-      params.userId,
-    );
   }
 }

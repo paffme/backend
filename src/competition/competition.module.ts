@@ -17,6 +17,7 @@ import { JudgeAuthorizationGuard } from './authorization/judge.authorization.gua
 import { BoulderJudgeAuthorizationService } from './authorization/boulder-judge.authorization.service';
 import { BoulderJudgeAuthorizationGuard } from './authorization/boulder-judge.authorization.guard';
 import { Boulder } from '../bouldering/boulder/boulder.entity';
+import { BoulderingController } from './bouldering.controller';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { Boulder } from '../bouldering/boulder/boulder.entity';
     UserModule,
     BoulderingModule,
   ],
-  controllers: [CompetitionController],
+  controllers: [CompetitionController, BoulderingController],
   providers: [
     OrganizerAuthorizationGuard,
     JuryPresidentAuthorizationGuard,
