@@ -39,6 +39,7 @@ describe('Competition (e2e)', () => {
     utils = new TestUtils(
       moduleFixture.get(UserService),
       moduleFixture.get(CompetitionService),
+      undefined,
       moduleFixture.get('MikroORM'),
     );
   });

@@ -35,6 +35,7 @@ import { CompetitionRoundType } from '../../../src/competition/competition-round
 import { AlreadyRegisteredError } from '../../../src/competition/errors/already-registered.error';
 import { CompetitionNotFoundError } from '../../../src/competition/errors/competition-not-found.error';
 import { RoundNotFoundError } from '../../../src/bouldering/errors/round-not-found.error';
+import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -71,6 +72,7 @@ const boulderingRoundServiceMock: ServiceMock = {
   delete: jest.fn(),
   assignJudgeToBoulder: jest.fn(),
   removeJudgeAssignmentToBoulder: jest.fn(),
+  getGroupBoulders: jest.fn(),
 };
 
 const boulderingRankingServiceMock: ServiceMock = {
@@ -1186,5 +1188,57 @@ describe('Competition service (unit)', () => {
     return expect(
       competitionService.removeJudgeAssignmentToBoulder(1, 2, 3, 4, 5),
     ).rejects.toBeInstanceOf(RoundNotFoundError);
+  });
+
+  it('get group boulders', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+      }),
+    ];
+
+    competition.boulderingRounds = ({
+      // eslint-disable-next-line sonarjs/no-identical-functions
+      async init(): Promise<Collection<BoulderingRound>> {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        return {
+          getItems(): typeof competitionRounds {
+            return competitionRounds;
+          },
+        };
+      },
+    } as unknown) as Collection<BoulderingRound>;
+
+    const fakeBoulders: Boulder[] = [];
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    boulderingRoundServiceMock.getGroupBoulders.mockImplementation(
+      async () => fakeBoulders,
+    );
+
+    const boulders = await competitionService.getGroupBoulders(1, 2, 3);
+
+    expect(boulders).toBe(fakeBoulders);
+    expect(boulderingRoundServiceMock.getGroupBoulders).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(boulderingRoundServiceMock.getGroupBoulders).toHaveBeenCalledWith(
+      competitionRounds[0],
+      3,
+    );
+  });
+
+  it('throws competition not found when getting group boulders of an unknown competition', () => {
+    competitionRepositoryMock.findOne.mockImplementation(async () => undefined);
+
+    return expect(
+      competitionService.getGroupBoulders(1, 2, 3),
+    ).rejects.toBeInstanceOf(CompetitionNotFoundError);
   });
 });

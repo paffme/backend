@@ -38,6 +38,7 @@ import { UpdateBoulderingRoundDto } from '../../../src/competition/dto/in/body/u
 import { InvalidRoundError } from '../../../src/bouldering/errors/invalid-round.error';
 import { LimitedUserMapper } from '../../../src/shared/mappers/limited-user.mapper';
 import { GroupNotFoundError } from '../../../src/bouldering/errors/group-not-found.error';
+import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -55,6 +56,7 @@ const boulderingGroupServiceMock: ServiceMock = {
   delete: jest.fn(),
   assignJudgeToBoulder: jest.fn(),
   removeJudgeAssignmentToBoulder: jest.fn(),
+  getBoulders: jest.fn(),
 };
 
 const boulderingUnlimitedContestRankingServiceMock: ServiceMock = {
@@ -677,6 +679,32 @@ describe('Bouldering round service (unit)', () => {
 
     return expect(
       boulderingRoundService.removeJudgeAssignmentToBoulder(round, 0, 1, 2),
+    ).rejects.toBeInstanceOf(GroupNotFoundError);
+  });
+
+  it('gets group boulders', async () => {
+    const { round, group } = givenRoundWithOneGroup();
+
+    const fakeBoulders: Boulder[] = [];
+    boulderingGroupServiceMock.getBoulders.mockImplementation(
+      async () => fakeBoulders,
+    );
+
+    const boulders = await boulderingRoundService.getGroupBoulders(
+      round,
+      group.id,
+    );
+
+    expect(boulders).toBe(fakeBoulders);
+    expect(boulderingGroupServiceMock.getBoulders).toHaveBeenCalledTimes(1);
+    expect(boulderingGroupServiceMock.getBoulders).toHaveBeenCalledWith(group);
+  });
+
+  it('throws group not found when getting boulders of an unknown group', () => {
+    const round = givenRoundWithNoGroups();
+
+    return expect(
+      boulderingRoundService.getGroupBoulders(round, 1),
     ).rejects.toBeInstanceOf(GroupNotFoundError);
   });
 });

@@ -83,6 +83,7 @@ describe('Bouldering round service (integration)', () => {
     utils = new TestUtils(
       module.get(UserService),
       module.get(CompetitionService),
+      undefined,
       module.get('MikroORM'),
     );
   });
