@@ -1,6 +1,6 @@
 {
   "name": "paffme",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "description": "paffme",
   "main": "dist/src/main.js",
   "scripts": {
