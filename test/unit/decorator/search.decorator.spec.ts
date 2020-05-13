@@ -14,7 +14,7 @@ function getParamDecoratorFactory<T>(
   decorator: Function,
   dto?: ClassType<unknown>,
   options?: SearchOptions,
-): (data: unknown, ctx: Partial<ExecutionContext>) => T {
+): (data: unknown, ctx: Partial<ExecutionContext>) => Promise<SearchQuery<T>> {
   class Test {
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     public test(@Search(dto, options) value: SearchQuery<T>): void {}
