@@ -1065,14 +1065,10 @@ describe('Bouldering (e2e)', () => {
       const {
         competition,
         juryPresidentAuth,
-        judge: baseJudge,
+        judge,
         round,
         boulder,
       } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
-
-      const { user: judge } = await utils.givenUser();
-      await utils.addJudgeInCompetition(judge, competition);
-      await utils.assignJudgeToBoulder(judge, boulder);
 
       await api
         .delete(
@@ -1082,8 +1078,7 @@ describe('Bouldering (e2e)', () => {
         .expect(204);
 
       const judges = await utils.getBoulderJudges(boulder.id);
-      expect(judges).toHaveLength(1);
-      expect(judges[0].id).toEqual(baseJudge.id);
+      expect(judges).toHaveLength(0);
     });
 
     it('returns 401 when trying to remove a judge assignment of a boulder without auth', async () => {
