@@ -1030,7 +1030,7 @@ describe('Bouldering (e2e)', () => {
   });
 
   describe('PUT /{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders/{boulderId}/judges/{judgeId}', () => {
-    it('assigns a judge to a bouler', async () => {
+    it('assigns a judge to a boulder', async () => {
       const {
         competition,
         juryPresidentAuth,
@@ -1050,7 +1050,9 @@ describe('Bouldering (e2e)', () => {
 
       const boulderJudges = await utils.getBoulderJudges(boulder.id);
       expect(boulderJudges).toHaveLength(2);
-      expect(boulderJudges[1].id).toEqual(judge.id);
+
+      const expectedJudge = boulderJudges.find((j) => j.id === judge.id);
+      expect(expectedJudge).not.toBeUndefined();
     });
 
     it('returns 401 when assigning a judge to a boulder without auth', async () => {
