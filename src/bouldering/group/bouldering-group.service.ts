@@ -74,4 +74,9 @@ export class BoulderingGroupService {
     const boulder = await this.getBoulderInGroupOrFail(group, boulderId);
     await this.boulderService.removeJudgeAssignment(boulder, judgeId);
   }
+
+  async getBoulders(group: BoulderingGroup): Promise<Boulder[]> {
+    const collection = await group.boulders.init(['judges']);
+    return collection.getItems();
+  }
 }

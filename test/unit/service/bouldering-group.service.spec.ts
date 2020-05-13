@@ -20,6 +20,26 @@ const boulderServiceMock: ServiceMock = {
   removeJudgeAssignment: jest.fn(),
 };
 
+const boulderInitFn = jest.fn();
+
+function givenBoulderingGroupWithBoulders(
+  ...boulders: Boulder[]
+): BoulderingGroup {
+  boulderInitFn.mockImplementation(async () => {
+    return {
+      getItems(): Boulder[] {
+        return boulders;
+      },
+    };
+  });
+
+  return ({
+    boulders: {
+      init: boulderInitFn,
+    },
+  } as unknown) as BoulderingGroup;
+}
+
 describe('Bouldering group service (unit)', () => {
   let boulderingGroupService: BoulderingGroupService;
 
@@ -101,48 +121,25 @@ describe('Bouldering group service (unit)', () => {
   it('assigns a judge to a boulder', async () => {
     const boulder = {} as Boulder;
 
-    const group = ({
-      boulders: {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-        async init(opts) {
-          expect(opts.where?.id).toEqual(1);
-
-          return {
-            getItems(): Boulder[] {
-              return [boulder];
-            },
-          };
-        },
-      },
-    } as unknown) as BoulderingGroup;
+    const group = givenBoulderingGroupWithBoulders(boulder);
 
     boulderServiceMock.assignJudge.mockImplementation(async () => undefined);
 
     await boulderingGroupService.assignJudgeToBoulder(group, 1, 2);
+
+    expect(boulderInitFn).toHaveBeenCalledTimes(1);
+    expect(boulderInitFn).toHaveBeenCalledWith({
+      where: {
+        id: 1,
+      },
+    });
 
     expect(boulderServiceMock.assignJudge).toHaveBeenCalledTimes(1);
     expect(boulderServiceMock.assignJudge).toHaveBeenCalledWith(boulder, 2);
   });
 
   it('throws 404 when trying to assign a judge to a boulder on an non-existant boulder', () => {
-    const group = ({
-      boulders: {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
-        async init(opts) {
-          expect(opts.where?.id).toEqual(1);
-
-          return {
-            getItems(): Boulder[] {
-              return [];
-            },
-          };
-        },
-      },
-    } as unknown) as BoulderingGroup;
+    const group = givenBoulderingGroupWithBoulders();
 
     boulderServiceMock.assignJudge.mockImplementation(async () => undefined);
 
@@ -154,28 +151,20 @@ describe('Bouldering group service (unit)', () => {
   it('removes assignment of a judge to a boulder', async () => {
     const boulder = {} as Boulder;
 
-    const group = ({
-      boulders: {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type,sonarjs/no-identical-functions
-        async init(opts) {
-          expect(opts.where?.id).toEqual(1);
-
-          return {
-            getItems(): Boulder[] {
-              return [boulder];
-            },
-          };
-        },
-      },
-    } as unknown) as BoulderingGroup;
+    const group = givenBoulderingGroupWithBoulders(boulder);
 
     boulderServiceMock.removeJudgeAssignment.mockImplementation(
       async () => undefined,
     );
 
     await boulderingGroupService.removeJudgeAssignmentToBoulder(group, 1, 2);
+
+    expect(boulderInitFn).toHaveBeenCalledTimes(1);
+    expect(boulderInitFn).toHaveBeenCalledWith({
+      where: {
+        id: 1,
+      },
+    });
 
     expect(boulderServiceMock.removeJudgeAssignment).toHaveBeenCalledTimes(1);
     expect(boulderServiceMock.removeJudgeAssignment).toHaveBeenCalledWith(
@@ -185,22 +174,7 @@ describe('Bouldering group service (unit)', () => {
   });
 
   it('throws 404 when trying to remove assignment of a judge to a boulder on an non-existant boulder', () => {
-    const group = ({
-      boulders: {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type,sonarjs/no-identical-functions
-        async init(opts) {
-          expect(opts.where?.id).toEqual(1);
-
-          return {
-            getItems(): Boulder[] {
-              return [];
-            },
-          };
-        },
-      },
-    } as unknown) as BoulderingGroup;
+    const group = givenBoulderingGroupWithBoulders();
 
     boulderServiceMock.removeJudgeAssignment.mockImplementation(
       async () => undefined,
@@ -209,5 +183,17 @@ describe('Bouldering group service (unit)', () => {
     return expect(
       boulderingGroupService.removeJudgeAssignmentToBoulder(group, 1, 2),
     ).rejects.toBeInstanceOf(BoulderNotFoundError);
+  });
+
+  it('gets boulders', async () => {
+    const boulder = {} as Boulder;
+    const group = givenBoulderingGroupWithBoulders(boulder);
+
+    const boulders = await boulderingGroupService.getBoulders(group);
+
+    expect(boulders).toHaveLength(1);
+    expect(boulders[0]).toBe(boulder);
+    expect(boulderInitFn).toHaveBeenCalledTimes(1);
+    expect(boulderInitFn).toHaveBeenCalledWith(['judges']);
   });
 });

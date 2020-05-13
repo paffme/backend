@@ -357,4 +357,12 @@ export class BoulderingRoundService {
       judgeId,
     );
   }
+
+  async getGroupBoulders(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<Boulder[]> {
+    const group = await this.getGroupOrFail(round, groupId);
+    return this.boulderingGroupService.getBoulders(group);
+  }
 }

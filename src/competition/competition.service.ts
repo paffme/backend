@@ -751,4 +751,17 @@ export class CompetitionService {
       judgeId,
     );
   }
+
+  async getGroupBoulders(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<Boulder[]> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return this.boulderingRoundService.getGroupBoulders(round, groupId);
+  }
 }

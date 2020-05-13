@@ -30,6 +30,7 @@ import { CreateBoulderingGroupDto } from '../../src/competition/dto/in/body/crea
 import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
 import { UpdateBoulderingRoundDto } from '../../src/competition/dto/in/body/update-bouldering-round.dto';
 import * as uuid from 'uuid';
+import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -51,6 +52,7 @@ describe('Bouldering (e2e)', () => {
     utils = new TestUtils(
       moduleFixture.get(UserService),
       moduleFixture.get(CompetitionService),
+      moduleFixture.get(BoulderService),
       moduleFixture.get('MikroORM'),
     );
   });
@@ -62,21 +64,6 @@ describe('Bouldering (e2e)', () => {
   afterAll(async () => {
     await app.close();
   });
-
-  async function assignJudgeToBoulder(
-    competition: Competition,
-    judge: User,
-    juryPresidentAuth: TokenResponseDto,
-    round: BoulderingRound,
-    boulder: Boulder,
-  ): Promise<void> {
-    await api
-      .put(
-        `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/judges/${judge.id}`,
-      )
-      .set('Authorization', `Bearer ${juryPresidentAuth.token}`)
-      .expect(204);
-  }
 
   async function givenReadyCompetition(
     rankingType: BoulderingRoundRankingType,
@@ -132,13 +119,7 @@ describe('Bouldering (e2e)', () => {
 
     const boulder = round.groups.getItems()[0].boulders.getItems()[0];
 
-    await assignJudgeToBoulder(
-      competition,
-      judge,
-      juryPresidentAuth,
-      round,
-      boulder,
-    );
+    await utils.assignJudgeToBoulder(judge, boulder);
 
     utils.clearORM();
 
@@ -1084,21 +1065,10 @@ describe('Bouldering (e2e)', () => {
       const {
         competition,
         juryPresidentAuth,
-        judge: baseJudge,
+        judge,
         round,
         boulder,
       } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
-
-      const { user: judge } = await utils.givenUser();
-      await utils.addJudgeInCompetition(judge, competition);
-
-      await assignJudgeToBoulder(
-        competition,
-        judge,
-        juryPresidentAuth,
-        round,
-        boulder,
-      );
 
       await api
         .delete(
@@ -1108,8 +1078,7 @@ describe('Bouldering (e2e)', () => {
         .expect(204);
 
       const judges = await utils.getBoulderJudges(boulder.id);
-      expect(judges).toHaveLength(1);
-      expect(judges[0].id).toEqual(baseJudge.id);
+      expect(judges).toHaveLength(0);
     });
 
     it('returns 401 when trying to remove a judge assignment of a boulder without auth', async () => {
@@ -1135,6 +1104,31 @@ describe('Bouldering (e2e)', () => {
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .expect(403);
+    });
+  });
+
+  describe('GET /{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders', () => {
+    it('gets group boulders', async () => {
+      const {
+        competition,
+        round,
+        boulder,
+        judge,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const { body } = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders`,
+        )
+        .expect(200);
+
+      expect(body).toHaveLength(1);
+      expect(body[0].id).toEqual(boulder.id);
+      expect(body[0].index).toEqual(boulder.index);
+      expect(body[0].judges).toHaveLength(1);
+      expect(body[0].judges[0].id).toEqual(judge.id);
+      expect(body[0].judges[0].firstName).toEqual(judge.firstName);
+      expect(body[0].judges[0].lastName).toEqual(judge.lastName);
     });
   });
 });

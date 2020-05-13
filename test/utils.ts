@@ -21,6 +21,7 @@ import { Sex } from '../src/shared/types/sex.enum';
 import { CategoryName } from '../src/shared/types/category-name.enum';
 import { BoulderingGroup } from '../src/bouldering/group/bouldering-group.entity';
 import { CompetitionRoundType } from '../src/competition/competition-round-type.enum';
+import { BoulderService } from '../src/bouldering/boulder/boulder.service';
 
 // FIXME, cut this utils in multiple parts to remove ! assertions
 
@@ -28,6 +29,7 @@ export default class TestUtils {
   constructor(
     private readonly userService?: UserService,
     private readonly competitionService?: CompetitionService,
+    private readonly boulderService?: BoulderService,
     private readonly orm?: MikroORM,
   ) {}
 
@@ -260,5 +262,9 @@ export default class TestUtils {
     ]);
 
     return boulder.judges.getItems();
+  }
+
+  async assignJudgeToBoulder(judge: User, boulder: Boulder): Promise<void> {
+    await this.boulderService!.assignJudge(boulder, judge.id);
   }
 }
