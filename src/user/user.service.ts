@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { randomBytes, scrypt } from 'crypto';
-import { EntityRepository, wrap } from 'mikro-orm';
+import { EntityRepository, FilterQuery, wrap } from 'mikro-orm';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { UpdateUserDto } from './dto/in/body/update-user.dto';
 import { User } from './user.entity';
@@ -21,6 +21,8 @@ import { UserCompetitionRolesDto } from './dto/out/user-competition-roles.dto';
 import { EmailAlreadyUsedError } from './errors/email-already-used.error';
 import { InvalidCredentialsError } from './errors/invalid-credentials.error';
 import { UserNotFoundError } from './errors/user-not-found.error';
+import { JudgementAssignment } from './interfaces/judgement-assignement.type';
+import { BoulderingRoundState } from '../bouldering/round/bouldering-round.entity';
 
 @Injectable()
 export class UserService {
@@ -195,8 +197,17 @@ export class UserService {
   async getOrFail(
     userId: typeof User.prototype.id,
     populate?: string[],
+    where?: FilterQuery<User>,
   ): Promise<User> {
-    const user = await this.userRepository.findOne(userId, populate);
+    const whereQuery = {
+      id: userId,
+    };
+
+    if (where) {
+      Object.assign(whereQuery, where);
+    }
+
+    const user = await this.userRepository.findOne(whereQuery, populate);
 
     if (!user) {
       throw new UserNotFoundError();
@@ -295,5 +306,49 @@ export class UserService {
       routeSetter: routeSettings.count() === 1,
       technicalDelegate: technicalDelegations.count() === 1,
     };
+  }
+
+  async getJudgementAssignments(
+    userId: typeof User.prototype.id,
+  ): Promise<JudgementAssignment[]> {
+    const { judgedBoulders } = await this.getOrFail(
+      userId,
+      ['judgedBoulders.group.round.competition'],
+      {
+        judgedBoulders: {
+          group: {
+            round: {
+              state: BoulderingRoundState.ONGOING,
+            },
+          },
+        },
+      },
+    );
+
+    return judgedBoulders.getItems();
+  }
+
+  async getCompetitionJudgementAssignments(
+    userId: typeof User.prototype.id,
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<JudgementAssignment[]> {
+    const { judgedBoulders } = await this.getOrFail(
+      userId,
+      ['judgedBoulders.group.round.competition'],
+      {
+        judgedBoulders: {
+          group: {
+            round: {
+              state: BoulderingRoundState.ONGOING,
+              competition: {
+                id: competitionId,
+              },
+            },
+          },
+        },
+      },
+    );
+
+    return judgedBoulders.getItems();
   }
 }

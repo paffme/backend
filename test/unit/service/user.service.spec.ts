@@ -17,6 +17,8 @@ import { JWT_MODULE_OPTIONS } from '@nestjs/jwt/dist/jwt.constants';
 import * as uuid from 'uuid';
 import { Sex } from '../../../src/shared/types/sex.enum';
 import { QueryOrder } from 'mikro-orm';
+import { CompetitionState } from '../../../src/competition/competition.entity';
+import { UserNotFoundError } from '../../../src/user/errors/user-not-found.error';
 
 const userRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -251,7 +253,10 @@ describe('User service (unit)', () => {
     expect(result.routeSetter).toEqual(true);
     expect(result.technicalDelegate).toEqual(false);
     expect(userRepositoryMock.findOne).toHaveBeenCalledTimes(1);
-    expect(userRepositoryMock.findOne).toHaveBeenCalledWith(1, undefined);
+    expect(userRepositoryMock.findOne).toHaveBeenCalledWith(
+      { id: 1 },
+      undefined,
+    );
 
     for (const initMock of initMocks) {
       expect(initMock).toHaveBeenCalledTimes(1);
@@ -267,5 +272,87 @@ describe('User service (unit)', () => {
     userRepositoryMock.count.mockImplementation(async () => 15);
     const res = await userService.count();
     expect(res).toEqual(15);
+  });
+
+  it('gets judgement assignments', async () => {
+    const fakeAssignments = {};
+    const user = {
+      judgedBoulders: {
+        getItems: jest.fn(),
+      },
+    };
+
+    user.judgedBoulders.getItems.mockImplementation(() => fakeAssignments);
+    userRepositoryMock.findOne.mockImplementation(async () => user);
+
+    const assignments = await userService.getJudgementAssignments(1);
+
+    expect(assignments).toBe(fakeAssignments);
+    expect(userRepositoryMock.findOne).toHaveBeenCalledTimes(1);
+    expect(userRepositoryMock.findOne).toHaveBeenCalledWith(
+      {
+        id: 1,
+        judgedBoulders: {
+          group: {
+            round: {
+              state: CompetitionState.ONGOING,
+            },
+          },
+        },
+      },
+      ['judgedBoulders.group.round.competition'],
+    );
+  });
+
+  it('throws user not found when getting assignments of an unknown user', () => {
+    userRepositoryMock.findOne.mockImplementation(async () => undefined);
+
+    return expect(
+      userService.getJudgementAssignments(1),
+    ).rejects.toBeInstanceOf(UserNotFoundError);
+  });
+
+  it('gets judgement assignments in a competition', async () => {
+    const fakeAssignments = {};
+    const user = {
+      judgedBoulders: {
+        getItems: jest.fn(),
+      },
+    };
+
+    user.judgedBoulders.getItems.mockImplementation(() => fakeAssignments);
+    userRepositoryMock.findOne.mockImplementation(async () => user);
+
+    const assignments = await userService.getCompetitionJudgementAssignments(
+      1,
+      2,
+    );
+
+    expect(assignments).toBe(fakeAssignments);
+    expect(userRepositoryMock.findOne).toHaveBeenCalledTimes(1);
+    expect(userRepositoryMock.findOne).toHaveBeenCalledWith(
+      {
+        id: 1,
+        judgedBoulders: {
+          group: {
+            round: {
+              state: CompetitionState.ONGOING,
+              competition: {
+                id: 2,
+              },
+            },
+          },
+        },
+      },
+      ['judgedBoulders.group.round.competition'],
+    );
+  });
+
+  it('throws user not found when getting assignments in a competition of an unknown user', () => {
+    userRepositoryMock.findOne.mockImplementation(async () => undefined);
+
+    return expect(
+      userService.getCompetitionJudgementAssignments(1, 2),
+    ).rejects.toBeInstanceOf(UserNotFoundError);
   });
 });

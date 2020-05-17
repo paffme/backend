@@ -12,6 +12,9 @@ import { CompetitionRegistrationDto } from '../../src/competition/dto/out/compet
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { CompetitionService } from '../../src/competition/competition.service';
 import { Sex } from '../../src/shared/types/sex.enum';
+import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
+import { BoulderingRoundState } from '../../src/bouldering/round/bouldering-round.entity';
+import { CompetitionType } from '../../src/competition/types/competition-type.enum';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -34,7 +37,7 @@ describe('User (e2e)', () => {
     utils = new TestUtils(
       moduleFixture.get(UserService),
       moduleFixture.get(CompetitionService),
-      undefined,
+      moduleFixture.get(BoulderService),
       moduleFixture.get('MikroORM'),
     );
   });
@@ -926,6 +929,100 @@ describe('User (e2e)', () => {
 
       await api
         .get('/users/9999999/competitions-roles/999999')
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
+    });
+  });
+
+  describe('GET /users/{userId}/judgements/assignments', () => {
+    it('gets user judgement assignments', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const boulderingRound = await utils.addBoulderingRound(competition, {
+        boulders: 1,
+      });
+
+      await utils.updateBoulderingRoundState(
+        boulderingRound,
+        BoulderingRoundState.ONGOING,
+      );
+
+      const boulder = boulderingRound.groups[0].boulders.getItems()[0];
+      await utils.assignJudgeToBoulder(user, boulder);
+      const auth = await utils.login(credentials);
+
+      const { body } = await api
+        .get(`/users/${user.id}/judgements/assignments`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(200);
+
+      expect(body).toHaveLength(1);
+      expect(body[0].competitionId).toEqual(competition.id);
+      expect(body[0].roundId).toEqual(boulderingRound.id);
+      expect(body[0].groupId).toEqual(boulderingRound.groups[0].id);
+      expect(body[0].type).toEqual(CompetitionType.Bouldering);
+      expect(body[0].assignedElementId).toEqual(boulder.id);
+    });
+
+    it('returns 401 when getting assignments without auth', async () => {
+      const { user } = await utils.givenUser();
+      await api.get(`/users/${user.id}/judgements/assignments`).expect(401);
+    });
+
+    it('returns 403 when getting assignments without being the appropriate judge', async () => {
+      const { user } = await utils.givenUser();
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      await api
+        .get(`/users/${user.id}/judgements/assignments`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
+    });
+  });
+
+  describe('GET /users/{userId}/judgements/assignments/{competitionId}', () => {
+    it('gets user judgement assignments in a competition', async () => {
+      const { user, credentials } = await utils.givenUser();
+      const competition = await utils.givenCompetition(user);
+      const boulderingRound = await utils.addBoulderingRound(competition, {
+        boulders: 1,
+      });
+
+      await utils.updateBoulderingRoundState(
+        boulderingRound,
+        BoulderingRoundState.ONGOING,
+      );
+
+      const boulder = boulderingRound.groups[0].boulders.getItems()[0];
+      await utils.assignJudgeToBoulder(user, boulder);
+      const auth = await utils.login(credentials);
+
+      const { body } = await api
+        .get(`/users/${user.id}/judgements/assignments/${competition.id}`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(200);
+
+      expect(body).toHaveLength(1);
+      expect(body[0].competitionId).toEqual(competition.id);
+      expect(body[0].roundId).toEqual(boulderingRound.id);
+      expect(body[0].groupId).toEqual(boulderingRound.groups[0].id);
+      expect(body[0].type).toEqual(CompetitionType.Bouldering);
+      expect(body[0].assignedElementId).toEqual(boulder.id);
+    });
+
+    it('returns 401 when getting assignments without auth in a competition', async () => {
+      const { user } = await utils.givenUser();
+      await api.get(`/users/${user.id}/judgements/assignments/123`).expect(401);
+    });
+
+    it('returns 403 when getting assignments without being the appropriate judge in a competition', async () => {
+      const { user } = await utils.givenUser();
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      await api
+        .get(`/users/${user.id}/judgements/assignments/123`)
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(403);
     });
