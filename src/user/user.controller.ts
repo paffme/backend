@@ -67,6 +67,10 @@ import { SearchUsersDto } from './dto/in/search/search-users.dto';
 import { GetUserCompetitionRolesParamsDto } from './dto/in/params/get-user-competition-roles-params.dto';
 import { UserCompetitionRolesDto } from './dto/out/user-competition-roles.dto';
 import { CountDto } from '../shared/dto/count.dto';
+import { GetJudgementsAssignmentsParamsDto } from './dto/in/params/get-judgements-assignments-params.dto';
+import { JudgementAssignmentDto } from './dto/out/judgement-assignment.dto';
+import { JudgementAssignmentsMapper } from '../shared/mappers/judgement-assignments.mapper';
+import { GetCompetitionJudgementsAssignmentsParamsDto } from './dto/in/params/get-competition-judgements-assignments-params.dto';
 
 @Controller('users')
 @ApiTags(User.name)
@@ -78,6 +82,7 @@ export class UserController {
     private readonly competitionMapper: CompetitionMapper,
     private readonly mapper: UserMapper,
     private readonly limitedUserMapper: LimitedUserMapper,
+    private readonly judgementAssignmentMapper: JudgementAssignmentsMapper,
     private readonly paginationService: PaginationService,
   ) {}
 
@@ -345,5 +350,40 @@ export class UserController {
       params.userId,
       params.competitionId,
     );
+  }
+
+  @Get('/:userId/judgements/assignments')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
+  @ApiOkResponse({ type: JudgementAssignmentDto, isArray: true })
+  @ApiOperation(GetOperationId(User.name, 'GetJudgementsAssignments'))
+  async getJudgementsAssignments(
+    @Param() params: GetJudgementsAssignmentsParamsDto,
+  ): Promise<JudgementAssignmentDto[]> {
+    const judgementAssignments = await this.userService.getJudgementAssignments(
+      params.userId,
+    );
+
+    return this.judgementAssignmentMapper.mapArray(judgementAssignments);
+  }
+
+  @Get('/:userId/judgements/assignments/:competitionId')
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
+  @ApiOkResponse({ type: undefined })
+  @ApiOperation(
+    GetOperationId(User.name, 'GetCompetitionJudgementsAssignments'),
+  )
+  async getCompetitionJudgementsAssignments(
+    @Param() params: GetCompetitionJudgementsAssignmentsParamsDto,
+  ): Promise<JudgementAssignmentDto[]> {
+    const judgementsAssignments = await this.userService.getCompetitionJudgementAssignments(
+      params.userId,
+      params.competitionId,
+    );
+
+    return this.judgementAssignmentMapper.mapArray(judgementsAssignments);
   }
 }

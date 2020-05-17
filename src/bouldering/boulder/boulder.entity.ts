@@ -8,7 +8,7 @@ export class Boulder extends BaseEntity {
   @ManyToOne()
   group: BoulderingGroup;
 
-  @ManyToMany(() => User, (user) => user.boulders, {
+  @ManyToMany(() => User, (user) => user.judgedBoulders, {
     owner: true,
     pivotTable: 'boulder_to_judges',
   })

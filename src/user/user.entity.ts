@@ -76,7 +76,7 @@ export class User extends BaseEntity {
   organizations: Collection<Competition> = new Collection<Competition>(this);
 
   @ManyToMany(() => Boulder, (boulder) => boulder.judges)
-  boulders: Collection<Boulder> = new Collection<Boulder>(this);
+  judgedBoulders: Collection<Boulder> = new Collection<Boulder>(this);
 
   getCategory(season: number): Category {
     const delta = season - this.birthYear;

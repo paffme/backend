@@ -13,6 +13,7 @@ import { CreateBoulderingRoundDto } from '../src/competition/dto/in/body/create-
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
+  BoulderingRoundState,
 } from '../src/bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from '../src/competition/dto/in/body/create-bouldering-result.dto';
 import { Boulder } from '../src/bouldering/boulder/boulder.entity';
@@ -266,5 +267,18 @@ export default class TestUtils {
 
   async assignJudgeToBoulder(judge: User, boulder: Boulder): Promise<void> {
     await this.boulderService!.assignJudge(boulder, judge.id);
+  }
+
+  async updateBoulderingRoundState(
+    boulderingRound: BoulderingRound,
+    state: BoulderingRoundState,
+  ): Promise<void> {
+    const round = await this.orm!.em.findOneOrFail(
+      BoulderingRound,
+      boulderingRound.id,
+    );
+
+    round.state = state;
+    await this.orm!.em.persistAndFlush(round);
   }
 }

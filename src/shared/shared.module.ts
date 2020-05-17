@@ -24,6 +24,7 @@ import {
   RoundBySexMapper,
   RoundByTypeMapper,
 } from './mappers/bouldering-rounds-by-category-by-type.mapper';
+import { JudgementAssignmentsMapper } from './mappers/judgement-assignments.mapper';
 
 @Global()
 @Module({
@@ -45,6 +46,7 @@ import {
     BoulderingRoundsByCategoryByTypeMapper,
     RoundBySexMapper,
     RoundByTypeMapper,
+    JudgementAssignmentsMapper,
     UserAuthorizationService,
     PaginationService,
   ],
@@ -65,6 +67,7 @@ import {
     BoulderingRoundsByCategoryByTypeMapper,
     RoundBySexMapper,
     RoundByTypeMapper,
+    JudgementAssignmentsMapper,
     UserAuthorizationService,
     PaginationService,
   ],
