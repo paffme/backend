@@ -44,7 +44,6 @@ describe('Bouldering round service (unit)', () => {
         Sex.Female,
         uuid.v4(),
         5,
-        0,
         d[1].type,
         d[0],
         {} as Competition,

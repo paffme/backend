@@ -28,7 +28,6 @@ export function givenBoulderingRound(
     data?.sex ?? Sex.Female,
     data?.name ?? uuid.v4(),
     data?.maxTries ?? 5,
-    data?.quota ?? 0,
     data?.rankingType ?? BoulderingRoundRankingType.CIRCUIT,
     data?.type ?? CompetitionRoundType.QUALIFIER,
     data?.competition ?? ({} as Competition),
@@ -36,6 +35,7 @@ export function givenBoulderingRound(
 
   round.id = utils.getRandomId();
   round.state = data?.state ?? round.state;
+  round.rankings = data?.rankings;
 
   // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
   // @ts-ignore

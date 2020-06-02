@@ -30,6 +30,10 @@ import { GroupNotFoundError } from '../errors/group-not-found.error';
 import { ClimberNotInRoundError } from '../errors/climber-not-in-round.error';
 import { BoulderNotInRoundError } from '../errors/boulder-not-in-round.error';
 import { MaxClimbersReachedError } from '../errors/max-climbers-reached.error';
+import {
+  RoundQuotaConfig,
+  RoundQuotaConfigValue,
+} from '../../../config/round-quota';
 
 @Injectable()
 export class BoulderingRoundService {
@@ -136,7 +140,6 @@ export class BoulderingRoundService {
       dto.sex,
       dto.name,
       dto.maxTries,
-      dto.quota,
       dto.rankingType,
       dto.type,
       competition,
@@ -148,7 +151,7 @@ export class BoulderingRoundService {
       await this.boulderService.createMany(group, dto.boulders);
     }
 
-    // Add registrations if this is the qualfiers
+    // Add registrations if this is the qualifiers
     if (round.type === CompetitionRoundType.QUALIFIER) {
       const registrations = competition.registrations.getItems();
       const climbersRegistered = registrations.map((r) => r.climber);
@@ -221,6 +224,11 @@ export class BoulderingRoundService {
     const groups = round.groups.getItems();
     let currentGroupIndex = 0;
 
+    if (groups.length > 1) {
+      currentGroupIndex =
+        groups[0].climbers.count() > groups[1].climbers.count() ? 1 : 0;
+    }
+
     for (let i = 0; i < climbers.length; i++) {
       const climber = climbers[i];
       const climberCategory = climber.getCategory(season);
@@ -236,7 +244,37 @@ export class BoulderingRoundService {
       }
     }
 
+    const totalClimbers = groups.reduce(
+      (acc, g) => acc + g.climbers.count(),
+      0,
+    );
+
+    if (round.type !== CompetitionRoundType.FINAL) {
+      round.quota = this.computeQuota(totalClimbers, round.type);
+    }
+
     await this.boulderingRoundRepository.persistAndFlush(round);
+  }
+
+  private computeQuota(
+    climbers: number,
+    roundType: CompetitionRoundType.QUALIFIER | CompetitionRoundType.SEMI_FINAL,
+  ): number {
+    let quota: RoundQuotaConfigValue | undefined;
+
+    if (climbers < 3) {
+      quota = RoundQuotaConfig.get(3);
+    } else if (climbers > 30) {
+      quota = RoundQuotaConfig.get(30);
+    } else {
+      quota = RoundQuotaConfig.get(climbers);
+    }
+
+    if (!quota) {
+      return 0;
+    }
+
+    return quota[roundType];
   }
 
   private async getGroupOrFail(

@@ -30,11 +30,6 @@ export class CreateBoulderingRoundDto {
 
   @ApiProperty()
   @IsInt()
-  @Min(0)
-  quota!: number;
-
-  @ApiProperty()
-  @IsInt()
   @Min(1)
   boulders!: number;
 

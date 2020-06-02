@@ -376,6 +376,9 @@ describe('Competition service (unit)', () => {
       takesRegistrations(): true {
         return true;
       },
+      getQualifierRound(): BoulderingRound {
+        return rounds[1] as BoulderingRound;
+      },
       boulderingRounds: {
         async loadItems(): Promise<unknown[]> {
           return rounds;
@@ -425,6 +428,9 @@ describe('Competition service (unit)', () => {
       },
       takesRegistrations(): true {
         return true;
+      },
+      getQualifierRound(): BoulderingRound {
+        return rounds[0] as BoulderingRound;
       },
       boulderingRounds: {
         async loadItems(): Promise<unknown[]> {
@@ -844,12 +850,18 @@ describe('Competition service (unit)', () => {
     const competitionRounds: BoulderingRound[] = [
       givenBoulderingRound({
         type: CompetitionRoundType.QUALIFIER,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
       }),
       givenBoulderingRound({
         type: CompetitionRoundType.SEMI_FINAL,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
       }),
       givenBoulderingRound({
         type: CompetitionRoundType.FINAL,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
       }),
     ];
 
@@ -883,12 +895,30 @@ describe('Competition service (unit)', () => {
     const competitionRounds: BoulderingRound[] = [
       givenBoulderingRound({
         type: CompetitionRoundType.QUALIFIER,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        rankings: {
+          groups: [
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
+            {
+              id: 0,
+              rankings: [],
+            },
+          ],
+        },
       }),
       givenBoulderingRound({
         type: CompetitionRoundType.SEMI_FINAL,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
       }),
       givenBoulderingRound({
         type: CompetitionRoundType.FINAL,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
       }),
     ];
 
@@ -909,10 +939,18 @@ describe('Competition service (unit)', () => {
 
     expect(rounds).toHaveLength(1);
     expect(rounds[0]).toBe(competitionRounds[1]);
-    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledTimes(1);
-    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledWith(
+    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledTimes(2);
+
+    expect(competitionRepositoryMock.persistLater).toHaveBeenNthCalledWith(
+      1,
+      competitionRounds[0],
+    );
+
+    expect(competitionRepositoryMock.persistLater).toHaveBeenNthCalledWith(
+      2,
       competitionRounds[1],
     );
+
     expect(competitionRepositoryMock.flush).toHaveBeenCalledTimes(1);
   });
 
@@ -922,12 +960,30 @@ describe('Competition service (unit)', () => {
     const competitionRounds: BoulderingRound[] = [
       givenBoulderingRound({
         type: CompetitionRoundType.QUALIFIER,
+        sex: Sex.Male,
+        category: CategoryName.Senior,
       }),
       givenBoulderingRound({
         type: CompetitionRoundType.SEMI_FINAL,
+        sex: Sex.Male,
+        category: CategoryName.Senior,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // @ts-ignore
+        rankings: {
+          groups: [
+            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // @ts-ignore
+            {
+              id: 0,
+              rankings: [],
+            },
+          ],
+        },
       }),
       givenBoulderingRound({
         type: CompetitionRoundType.FINAL,
+        sex: Sex.Male,
+        category: CategoryName.Senior,
       }),
     ];
 
@@ -948,10 +1004,18 @@ describe('Competition service (unit)', () => {
 
     expect(rounds).toHaveLength(1);
     expect(rounds[0]).toBe(competitionRounds[2]);
-    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledTimes(1);
-    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledWith(
+    expect(competitionRepositoryMock.persistLater).toHaveBeenCalledTimes(2);
+
+    expect(competitionRepositoryMock.persistLater).toHaveBeenNthCalledWith(
+      1,
+      competitionRounds[1],
+    );
+
+    expect(competitionRepositoryMock.persistLater).toHaveBeenNthCalledWith(
+      2,
       competitionRounds[2],
     );
+
     expect(competitionRepositoryMock.flush).toHaveBeenCalledTimes(1);
   });
 

@@ -15,6 +15,7 @@ import { Sex } from '../shared/types/sex.enum';
 import { CategoryName } from '../shared/types/category-name.enum';
 import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
+import { CompetitionRoundType } from './competition-round-type.enum';
 
 interface ClimberRankingInfo {
   id: typeof User.prototype.id;
@@ -159,6 +160,44 @@ export class Competition extends BaseEntity {
     );
   }
 
+  getQualifierRound(category: Category): BoulderingRound | undefined {
+    return this.boulderingRounds
+      .getItems()
+      .find(
+        (r) =>
+          r.type === CompetitionRoundType.QUALIFIER &&
+          r.category === category.name &&
+          r.sex === category.sex,
+      );
+  }
+
+  getSemiFinalRound(category: Category): BoulderingRound | undefined {
+    return this.boulderingRounds
+      .getItems()
+      .find(
+        (r) =>
+          r.type === CompetitionRoundType.SEMI_FINAL &&
+          r.category === category.name &&
+          r.sex === category.sex,
+      );
+  }
+
+  getPreviousRound(round: BoulderingRound): BoulderingRound | undefined {
+    if (round.type === CompetitionRoundType.FINAL) {
+      return this.getSemiFinalRound({
+        sex: round.sex,
+        name: round.category,
+      });
+    }
+
+    if (round.type === CompetitionRoundType.SEMI_FINAL) {
+      return this.getQualifierRound({
+        sex: round.sex,
+        name: round.category,
+      });
+    }
+  }
+
   getSeason(): number {
     if (this.startDate.getMonth() >= 8) {
       return this.startDate.getFullYear();
@@ -207,10 +246,11 @@ export type UserCompetitionRelation =
   | 'technicalDelegates'
   | 'organizers';
 
+type Relations = UserCompetitionRelation | 'registrations' | 'boulderingRounds';
+
 export type CompetitionRelation =
-  | UserCompetitionRelation
-  | 'registrations'
-  | 'boulderingRounds';
+  | Relations
+  | 'boulderingRounds.groups.climbers';
 
 // This is just for static validation
-type CompetitionRelationValidation = Pick<Competition, CompetitionRelation>;
+type CompetitionRelationValidation = Pick<Competition, Relations>;

@@ -207,7 +207,6 @@ export default class TestUtils {
     const dto: CreateBoulderingRoundDto = {
       boulders: partialDto?.boulders ?? 4,
       name: partialDto?.name ?? String(Math.random()),
-      quota: partialDto?.quota ?? 5,
       rankingType:
         partialDto?.rankingType ?? BoulderingRoundRankingType.CIRCUIT,
       type: partialDto?.type ?? CompetitionRoundType.QUALIFIER,
@@ -280,5 +279,13 @@ export default class TestUtils {
 
     round.state = state;
     await this.orm!.em.persistAndFlush(round);
+  }
+
+  async startQualifiers(competition: Competition): Promise<void> {
+    await this.competitionService!.startQualifiers(competition.id);
+  }
+
+  async startSemiFinals(competition: Competition): Promise<void> {
+    await this.competitionService!.startSemiFinals(competition.id);
   }
 }

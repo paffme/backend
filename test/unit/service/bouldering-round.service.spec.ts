@@ -162,7 +162,6 @@ describe('Bouldering round service (unit)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: CompetitionRoundType.SEMI_FINAL,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       sex: Sex.Female,
@@ -180,7 +179,6 @@ describe('Bouldering round service (unit)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: CompetitionRoundType.FINAL,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       sex: Sex.Female,
@@ -225,7 +223,6 @@ describe('Bouldering round service (unit)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       sex: Sex.Female,
@@ -255,7 +252,6 @@ describe('Bouldering round service (unit)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       sex: Sex.Female,
@@ -509,7 +505,6 @@ describe('Bouldering round service (unit)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
       type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       sex: Sex.Female,
