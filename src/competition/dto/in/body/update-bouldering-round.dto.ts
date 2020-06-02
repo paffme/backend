@@ -15,12 +15,6 @@ export class UpdateBoulderingRoundDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  quota?: number;
-
   @ApiPropertyOptional({
     enum: BoulderingRoundRankingType,
   })

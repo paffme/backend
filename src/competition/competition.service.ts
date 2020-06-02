@@ -21,6 +21,7 @@ import { CompetitionRegistration } from '../shared/entity/competition-registrati
 import { User } from '../user/user.entity';
 import { BoulderingRoundService } from '../bouldering/round/bouldering-round.service';
 import {
+  BaseBoulderingRoundRanking,
   BoulderingRound,
   BoulderingRoundRankings,
   BoulderingRoundState,
@@ -51,6 +52,7 @@ import { ClimberNotRegisteredError } from './errors/climber-not-registered.error
 import { RoundNotFoundError } from '../bouldering/errors/round-not-found.error';
 import { RankingsNotFoundError } from './errors/rankings-not-found.error';
 import { RoundByCategoryByType } from './types/round-by-category-by-type.type';
+import { NoPreviousRoundRankingsError } from './errors/no-previous-round-rankings.error';
 
 @Injectable()
 export class CompetitionService {
@@ -134,6 +136,18 @@ export class CompetitionService {
     return competition;
   }
 
+  private async isRegistered(
+    climber: User,
+    competition: Competition,
+  ): Promise<boolean> {
+    const count = await this.competitionRegistrationRepository.count({
+      competition,
+      climber,
+    });
+
+    return count === 1;
+  }
+
   async register(
     competitionId: typeof Competition.prototype.id,
     userId: typeof User.prototype.id,
@@ -146,13 +160,7 @@ export class CompetitionService {
 
     const user = await this.userService.getOrFail(userId);
 
-    const registrationExists =
-      (await this.competitionRegistrationRepository.count({
-        competition,
-        climber: user,
-      })) === 1;
-
-    if (registrationExists) {
+    if (await this.isRegistered(user, competition)) {
       throw new AlreadyRegisteredError();
     }
 
@@ -162,20 +170,12 @@ export class CompetitionService {
 
     if (competition.type === CompetitionType.Bouldering) {
       const season = competition.getSeason();
-      const rounds = await competition.boulderingRounds.loadItems();
+      const climberCategory = user.getCategory(season);
+      await competition.boulderingRounds.loadItems();
+      const qualifierRound = competition.getQualifierRound(climberCategory);
 
-      const firstRound = rounds.find((r) => {
-        const climberCategory = user.getCategory(season);
-
-        return (
-          r.type === CompetitionRoundType.QUALIFIER &&
-          r.category === climberCategory.name &&
-          r.sex === climberCategory.sex
-        );
-      });
-
-      if (firstRound && firstRound.takesNewClimbers()) {
-        await this.boulderingRoundService.addClimbers(firstRound, user);
+      if (qualifierRound && qualifierRound.takesNewClimbers()) {
+        await this.boulderingRoundService.addClimbers(qualifierRound, user);
       }
     }
 
@@ -631,22 +631,73 @@ export class CompetitionService {
     return this.competitionRepository.count(search.filter);
   }
 
+  // eslint-disable-next-line sonarjs/cognitive-complexity
   private async startRoundsByType(
     competitionId: typeof Competition.prototype.id,
     type: CompetitionRoundType,
   ): Promise<BoulderingRound[]> {
     const competition = await this.getOrFail(competitionId, [
-      'boulderingRounds',
+      'boulderingRounds.groups.climbers',
     ]);
 
-    const startedRounds = [];
+    const rounds = competition.boulderingRounds.getItems();
 
-    for (const r of competition.boulderingRounds.getItems()) {
-      if (r.type === type && r.state === BoulderingRoundState.PENDING) {
-        r.state = BoulderingRoundState.ONGOING;
-        this.competitionRepository.persistLater(r);
-        startedRounds.push(r);
+    const startedRounds = rounds.filter(
+      (r) => r.type === type && r.state === BoulderingRoundState.PENDING,
+    );
+
+    for (const r of startedRounds) {
+      const previousRound = competition.getPreviousRound(r);
+
+      if (previousRound) {
+        if (!previousRound.rankings) {
+          throw new NoPreviousRoundRankingsError();
+        }
+
+        if (previousRound.quota > 0) {
+          const groups = previousRound.groups.getItems();
+          const getClimberJobs: Promise<User>[] = [];
+
+          for (let i = 1; i <= previousRound.quota; i++) {
+            const group = groups[i % groups.length];
+
+            const groupIndexInRankings = previousRound.rankings.groups.findIndex(
+              (g: { id: typeof BoulderingGroup.prototype.id }) =>
+                g.id === group.id,
+            );
+
+            const groupRankings =
+              previousRound.rankings.groups[groupIndexInRankings].rankings;
+
+            let addedClimbers = 0;
+
+            for (const ranking of groupRankings) {
+              const rank: BaseBoulderingRoundRanking = ranking;
+
+              if (rank.ranking === i) {
+                getClimberJobs.push(
+                  this.userService.getOrFail(rank.climber.id),
+                );
+
+                addedClimbers++;
+              }
+            }
+
+            if (addedClimbers === 0) {
+              break;
+            }
+          }
+
+          const climbers = await Promise.all(getClimberJobs);
+          await this.boulderingRoundService.addClimbers(r, ...climbers);
+        }
+
+        previousRound.state = BoulderingRoundState.ENDED;
+        this.competitionRepository.persistLater(previousRound);
       }
+
+      r.state = BoulderingRoundState.ONGOING;
+      this.competitionRepository.persistLater(r);
     }
 
     await this.competitionRepository.flush();

@@ -7,9 +7,7 @@ export function GetOperationId(
 } {
   const summary = `${model} - ${operation}`;
 
-  // eslint-disable-next-line @typescript-eslint/no-use-before-define
   model = ToTitleCase(model).replace(/\s/g, '');
-  // eslint-disable-next-line @typescript-eslint/no-use-before-define
   operation = ToTitleCase(operation).replace(/\s/g, '');
 
   return {

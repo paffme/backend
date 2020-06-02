@@ -28,7 +28,6 @@ export function givenBoulderingRound(
     data?.sex ?? Sex.Female,
     data?.name ?? uuid.v4(),
     data?.maxTries ?? 5,
-    data?.quota ?? 0,
     data?.rankingType ?? BoulderingRoundRankingType.CIRCUIT,
     data?.type ?? CompetitionRoundType.QUALIFIER,
     data?.competition ?? ({} as Competition),
@@ -36,18 +35,19 @@ export function givenBoulderingRound(
 
   round.id = utils.getRandomId();
   round.state = data?.state ?? round.state;
+  round.rankings = data?.rankings;
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   round.groups = groups ?? {
     getItems(): BoulderingGroup[] {
       return [
         {
           id: 0,
-          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           results: {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             init(): Promise<void> {
               return Promise.resolve();
@@ -57,7 +57,7 @@ export function givenBoulderingRound(
             },
           },
           boulders: {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             init(): Promise<void> {
               return Promise.resolve();
@@ -66,10 +66,10 @@ export function givenBoulderingRound(
               return boulders?.length ?? 0;
             },
           },
-          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           climbers: {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             getItems(): User[] {
               return (

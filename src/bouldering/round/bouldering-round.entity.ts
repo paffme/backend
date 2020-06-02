@@ -22,7 +22,7 @@ export enum BoulderingRoundRankingType {
   LIMITED_CONTEST = 'LIMITED_CONTEST',
 }
 
-export interface BaseGroup<RankingType> {
+export interface BaseGroup<RankingType extends BaseBoulderingRoundRanking> {
   id: number;
   rankings: RankingType[];
 }
@@ -63,8 +63,9 @@ export interface BoulderingRoundUnlimitedContestRanking
   points: number;
 }
 
-export interface BoulderingRoundUnlimitedContestGroup<RankingType>
-  extends BaseGroup<RankingType> {
+export interface BoulderingRoundUnlimitedContestGroup<
+  RankingType extends BaseBoulderingRoundRanking
+> extends BaseGroup<RankingType> {
   bouldersPoints: number[];
 }
 
@@ -108,7 +109,7 @@ export class BoulderingRound extends BaseEntity
   started = false;
 
   @Property()
-  quota: number;
+  quota = 0;
 
   @ManyToOne()
   competition: Competition;
@@ -158,7 +159,6 @@ export class BoulderingRound extends BaseEntity
     sex: Sex,
     name: string,
     maxTries: number | undefined,
-    quota: number,
     rankingType: BoulderingRoundRankingType,
     type: CompetitionRoundType,
     competition: Competition,
@@ -168,7 +168,6 @@ export class BoulderingRound extends BaseEntity
     this.sex = sex;
     this.name = name;
     this.maxTries = maxTries;
-    this.quota = quota;
     this.rankingType = rankingType;
     this.type = type;
     this.competition = competition;

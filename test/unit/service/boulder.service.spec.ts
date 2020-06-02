@@ -204,12 +204,12 @@ describe('Boulder service (unit)', () => {
     );
 
     const group = givenBoulderingGroup(undefined, {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       async init(
         options: InitOptions<Boulder>,
       ): Promise<Partial<Collection<Boulder>>> {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         expect(options.where.id).toEqual(boulders[0].id);
 
@@ -231,7 +231,7 @@ describe('Boulder service (unit)', () => {
 
   it('throws not found when trying to delete an unknown boulder', () => {
     const group = givenBoulderingGroup(undefined, {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       async init(): Promise<Partial<Collection<Boulder>>> {
         return {
@@ -292,7 +292,6 @@ describe('Boulder service (unit)', () => {
 
     const boulder = ({
       judges: {
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         async init() {
           return {
             contains,
@@ -328,7 +327,6 @@ describe('Boulder service (unit)', () => {
 
     const boulder = ({
       judges: {
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         async init() {
           return {
             contains,
@@ -351,7 +349,6 @@ describe('Boulder service (unit)', () => {
 
     const boulder = ({
       judges: {
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
         async init() {
           return {
             contains,
@@ -387,7 +384,7 @@ describe('Boulder service (unit)', () => {
 
     const boulder = ({
       judges: {
-        // eslint-disable-next-line @typescript-eslint/explicit-function-return-type,sonarjs/no-identical-functions
+        // eslint-disable-next-line sonarjs/no-identical-functions
         async init() {
           return {
             contains,
