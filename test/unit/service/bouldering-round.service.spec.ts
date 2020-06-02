@@ -162,7 +162,6 @@ describe('Bouldering round service (unit)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: CompetitionRoundType.SEMI_FINAL,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       sex: Sex.Female,
@@ -180,7 +179,6 @@ describe('Bouldering round service (unit)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: CompetitionRoundType.FINAL,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       sex: Sex.Female,
@@ -225,7 +223,6 @@ describe('Bouldering round service (unit)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       sex: Sex.Female,
@@ -255,7 +252,6 @@ describe('Bouldering round service (unit)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       sex: Sex.Female,
@@ -416,13 +412,13 @@ describe('Bouldering round service (unit)', () => {
       undefined,
       undefined,
       {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         async init(
           options: InitOptions<BoulderingGroup>,
         ): Promise<Partial<Collection<BoulderingGroup>>> {
           if (verifyWhere) {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             expect(options.where.id).toEqual(group.id);
           }
@@ -462,7 +458,7 @@ describe('Bouldering round service (unit)', () => {
 
   function givenRoundWithNoGroups(): BoulderingRound {
     return givenBoulderingRound(undefined, undefined, undefined, undefined, {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       async init(): Promise<Partial<Collection<BoulderingGroup>>> {
         return {
@@ -509,7 +505,6 @@ describe('Bouldering round service (unit)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
       type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       sex: Sex.Female,

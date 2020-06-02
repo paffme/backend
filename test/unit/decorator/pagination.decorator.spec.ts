@@ -10,8 +10,9 @@ import { catchErrors } from './decorator.utils';
 import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { CustomValidationError } from '../../../src/shared/errors/custom-validation.error';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getParamDecoratorFactory(decorator: Function): Function {
+function getParamDecoratorFactory(
+  decorator: () => unknown,
+): (...args: unknown[]) => Promise<OffsetLimitRequest> {
   class Test {
     // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
     public test(@Pagination() value: OffsetLimitRequest): void {}
@@ -29,7 +30,7 @@ function givenPaginationDecorator(
   return factory(null, {
     switchToHttp() {
       return {
-        getRequest(): {} {
+        getRequest(): Record<string, unknown> {
           return {
             query,
           };

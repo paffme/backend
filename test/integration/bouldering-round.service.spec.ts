@@ -103,7 +103,6 @@ describe('Bouldering round service (integration)', () => {
       rankingType:
         partialDto?.rankingType ?? BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: partialDto?.type ?? CompetitionRoundType.QUALIFIER,
-      quota: partialDto?.quota ?? 0,
       name: partialDto?.name ?? 'SuperRound',
       boulders: partialDto?.boulders ?? 4,
       category: partialDto?.category ?? CategoryName.Minime,
@@ -132,7 +131,6 @@ describe('Bouldering round service (integration)', () => {
     const dto: CreateBoulderingRoundDto = {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
       name: 'SuperRound',
       boulders: 4,
       category: CategoryName.Minime,
@@ -161,7 +159,6 @@ describe('Bouldering round service (integration)', () => {
     const round = await boulderingRoundService.createRound(competition, {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       type: CompetitionRoundType.QUALIFIER,
-      quota: 0,
       name: 'SuperRound1',
       boulders: 4,
       category: CategoryName.Minime,

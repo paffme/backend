@@ -16,6 +16,7 @@ import { CategoryName } from '../../src/shared/types/category-name.enum';
 import * as uuid from 'uuid';
 import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
 import { CompetitionState } from '../../src/competition/competition.entity';
+import { CompetitionType } from '../../src/competition/types/competition-type.enum';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -186,7 +187,7 @@ describe('Competition (e2e)', () => {
       const competition = await utils.givenCompetition(user);
 
       const dto: UpdateCompetitionByIdDto = {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         categories: [{}, {}],
       };
@@ -278,7 +279,7 @@ describe('Competition (e2e)', () => {
       const { credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
       const competition = givenCreateCompetitionDto({
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         categories: [{}, {}],
       });
@@ -1221,20 +1222,42 @@ describe('Competition (e2e)', () => {
   describe('PATCH /competitions/{competitionId}/start-semi-finals', () => {
     it('starts semi finals rounds', async () => {
       const { user, credentials } = await utils.givenUser();
-      const competition = await utils.givenCompetition(user);
       const auth = await utils.login(credentials);
+
+      const competition = await utils.givenCompetition(user, {
+        type: CompetitionType.Bouldering,
+      });
+
       await utils.addJuryPresidentInCompetition(user, competition);
 
-      await utils.addBoulderingRound(competition, {
+      const { user: climber } = await utils.givenUser();
+      const category = climber.getCategory(competition.getSeason());
+      await utils.registerUserInCompetition(climber, competition);
+
+      const qRound = await utils.addBoulderingRound(competition, {
         type: CompetitionRoundType.QUALIFIER,
+        category: category.name,
+        sex: category.sex,
       });
+
+      await utils.addBoulderingResult(
+        competition,
+        qRound,
+        qRound.groups[0],
+        qRound.groups[0].boulders[0],
+        climber,
+      );
 
       const sRound = await utils.addBoulderingRound(competition, {
         type: CompetitionRoundType.SEMI_FINAL,
+        category: category.name,
+        sex: category.sex,
       });
 
       await utils.addBoulderingRound(competition, {
         type: CompetitionRoundType.FINAL,
+        category: category.name,
+        sex: category.sex,
       });
 
       const { body } = await api
@@ -1269,22 +1292,60 @@ describe('Competition (e2e)', () => {
   });
 
   describe('PATCH /competitions/{competitionId}/start-finals', () => {
-    it('starts semi finals rounds', async () => {
+    it('starts finals rounds', async () => {
+      // INIT COMPETITION
       const { user, credentials } = await utils.givenUser();
-      const competition = await utils.givenCompetition(user);
       const auth = await utils.login(credentials);
+
+      const competition = await utils.givenCompetition(user, {
+        type: CompetitionType.Bouldering,
+      });
+
       await utils.addJuryPresidentInCompetition(user, competition);
 
-      await utils.addBoulderingRound(competition, {
+      const { user: climber } = await utils.givenUser();
+      const category = climber.getCategory(competition.getSeason());
+      await utils.registerUserInCompetition(climber, competition);
+
+      // START QUALIFIER ROUND
+      const qRound = await utils.addBoulderingRound(competition, {
         type: CompetitionRoundType.QUALIFIER,
+        category: category.name,
+        sex: category.sex,
       });
 
-      await utils.addBoulderingRound(competition, {
+      await utils.startQualifiers(competition);
+
+      await utils.addBoulderingResult(
+        competition,
+        qRound,
+        qRound.groups[0],
+        qRound.groups[0].boulders[0],
+        climber,
+      );
+
+      // START SEMI FINAL ROUND
+      const sRound = await utils.addBoulderingRound(competition, {
         type: CompetitionRoundType.SEMI_FINAL,
+        category: category.name,
+        sex: category.sex,
       });
 
+      await utils.startSemiFinals(competition);
+
+      await utils.addBoulderingResult(
+        competition,
+        sRound,
+        sRound.groups[0],
+        sRound.groups[0].boulders[0],
+        climber,
+      );
+
+      // FINALLY START THE FINAL ROUND
       const fRound = await utils.addBoulderingRound(competition, {
         type: CompetitionRoundType.FINAL,
+        category: category.name,
+        sex: category.sex,
       });
 
       const { body } = await api

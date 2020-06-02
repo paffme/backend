@@ -11,7 +11,7 @@ import { catchErrors } from './decorator.utils';
 import { QueryOrder } from 'mikro-orm';
 
 function getParamDecoratorFactory<T>(
-  decorator: Function,
+  decorator: () => unknown,
   dto?: ClassType<unknown>,
   options?: SearchOptions,
 ): (data: unknown, ctx: Partial<ExecutionContext>) => Promise<SearchQuery<T>> {
@@ -32,11 +32,11 @@ function givenSearchDecorator<T, Dto>(
   const factory = getParamDecoratorFactory<T>(Search, dto, options);
 
   return factory(null, {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     switchToHttp() {
       return {
-        getRequest(): {} {
+        getRequest(): Record<string, unknown> {
           return {
             query,
           };
@@ -157,7 +157,7 @@ describe('Search decorator (unit)', () => {
       Dto,
     );
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     expect(result.filter.hello).toEqual('abc');
   });

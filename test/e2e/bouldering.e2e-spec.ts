@@ -147,7 +147,6 @@ describe('Bouldering (e2e)', () => {
       const dto: CreateBoulderingRoundDto = {
         boulders: 5,
         name: 'Super Round',
-        quota: 0,
         rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
         type: CompetitionRoundType.QUALIFIER,
         sex: Sex.Female,
@@ -164,7 +163,7 @@ describe('Bouldering (e2e)', () => {
       expect(body).toHaveProperty('id');
       expect(body.name).toEqual(dto.name);
       expect(body.type).toEqual(dto.type);
-      expect(body.quota).toEqual(dto.quota);
+      expect(body.quota).toEqual(3);
       expect(body.maxTries).toEqual(dto.maxTries);
       expect(body.competitionId).toEqual(competition.id);
       expect(body.sex).toEqual(Sex.Female);
