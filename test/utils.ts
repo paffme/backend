@@ -117,8 +117,8 @@ export default class TestUtils {
     const { data } = await this.competitionService!.getRegistrations(
       {
         offset: 0,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
         limit: undefined,
       },
       competition.id,

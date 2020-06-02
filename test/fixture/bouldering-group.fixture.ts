@@ -17,7 +17,7 @@ export function givenBoulderingGroup(
   );
 
   if (boulders) {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     group.boulders = boulders;
   }

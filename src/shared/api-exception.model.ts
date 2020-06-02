@@ -9,7 +9,7 @@ export class ApiException {
     type: Object,
     isArray: true,
   })
-  errors?: object[];
+  errors?: Record<string, unknown>[];
   @ApiPropertyOptional() timestamp?: string;
   @ApiPropertyOptional() path?: string;
 }

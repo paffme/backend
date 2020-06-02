@@ -51,7 +51,7 @@ describe('Bouldering round service (unit)', () => {
 
       round.id = utils.getRandomId();
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       const groups: BoulderingGroup[] = d[1].groups.map(
         (g: { id: number; rankings: [] }): BoulderingGroup => ({

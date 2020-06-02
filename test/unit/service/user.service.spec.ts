@@ -44,7 +44,7 @@ describe('User service (unit)', () => {
         },
         {
           provide: JWT_MODULE_OPTIONS,
-          useFactory: (): {} => ({}),
+          useFactory: (): Record<string, unknown> => ({}),
         },
       ],
     }).compile();

@@ -576,7 +576,7 @@ describe('Competition service (unit)', () => {
         async init(
           options: InitOptions<BoulderingGroup>,
         ): Promise<Partial<Collection<BoulderingRound>>> {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           expect(options.where.id).toEqual(round.id);
 
@@ -591,7 +591,7 @@ describe('Competition service (unit)', () => {
 
     return {
       round,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       competition,
     };
@@ -602,7 +602,7 @@ describe('Competition service (unit)', () => {
   }> {
     return {
       boulderingRounds: {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         async init(): Promise<Partial<Collection<BoulderingRound>>> {
           return {
@@ -897,12 +897,10 @@ describe('Competition service (unit)', () => {
         type: CompetitionRoundType.QUALIFIER,
         category: CategoryName.Senior,
         sex: Sex.Male,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
         rankings: {
           groups: [
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-            // @ts-ignore
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             {
               id: 0,
               rankings: [],
@@ -967,11 +965,9 @@ describe('Competition service (unit)', () => {
         type: CompetitionRoundType.SEMI_FINAL,
         sex: Sex.Male,
         category: CategoryName.Senior,
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
-        // @ts-ignore
         rankings: {
           groups: [
-            // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             {
               id: 0,
@@ -1118,7 +1114,7 @@ describe('Competition service (unit)', () => {
 
     competition.boulderingRounds = ({
       async init(): Promise<Collection<BoulderingRound>> {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         return {
           getItems(): typeof competitionRounds {
@@ -1161,7 +1157,7 @@ describe('Competition service (unit)', () => {
     competition.boulderingRounds = ({
       // eslint-disable-next-line sonarjs/no-identical-functions
       async init(): Promise<Collection<BoulderingRound>> {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         return {
           getItems(): BoulderingRound[] {
@@ -1192,7 +1188,7 @@ describe('Competition service (unit)', () => {
     competition.boulderingRounds = ({
       // eslint-disable-next-line sonarjs/no-identical-functions
       async init(): Promise<Collection<BoulderingRound>> {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         return {
           getItems(): typeof competitionRounds {
@@ -1235,7 +1231,7 @@ describe('Competition service (unit)', () => {
     competition.boulderingRounds = ({
       // eslint-disable-next-line sonarjs/no-identical-functions
       async init(): Promise<Collection<BoulderingRound>> {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         return {
           getItems(): BoulderingRound[] {
@@ -1266,7 +1262,7 @@ describe('Competition service (unit)', () => {
     competition.boulderingRounds = ({
       // eslint-disable-next-line sonarjs/no-identical-functions
       async init(): Promise<Collection<BoulderingRound>> {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         return {
           getItems(): typeof competitionRounds {

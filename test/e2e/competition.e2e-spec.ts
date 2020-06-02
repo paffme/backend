@@ -187,7 +187,7 @@ describe('Competition (e2e)', () => {
       const competition = await utils.givenCompetition(user);
 
       const dto: UpdateCompetitionByIdDto = {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         categories: [{}, {}],
       };
@@ -279,7 +279,7 @@ describe('Competition (e2e)', () => {
       const { credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
       const competition = givenCreateCompetitionDto({
-        // eslint-disable-next-line @typescript-eslint/ban-ts-ignore
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         categories: [{}, {}],
       });
