@@ -65,6 +65,7 @@ import { AssignJudgeToBoulderParamsDto } from './dto/in/params/assign-judge-to-b
 import { RemoveJudgeAssignmentToBoulderParamsDto } from './dto/in/params/remove-judge-assignment-to-boulder-params.dto';
 import { BoulderJudgeAuthorizationGuard } from './authorization/boulder-judge.authorization.guard';
 import { GetBouldersParamsDto } from './dto/in/params/get-boulders-params.dto';
+import { GetBoulderingGroupsParamsDto } from './dto/in/params/get-bouldering-groups-params.dto';
 
 @Controller('competitions')
 @ApiTags('Bouldering')
@@ -370,5 +371,19 @@ export class BoulderingController {
     );
 
     return this.boulderMapper.mapArray(boulders);
+  }
+
+  @Get('/:competitionId/bouldering-rounds/:roundId/groups')
+  @ApiOkResponse({ type: BoulderingGroupDto, isArray: true })
+  @ApiOperation(GetOperationId(Competition.name, 'GetBoulderingGroups'))
+  async getBoulderingGroups(
+    @Param() params: GetBoulderingGroupsParamsDto,
+  ): Promise<BoulderingGroupDto[]> {
+    const groups = await this.competitionService.getBoulderingGroups(
+      params.competitionId,
+      params.roundId,
+    );
+
+    return this.boulderingGroupMapper.mapArray(groups);
   }
 }

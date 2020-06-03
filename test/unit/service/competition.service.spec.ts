@@ -1301,4 +1301,35 @@ describe('Competition service (unit)', () => {
       competitionService.getGroupBoulders(1, 2, 3),
     ).rejects.toBeInstanceOf(CompetitionNotFoundError);
   });
+
+  it('gets bouldering groups', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+      }),
+    ];
+
+    competition.boulderingRounds = ({
+      // eslint-disable-next-line sonarjs/no-identical-functions
+      async init(): Promise<Collection<BoulderingRound>> {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        return {
+          getItems(): typeof competitionRounds {
+            return competitionRounds;
+          },
+        };
+      },
+    } as unknown) as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    const groups = await competitionService.getBoulderingGroups(1, 2);
+
+    expect(groups).toBe(competitionRounds[0].groups.getItems());
+  });
 });

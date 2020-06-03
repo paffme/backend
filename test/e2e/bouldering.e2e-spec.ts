@@ -1137,4 +1137,29 @@ describe('Bouldering (e2e)', () => {
       expect(body[0].judges[0].lastName).toEqual(judge.lastName);
     });
   });
+
+  describe('GET /{competitionId}/bouldering-rounds/{roundId}/groups', () => {
+    it('gets bouldering groups', async () => {
+      const {
+        competition,
+        round,
+        climber,
+        boulder,
+        judge,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const { body } = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups`,
+        )
+        .expect(200);
+
+      expect(body).toHaveLength(1);
+      expect(body[0].roundId).toEqual(round.id);
+      expect(body[0].id).toEqual(round.groups.getItems()[0].id);
+      expect(body[0].climbers[0]).toEqual(climber.id);
+      expect(body[0].boulders[0].id).toEqual(boulder.id);
+      expect(body[0].boulders[0].judges[0].id).toEqual(judge.id);
+    });
+  });
 });
