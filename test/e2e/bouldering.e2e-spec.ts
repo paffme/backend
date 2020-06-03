@@ -185,7 +185,6 @@ describe('Bouldering (e2e)', () => {
       expect(group.boulders).toHaveLength(dto.boulders);
 
       for (let i = 0; i < dto.boulders; i++) {
-        expect(group.boulders[i].index).toEqual(i);
         expect(group.boulders[i]).toHaveProperty('id');
       }
     });
@@ -500,7 +499,6 @@ describe('Bouldering (e2e)', () => {
         .send(dto)
         .expect(201);
 
-      expect(body.index).toEqual(boulder.index + 1);
       expect(body).toHaveProperty('id');
       expect(body.judges).toHaveLength(0);
 
@@ -1130,7 +1128,6 @@ describe('Bouldering (e2e)', () => {
 
       expect(body).toHaveLength(1);
       expect(body[0].id).toEqual(boulder.id);
-      expect(body[0].index).toEqual(boulder.index);
       expect(body[0].judges).toHaveLength(1);
       expect(body[0].judges[0].id).toEqual(judge.id);
       expect(body[0].judges[0].firstName).toEqual(judge.firstName);

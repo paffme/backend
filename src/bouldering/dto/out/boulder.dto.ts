@@ -9,11 +9,6 @@ export class BoulderDto {
   readonly id!: typeof Boulder.prototype.id;
 
   @ApiProperty({
-    type: Number,
-  })
-  readonly index!: typeof Boulder.prototype.index;
-
-  @ApiProperty({
     isArray: true,
     type: UserLimitedDto,
   })
