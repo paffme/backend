@@ -17,6 +17,7 @@ import * as uuid from 'uuid';
 import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
 import { CompetitionState } from '../../src/competition/competition.entity';
 import { CompetitionType } from '../../src/competition/types/competition-type.enum';
+import { BoulderingGroupState } from '../../src/bouldering/group/bouldering-group.entity';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -1239,6 +1240,11 @@ describe('Competition (e2e)', () => {
         category: category.name,
         sex: category.sex,
       });
+
+      await utils.updateBoulderingGroupState(
+        qRound.groups[0],
+        BoulderingGroupState.ONGOING,
+      );
 
       await utils.addBoulderingResult(
         competition,

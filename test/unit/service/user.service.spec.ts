@@ -294,9 +294,7 @@ describe('User service (unit)', () => {
         id: 1,
         judgedBoulders: {
           group: {
-            round: {
-              state: CompetitionState.ONGOING,
-            },
+            state: CompetitionState.ONGOING,
           },
         },
       },
@@ -335,8 +333,8 @@ describe('User service (unit)', () => {
         id: 1,
         judgedBoulders: {
           group: {
+            state: CompetitionState.ONGOING,
             round: {
-              state: CompetitionState.ONGOING,
               competition: {
                 id: 2,
               },

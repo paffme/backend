@@ -13,7 +13,10 @@ import { User } from '../../user/user.entity';
 import { BaseEntity } from '../../shared/base.entity';
 import { CategoryName } from '../../shared/types/category-name.enum';
 import { Sex } from '../../shared/types/sex.enum';
-import { BoulderingGroup } from '../group/bouldering-group.entity';
+import {
+  BoulderingGroup,
+  BoulderingGroupState,
+} from '../group/bouldering-group.entity';
 import { CompetitionRoundType } from '../../competition/competition-round-type.enum';
 
 export enum BoulderingRoundRankingType {
@@ -99,9 +102,6 @@ export class BoulderingRound extends BaseEntity
   @Property()
   name: string;
 
-  @Enum(() => BoulderingRoundState)
-  state: BoulderingRoundState = BoulderingRoundState.PENDING;
-
   @Property()
   maxTries?: number;
 
@@ -136,10 +136,26 @@ export class BoulderingRound extends BaseEntity
   @Property()
   rankings?: BoulderingRoundRankings;
 
+  get state(): BoulderingRoundState {
+    const groups = this.groups.getItems();
+
+    if (groups.every((g) => g.state === BoulderingGroupState.ENDED)) {
+      return BoulderingRoundState.ENDED;
+    }
+
+    if (groups.some((g) => g.state === BoulderingGroupState.ONGOING)) {
+      return BoulderingRoundState.ONGOING;
+    }
+
+    return BoulderingRoundState.PENDING;
+  }
+
   takesNewClimbers(): boolean {
+    const state = this.state;
+
     return (
-      this.state === BoulderingRoundState.PENDING ||
-      this.state === BoulderingRoundState.ONGOING
+      state === BoulderingRoundState.PENDING ||
+      state === BoulderingRoundState.ONGOING
     );
   }
 

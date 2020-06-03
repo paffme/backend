@@ -250,7 +250,8 @@ type Relations = UserCompetitionRelation | 'registrations' | 'boulderingRounds';
 
 export type CompetitionRelation =
   | Relations
-  | 'boulderingRounds.groups.climbers';
+  | 'boulderingRounds.groups.climbers'
+  | 'boulderingRounds.groups';
 
 // This is just for static validation
 type CompetitionRelationValidation = Pick<Competition, Relations>;

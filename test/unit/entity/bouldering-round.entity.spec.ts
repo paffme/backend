@@ -1,9 +1,6 @@
-import {
-  BoulderingRoundRankingType,
-  BoulderingRoundState,
-} from '../../../src/bouldering/round/bouldering-round.entity';
-
+import { BoulderingRoundRankingType } from '../../../src/bouldering/round/bouldering-round.entity';
 import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
+import { BoulderingGroupState } from '../../../src/bouldering/group/bouldering-group.entity';
 
 describe('Bouldering round entity (unit)', () => {
   it('returns correctly competitions with counted tries', () => {
@@ -47,26 +44,20 @@ describe('Bouldering round entity (unit)', () => {
   });
 
   it('takes new climbers in pending state', () => {
-    expect(
-      givenBoulderingRound({
-        state: BoulderingRoundState.PENDING,
-      }).takesNewClimbers(),
-    ).toEqual(true);
+    const round = givenBoulderingRound();
+    round.groups.getItems()[0].state = BoulderingGroupState.PENDING;
+    expect(round.takesNewClimbers()).toEqual(true);
   });
 
   it('takes new climbers in ongoing state', () => {
-    expect(
-      givenBoulderingRound({
-        state: BoulderingRoundState.ONGOING,
-      }).takesNewClimbers(),
-    ).toEqual(true);
+    const round = givenBoulderingRound();
+    round.groups.getItems()[0].state = BoulderingGroupState.ONGOING;
+    expect(round.takesNewClimbers()).toEqual(true);
   });
 
   it('does not takes new climbers in ended state', () => {
-    expect(
-      givenBoulderingRound({
-        state: BoulderingRoundState.ENDED,
-      }).takesNewClimbers(),
-    ).toEqual(false);
+    const round = givenBoulderingRound();
+    round.groups.getItems()[0].state = BoulderingGroupState.ENDED;
+    expect(round.takesNewClimbers()).toEqual(false);
   });
 });

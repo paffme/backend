@@ -13,14 +13,16 @@ import { CreateBoulderingRoundDto } from '../src/competition/dto/in/body/create-
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
-  BoulderingRoundState,
 } from '../src/bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from '../src/competition/dto/in/body/create-bouldering-result.dto';
 import { Boulder } from '../src/bouldering/boulder/boulder.entity';
 import { givenCreateCompetitionDto } from './fixture/competition.fixture';
 import { Sex } from '../src/shared/types/sex.enum';
 import { CategoryName } from '../src/shared/types/category-name.enum';
-import { BoulderingGroup } from '../src/bouldering/group/bouldering-group.entity';
+import {
+  BoulderingGroup,
+  BoulderingGroupState,
+} from '../src/bouldering/group/bouldering-group.entity';
 import { CompetitionRoundType } from '../src/competition/competition-round-type.enum';
 import { BoulderService } from '../src/bouldering/boulder/boulder.service';
 
@@ -268,17 +270,17 @@ export default class TestUtils {
     await this.boulderService!.assignJudge(boulder, judge.id);
   }
 
-  async updateBoulderingRoundState(
-    boulderingRound: BoulderingRound,
-    state: BoulderingRoundState,
+  async updateBoulderingGroupState(
+    boulderingGroup: BoulderingGroup,
+    state: BoulderingGroupState,
   ): Promise<void> {
-    const round = await this.orm!.em.findOneOrFail(
-      BoulderingRound,
-      boulderingRound.id,
+    const group = await this.orm!.em.findOneOrFail(
+      BoulderingGroup,
+      boulderingGroup.id,
     );
 
-    round.state = state;
-    await this.orm!.em.persistAndFlush(round);
+    group.state = state;
+    await this.orm!.em.persistAndFlush(group);
   }
 
   async startQualifiers(competition: Competition): Promise<void> {

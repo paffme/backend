@@ -112,11 +112,7 @@ describe('Boulder service (unit)', () => {
 
   it('creates a boulder without an index in the dto and put the boulder at the end', async () => {
     const boulders: Boulder[] = [];
-    const group = givenBoulderingGroup(undefined, {
-      async loadItems(): Promise<Boulder[]> {
-        return boulders;
-      },
-    });
+    const group = givenBoulderingGroup(undefined, boulders);
 
     const dto: CreateBoulderDto = {};
     boulderRepositoryMock.persistAndFlush.mockImplementation(
@@ -144,11 +140,7 @@ describe('Boulder service (unit)', () => {
       },
     ];
 
-    const group = givenBoulderingGroup(undefined, {
-      async loadItems(): Promise<Boulder[]> {
-        return boulders as Boulder[];
-      },
-    });
+    const group = givenBoulderingGroup(undefined, boulders);
 
     const dto: CreateBoulderDto = {
       index: 1,
@@ -172,15 +164,11 @@ describe('Boulder service (unit)', () => {
   });
 
   it('throws when adding a boulder at an invalid index', () => {
-    const group = givenBoulderingGroup(undefined, {
-      async loadItems(): Promise<Boulder[]> {
-        return [
-          {
-            index: 0,
-          },
-        ] as Boulder[];
+    const group = givenBoulderingGroup(undefined, [
+      {
+        index: 0,
       },
-    });
+    ]);
 
     const dto: CreateBoulderDto = {
       index: 2,
@@ -203,23 +191,7 @@ describe('Boulder service (unit)', () => {
       async () => undefined,
     );
 
-    const group = givenBoulderingGroup(undefined, {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      async init(
-        options: InitOptions<Boulder>,
-      ): Promise<Partial<Collection<Boulder>>> {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        expect(options.where.id).toEqual(boulders[0].id);
-
-        return {
-          getItems(): Boulder[] {
-            return boulders as Boulder[];
-          },
-        };
-      },
-    });
+    const group = givenBoulderingGroup(undefined, boulders);
 
     await boulderService.remove(group, boulders[0].id!);
 
@@ -230,17 +202,7 @@ describe('Boulder service (unit)', () => {
   });
 
   it('throws not found when trying to delete an unknown boulder', () => {
-    const group = givenBoulderingGroup(undefined, {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      async init(): Promise<Partial<Collection<Boulder>>> {
-        return {
-          getItems(): Boulder[] {
-            return [];
-          },
-        };
-      },
-    });
+    const group = givenBoulderingGroup(undefined, []);
 
     return expect(boulderService.remove(group, 123)).rejects.toBeInstanceOf(
       NotFoundException,
