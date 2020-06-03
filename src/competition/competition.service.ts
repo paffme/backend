@@ -524,6 +524,7 @@ export class CompetitionService {
   private async getBoulderingRoundOrFail(
     competitionId: typeof Competition.prototype.id,
     roundId: typeof BoulderingRound.prototype.id,
+    populate?: string[],
   ): Promise<{
     round: BoulderingRound;
     competition: Competition;
@@ -534,7 +535,7 @@ export class CompetitionService {
       where: {
         id: roundId,
       },
-      populate: ['groups'],
+      populate,
     });
 
     const round = rounds.getItems()[0];
@@ -743,10 +744,10 @@ export class CompetitionService {
     roundId: typeof BoulderingRound.prototype.id,
     dto: UpdateBoulderingRoundDto,
   ): Promise<BoulderingRound> {
-    const { competition, round } = await this.getBoulderingRoundOrFail(
-      competitionId,
-      roundId,
-    );
+    const {
+      competition,
+      round,
+    } = await this.getBoulderingRoundOrFail(competitionId, roundId, ['groups']);
 
     return this.boulderingRoundService.update(competition, round, dto);
   }
@@ -824,5 +825,18 @@ export class CompetitionService {
     );
 
     return this.boulderingRoundService.getGroupBoulders(round, groupId);
+  }
+
+  async getBoulderingGroups(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+  ): Promise<BoulderingGroup[]> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+      ['groups.climbers', 'groups.boulders.judges'],
+    );
+
+    return round.groups.getItems();
   }
 }
