@@ -14,6 +14,7 @@ export class BoulderingGroupMapper extends BaseMapper<
     super({
       id: 'id',
       name: 'name',
+      state: 'state',
       roundId: (group) => group.round.id,
       climbers: (group) => group.climbers.getItems().map((c) => c.id),
       boulders: (group) => boulderMapper.mapArray(group.boulders.getItems()),

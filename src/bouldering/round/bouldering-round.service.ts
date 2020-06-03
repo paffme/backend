@@ -27,8 +27,6 @@ import { RoundNotFoundError } from '../errors/round-not-found.error';
 import { InvalidRoundError } from '../errors/invalid-round.error';
 import { RoundTypeConflictError } from '../errors/round-type-conflict.error';
 import { GroupNotFoundError } from '../errors/group-not-found.error';
-import { ClimberNotInRoundError } from '../errors/climber-not-in-round.error';
-import { BoulderNotInRoundError } from '../errors/boulder-not-in-round.error';
 import { MaxClimbersReachedError } from '../errors/max-climbers-reached.error';
 import {
   RoundQuotaConfig,
@@ -164,6 +162,7 @@ export class BoulderingRoundService {
   }
 
   async updateRankings(round: BoulderingRound): Promise<void> {
+    await Promise.all(round.groups.getItems().map((g) => g.results.init()));
     round.rankings = this.rankingServices[round.rankingType].getRankings(round);
     await this.boulderingRoundRepository.persistAndFlush(round);
   }
@@ -184,20 +183,6 @@ export class BoulderingRoundService {
 
     if (!group) {
       throw new GroupNotFoundError();
-    }
-
-    await Promise.all([
-      group.climbers.init(),
-      group.boulders.init(),
-      group.results.init(),
-    ]);
-
-    if (!group.climbers.contains(climber)) {
-      throw new ClimberNotInRoundError();
-    }
-
-    if (!group.boulders.contains(boulder)) {
-      throw new BoulderNotInRoundError();
     }
 
     const result = await this.boulderingResultService.addResult(

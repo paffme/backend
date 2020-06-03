@@ -317,9 +317,7 @@ export class UserService {
       {
         judgedBoulders: {
           group: {
-            round: {
-              state: BoulderingRoundState.ONGOING,
-            },
+            state: BoulderingRoundState.ONGOING,
           },
         },
       },
@@ -338,8 +336,8 @@ export class UserService {
       {
         judgedBoulders: {
           group: {
+            state: BoulderingRoundState.ONGOING,
             round: {
-              state: BoulderingRoundState.ONGOING,
               competition: {
                 id: competitionId,
               },

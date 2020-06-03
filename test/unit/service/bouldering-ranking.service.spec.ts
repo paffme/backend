@@ -10,7 +10,10 @@ import { CategoryName } from '../../../src/shared/types/category-name.enum';
 import { Sex } from '../../../src/shared/types/sex.enum';
 import * as uuid from 'uuid';
 import { Competition } from '../../../src/competition/competition.entity';
-import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
+import {
+  BoulderingGroup,
+  BoulderingGroupState,
+} from '../../../src/bouldering/group/bouldering-group.entity';
 import { Collection } from 'mikro-orm';
 import { BoulderingResult } from '../../../src/bouldering/result/bouldering-result.entity';
 import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
@@ -67,6 +70,7 @@ describe('Bouldering round service (unit)', () => {
           name: uuid.v4(),
           updatedAt: new Date(),
           createdAt: new Date(),
+          state: BoulderingGroupState.ONGOING,
         }),
       );
 

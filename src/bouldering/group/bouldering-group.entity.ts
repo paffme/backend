@@ -1,6 +1,7 @@
 import {
   Collection,
   Entity,
+  Enum,
   ManyToMany,
   ManyToOne,
   OneToMany,
@@ -13,6 +14,12 @@ import { BaseGroup } from '../../competition/base-group';
 import { BaseEntity } from '../../shared/base.entity';
 import { Boulder } from '../boulder/boulder.entity';
 import { BoulderingResult } from '../result/bouldering-result.entity';
+
+export enum BoulderingGroupState {
+  PENDING = 'PENDING',
+  ONGOING = 'ONGOING',
+  ENDED = 'ENDED',
+}
 
 @Entity()
 export class BoulderingGroup extends BaseEntity
@@ -42,6 +49,9 @@ export class BoulderingGroup extends BaseEntity
 
   @ManyToOne()
   round: BoulderingRound;
+
+  @Enum(() => BoulderingGroupState)
+  state: BoulderingGroupState = BoulderingGroupState.PENDING;
 
   constructor(name: string, round: BoulderingRound) {
     super();

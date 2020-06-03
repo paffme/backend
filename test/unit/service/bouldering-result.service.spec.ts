@@ -10,8 +10,13 @@ import { User } from '../../../src/user/user.entity';
 import { CreateBoulderingResultDto } from '../../../src/competition/dto/in/body/create-bouldering-result.dto';
 import { UnprocessableEntityException } from '@nestjs/common';
 import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
-import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
+import {
+  BoulderingGroup,
+  BoulderingGroupState,
+} from '../../../src/bouldering/group/bouldering-group.entity';
 import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
+import { ClimberNotInGroupError } from '../../../src/bouldering/errors/climber-not-in-group.error';
+import { BoulderNotInGroupError } from '../../../src/bouldering/errors/boulder-not-in-group.error';
 
 const boulderingResultRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -138,17 +143,27 @@ describe('Bouldering result service (unit)', () => {
     const boulder = {} as Boulder;
     const instance = {} as BoulderingResult;
 
-    const round = givenBoulderingRound({
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-    });
-
-    const group = givenBoulderingGroup({
-      round,
-    });
-
     const user = {
       id: utils.getRandomId(),
     } as User;
+
+    const round = givenBoulderingRound(
+      {
+        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      },
+      undefined,
+      undefined,
+      [user],
+    );
+
+    const group = givenBoulderingGroup(
+      {
+        round,
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
 
     const dto: CreateBoulderingResultDto = {
       top: true,
@@ -199,17 +214,22 @@ describe('Bouldering result service (unit)', () => {
       tries: 0,
     } as BoulderingResult;
 
+    const user = {
+      id: utils.getRandomId(),
+    } as User;
+
     const round = givenBoulderingRound({
       rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
     });
 
-    const group = givenBoulderingGroup({
-      round,
-    });
-
-    const user = {
-      id: utils.getRandomId(),
-    } as User;
+    const group = givenBoulderingGroup(
+      {
+        round,
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
 
     const dto: CreateBoulderingResultDto = {
       try: true,
@@ -266,13 +286,18 @@ describe('Bouldering result service (unit)', () => {
       rankingType: BoulderingRoundRankingType.CIRCUIT,
     });
 
-    const group = givenBoulderingGroup({
-      round,
-    });
-
     const user = {
       id: utils.getRandomId(),
     } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round,
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
 
     const dto: CreateBoulderingResultDto = {
       try: true,
@@ -324,13 +349,18 @@ describe('Bouldering result service (unit)', () => {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
     });
 
-    const group = givenBoulderingGroup({
-      round,
-    });
-
     const user = {
       id: utils.getRandomId(),
     } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round,
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
 
     const dto: CreateBoulderingResultDto = {
       try: true,
@@ -354,13 +384,18 @@ describe('Bouldering result service (unit)', () => {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
     });
 
-    const group = givenBoulderingGroup({
-      round,
-    });
-
     const user = {
       id: utils.getRandomId(),
     } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round,
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
 
     const dto: CreateBoulderingResultDto = {
       zone: true,
@@ -391,13 +426,18 @@ describe('Bouldering result service (unit)', () => {
       rankingType: BoulderingRoundRankingType.CIRCUIT,
     });
 
-    const group = givenBoulderingGroup({
-      round,
-    });
-
     const user = {
       id: utils.getRandomId(),
     } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round,
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
 
     const dto: CreateBoulderingResultDto = {
       top: false,
@@ -438,13 +478,18 @@ describe('Bouldering result service (unit)', () => {
       rankingType: BoulderingRoundRankingType.CIRCUIT,
     });
 
-    const group = givenBoulderingGroup({
-      round,
-    });
-
     const user = {
       id: utils.getRandomId(),
     } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round,
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
 
     const dto: CreateBoulderingResultDto = {
       zone: false,
@@ -485,13 +530,18 @@ describe('Bouldering result service (unit)', () => {
       rankingType: BoulderingRoundRankingType.CIRCUIT,
     });
 
-    const group = givenBoulderingGroup({
-      round,
-    });
-
     const user = {
       id: utils.getRandomId(),
     } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round,
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
 
     const dto: CreateBoulderingResultDto = {
       top: true,
@@ -518,18 +568,23 @@ describe('Bouldering result service (unit)', () => {
   });
 
   it('should not add a result if maxTries is already reached for a limited contest', () => {
-    const group = givenBoulderingGroup({
-      round: givenBoulderingRound({
-        maxTries: 5,
-      }),
-    });
+    const boulder = {} as Boulder;
+    const user = {} as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound({
+          maxTries: 5,
+        }),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
 
     boulderingResultRepositoryMock.findOne.mockImplementation(async () => ({
       tries: 5,
     }));
-
-    const boulder = {} as Boulder;
-    const user = {} as User;
 
     const dto: CreateBoulderingResultDto = {
       try: true,
@@ -539,5 +594,55 @@ describe('Bouldering result service (unit)', () => {
     return expect(
       boulderingResultService.addResult(group, boulder, user, dto),
     ).rejects.toBeInstanceOf(UnprocessableEntityException);
+  });
+
+  it('throws ClimberNotInGroupError', () => {
+    const boulder = {} as Boulder;
+    const user = {} as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound(),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [],
+    );
+
+    boulderingResultRepositoryMock.findOne.mockImplementation(async () => ({}));
+
+    const dto: CreateBoulderingResultDto = {
+      try: true,
+      climberId: 123,
+    };
+
+    return expect(
+      boulderingResultService.addResult(group, boulder, user, dto),
+    ).rejects.toBeInstanceOf(ClimberNotInGroupError);
+  });
+
+  it('throws BoulderNotInGroupError', () => {
+    const boulder = {} as Boulder;
+    const user = {} as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound(),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [],
+      [user],
+    );
+
+    boulderingResultRepositoryMock.findOne.mockImplementation(async () => ({}));
+
+    const dto: CreateBoulderingResultDto = {
+      try: true,
+      climberId: 123,
+    };
+
+    return expect(
+      boulderingResultService.addResult(group, boulder, user, dto),
+    ).rejects.toBeInstanceOf(BoulderNotInGroupError);
   });
 });

@@ -35,7 +35,10 @@ import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
 import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
 import { SearchQuery } from '../shared/decorators/search.decorator';
-import { BoulderingGroup } from '../bouldering/group/bouldering-group.entity';
+import {
+  BoulderingGroup,
+  BoulderingGroupState,
+} from '../bouldering/group/bouldering-group.entity';
 import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
 import { CreateBoulderingGroupDto } from './dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from './competition-round-type.enum';
@@ -531,6 +534,7 @@ export class CompetitionService {
       where: {
         id: roundId,
       },
+      populate: ['groups'],
     });
 
     const round = rounds.getItems()[0];
@@ -692,11 +696,17 @@ export class CompetitionService {
           await this.boulderingRoundService.addClimbers(r, ...climbers);
         }
 
-        previousRound.state = BoulderingRoundState.ENDED;
+        for (const group of previousRound.groups.getItems()) {
+          group.state = BoulderingGroupState.ENDED;
+        }
+
         this.competitionRepository.persistLater(previousRound);
       }
 
-      r.state = BoulderingRoundState.ONGOING;
+      for (const group of r.groups.getItems()) {
+        group.state = BoulderingGroupState.ONGOING;
+      }
+
       this.competitionRepository.persistLater(r);
     }
 
@@ -745,7 +755,7 @@ export class CompetitionService {
     competitionId: typeof Competition.prototype.id,
   ): Promise<RoundByCategoryByType<BoulderingRound>> {
     const { boulderingRounds } = await this.getOrFail(competitionId, [
-      'boulderingRounds',
+      'boulderingRounds.groups',
     ]);
 
     const roundsByCategoryByType: RoundByCategoryByType<BoulderingRound> = {};

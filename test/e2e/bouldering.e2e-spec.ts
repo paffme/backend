@@ -31,6 +31,7 @@ import { CompetitionRoundType } from '../../src/competition/competition-round-ty
 import { UpdateBoulderingRoundDto } from '../../src/competition/dto/in/body/update-bouldering-round.dto';
 import * as uuid from 'uuid';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
+import { BoulderingGroupState } from '../../src/bouldering/group/bouldering-group.entity';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -116,6 +117,11 @@ describe('Bouldering (e2e)', () => {
       category: CategoryName.Minime,
       maxTries: roundData?.maxTries,
     });
+
+    await utils.updateBoulderingGroupState(
+      round.groups.getItems()[0],
+      BoulderingGroupState.ONGOING,
+    );
 
     const boulder = round.groups.getItems()[0].boulders.getItems()[0];
 
@@ -677,6 +683,7 @@ describe('Bouldering (e2e)', () => {
       expect(body.roundId).toEqual(round.id);
       expect(body.climbers).toHaveLength(0);
       expect(body.boulders).toHaveLength(0);
+      expect(body.state).toEqual(BoulderingGroupState.PENDING);
     });
 
     it('returns 401 when creating a round without auth', async () => {
@@ -812,7 +819,7 @@ describe('Bouldering (e2e)', () => {
   });
 
   describe('PATCH /competitions/{competitionId}/bouldering-rounds/{roundId}', () => {
-    it('updates a bouldering group', async () => {
+    it('updates a bouldering round', async () => {
       const { competition, round } = await givenReadyCompetition(
         BoulderingRoundRankingType.CIRCUIT,
       );

@@ -15,6 +15,7 @@ import { Sex } from '../../src/shared/types/sex.enum';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
 import { BoulderingRoundState } from '../../src/bouldering/round/bouldering-round.entity';
 import { CompetitionType } from '../../src/competition/types/competition-type.enum';
+import { BoulderingGroupState } from '../../src/bouldering/group/bouldering-group.entity';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -942,9 +943,9 @@ describe('User (e2e)', () => {
         boulders: 1,
       });
 
-      await utils.updateBoulderingRoundState(
-        boulderingRound,
-        BoulderingRoundState.ONGOING,
+      await utils.updateBoulderingGroupState(
+        boulderingRound.groups.getItems()[0],
+        BoulderingGroupState.ONGOING,
       );
 
       const boulder = boulderingRound.groups[0].boulders.getItems()[0];
@@ -989,9 +990,9 @@ describe('User (e2e)', () => {
         boulders: 1,
       });
 
-      await utils.updateBoulderingRoundState(
-        boulderingRound,
-        BoulderingRoundState.ONGOING,
+      await utils.updateBoulderingGroupState(
+        boulderingRound.groups.getItems()[0],
+        BoulderingGroupState.ONGOING,
       );
 
       const boulder = boulderingRound.groups[0].boulders.getItems()[0];

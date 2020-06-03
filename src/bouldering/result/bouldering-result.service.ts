@@ -5,9 +5,15 @@ import { BoulderingResult } from './bouldering-result.entity';
 import { CreateBoulderingResultDto } from '../../competition/dto/in/body/create-bouldering-result.dto';
 import { User } from '../../user/user.entity';
 import { Boulder } from '../boulder/boulder.entity';
-import { BoulderingGroup } from '../group/bouldering-group.entity';
+import {
+  BoulderingGroup,
+  BoulderingGroupState,
+} from '../group/bouldering-group.entity';
 import { WrongResultForRoundError } from '../errors/wrong-result-for-round.error';
 import { MaxTriesReachedError } from '../errors/max-tries-reached.error';
+import { AddResultWithoutOngoingGroupError } from '../../competition/errors/add-result-without-ongoing-group.error';
+import { ClimberNotInGroupError } from '../errors/climber-not-in-group.error';
+import { BoulderNotInGroupError } from '../errors/boulder-not-in-group.error';
 
 @Injectable()
 export class BoulderingResultService {
@@ -53,6 +59,20 @@ export class BoulderingResultService {
     climber: User,
     dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResult> {
+    if (group.state !== BoulderingGroupState.ONGOING) {
+      throw new AddResultWithoutOngoingGroupError();
+    }
+
+    await Promise.all([group.climbers.init(), group.boulders.init()]);
+
+    if (!group.climbers.contains(climber)) {
+      throw new ClimberNotInGroupError();
+    }
+
+    if (!group.boulders.contains(boulder)) {
+      throw new BoulderNotInGroupError();
+    }
+
     const result = await this.getOrCreateNewInstance(group, boulder, climber);
 
     if (dto.try) {

@@ -264,9 +264,14 @@ describe('Bouldering round service (unit)', () => {
   });
 
   it('updates rankings for an unlimited contest', async () => {
-    const round = {
+    const round = ({
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-    } as BoulderingRound;
+      groups: {
+        getItems() {
+          return [];
+        },
+      },
+    } as unknown) as BoulderingRound;
 
     const rankings = {} as BoulderingRoundUnlimitedContestRankings;
 
@@ -300,9 +305,14 @@ describe('Bouldering round service (unit)', () => {
   });
 
   it('updates rankings for a limited contest', async () => {
-    const round = {
+    const round = ({
       rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
-    } as BoulderingRound;
+      groups: {
+        getItems() {
+          return [];
+        },
+      },
+    } as unknown) as BoulderingRound;
 
     const rankings = {} as BoulderingRoundUnlimitedContestRankings;
 
@@ -336,9 +346,14 @@ describe('Bouldering round service (unit)', () => {
   });
 
   it('updates rankings for a circuit', async () => {
-    const round = {
+    const round = ({
       rankingType: BoulderingRoundRankingType.CIRCUIT,
-    } as BoulderingRound;
+      groups: {
+        getItems() {
+          return [];
+        },
+      },
+    } as unknown) as BoulderingRound;
 
     const rankings = {} as BoulderingRoundUnlimitedContestRankings;
 

@@ -23,7 +23,6 @@ import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.
 import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import {
-  BadRequestException,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -32,13 +31,17 @@ import { BoulderingRankingService } from '../../src/bouldering/ranking/boulderin
 import { CategoryName } from '../../src/shared/types/category-name.enum';
 import { Sex } from '../../src/shared/types/sex.enum';
 import { CreateBoulderingResultDto } from '../../src/competition/dto/in/body/create-bouldering-result.dto';
-import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.entity';
+import {
+  BoulderingGroup,
+  BoulderingGroupState,
+} from '../../src/bouldering/group/bouldering-group.entity';
 import { BoulderingGroupService } from '../../src/bouldering/group/bouldering-group.service';
 import { CreateCompetitionDTO } from '../../src/competition/dto/in/body/create-competition.dto';
 import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
 import { UpdateBoulderingRoundDto } from '../../src/competition/dto/in/body/update-bouldering-round.dto';
 import * as uuid from 'uuid';
 import { givenCompetition } from '../fixture/competition.fixture';
+import { MaxClimbersReachedError } from '../../src/bouldering/errors/max-climbers-reached.error';
 
 describe('Bouldering round service (integration)', () => {
   let boulderingRoundService: BoulderingRoundService;
@@ -109,9 +112,7 @@ describe('Bouldering round service (integration)', () => {
       sex: partialDto?.sex ?? Sex.Female,
     };
 
-    const round = await boulderingRoundService.createRound(competition, dto);
-    round.state = partialDto?.state ?? round.state;
-    return round;
+    return boulderingRoundService.createRound(competition, dto);
   }
 
   function givenBoulderingGroup(
@@ -214,15 +215,14 @@ describe('Bouldering round service (integration)', () => {
   });
 
   it('does not add a climber when the state is ended', async () => {
-    const round = await givenBoulderingRound({
-      state: BoulderingRoundState.ENDED,
-    });
+    const round = await givenBoulderingRound();
+    round.groups.getItems()[0].state = BoulderingGroupState.ENDED;
 
     const { user: climber } = await utils.givenUser();
 
     return expect(
       boulderingRoundService.addClimbers(round, climber),
-    ).rejects.toBeInstanceOf(BadRequestException);
+    ).rejects.toBeInstanceOf(MaxClimbersReachedError);
   });
 
   it('adds a result', async () => {
@@ -243,6 +243,11 @@ describe('Bouldering round service (integration)', () => {
 
     await boulderingRoundService.addClimbers(round, climber);
     const dto = {} as CreateBoulderingResultDto;
+
+    await utils.updateBoulderingGroupState(
+      round.groups.getItems()[0],
+      BoulderingGroupState.ONGOING,
+    );
 
     const result = await boulderingRoundService.addResult(
       round.id,
@@ -279,6 +284,11 @@ describe('Bouldering round service (integration)', () => {
     await boulderingRoundService.addClimbers(round, climber);
     const dto = {} as CreateBoulderingResultDto;
 
+    await utils.updateBoulderingGroupState(
+      round.groups.getItems()[0],
+      BoulderingGroupState.ONGOING,
+    );
+
     await boulderingRoundService.addResult(
       round.id,
       round.groups[0].id,
@@ -311,63 +321,6 @@ describe('Bouldering round service (integration)', () => {
     for (let i = 0; i < round.groups[0].boulders.count(); i++) {
       expect(rankings.groups[0].rankings[0].tops[i]).toEqual(false);
     }
-  });
-
-  it('does not add a result if the climber is not in the round', async () => {
-    const { user: climber } = await utils.givenUser();
-    const round = await givenBoulderingRound({
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-    });
-
-    const dto = {} as CreateBoulderingResultDto;
-
-    return expect(
-      boulderingRoundService.addResult(
-        round.id,
-        round.groups[0].id,
-        round.groups[0].boulders.getItems()[0].id,
-        climber,
-        dto,
-      ),
-    ).rejects.toBeInstanceOf(BadRequestException);
-  });
-
-  it('does not add a result if the boulder is not in the group of a round', async () => {
-    const { user: climber } = await utils.givenUser({
-      sex: Sex.Female,
-      birthYear: 2006,
-    });
-
-    const round = await givenBoulderingRound(
-      {
-        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-        sex: Sex.Female,
-        category: CategoryName.Minime,
-      },
-      {
-        startDate: new Date(2019, 10, 1),
-      },
-    );
-
-    const group = round.groups.getItems()[0];
-    const [boulder] = group.boulders;
-    const dto = {} as CreateBoulderingResultDto;
-
-    const anotherRound = await givenBoulderingRound({
-      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-    });
-
-    await boulderingRoundService.addClimbers(anotherRound, climber);
-
-    return expect(
-      boulderingRoundService.addResult(
-        anotherRound.id,
-        anotherRound.groups[0].id,
-        boulder.id,
-        climber,
-        dto,
-      ),
-    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it('throws not found when adding a result to an unknown boulder', async () => {
