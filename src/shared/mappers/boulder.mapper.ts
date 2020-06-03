@@ -11,7 +11,6 @@ export class BoulderMapper extends BaseMapper<BoulderDto, Boulder> {
   constructor(limitedUserMapper: LimitedUserMapper) {
     super({
       id: 'id',
-      index: 'index',
       judges: (boulder) =>
         limitedUserMapper.mapArray(boulder.judges.getItems()),
     });
@@ -22,6 +21,6 @@ export class BoulderMapper extends BaseMapper<BoulderDto, Boulder> {
   }
 
   public mapArray(boulders: Boulder[]): BoulderDto[] {
-    return boulders.map((b) => this.map(b));
+    return boulders.sort((a, b) => a.index - b.index).map((b) => this.map(b));
   }
 }
