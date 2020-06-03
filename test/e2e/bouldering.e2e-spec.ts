@@ -683,6 +683,7 @@ describe('Bouldering (e2e)', () => {
       expect(body.roundId).toEqual(round.id);
       expect(body.climbers).toHaveLength(0);
       expect(body.boulders).toHaveLength(0);
+      expect(body.state).toEqual(BoulderingGroupState.PENDING);
     });
 
     it('returns 401 when creating a round without auth', async () => {

@@ -2,7 +2,10 @@ import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../../user/user.entity';
 import { BoulderDto } from './boulder.dto';
 import { BoulderingRound } from '../../round/bouldering-round.entity';
-import { BoulderingGroup } from '../../group/bouldering-group.entity';
+import {
+  BoulderingGroup,
+  BoulderingGroupState,
+} from '../../group/bouldering-group.entity';
 
 export class BoulderingGroupDto {
   @ApiProperty()
@@ -27,4 +30,9 @@ export class BoulderingGroupDto {
     type: Number,
   })
   readonly roundId!: typeof BoulderingRound.prototype.id;
+
+  @ApiProperty({
+    enum: BoulderingGroupState,
+  })
+  readonly state!: BoulderingGroupState;
 }
