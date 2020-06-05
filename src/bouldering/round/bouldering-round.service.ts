@@ -145,14 +145,18 @@ export class BoulderingRoundService {
 
     // Create groups
     for (let i = 0; i < groups; i++) {
+      // FIXME: this is a transaction and should be flushed underneath
       const group = await this.boulderingGroupService.create(`${i}`, round);
       await this.boulderService.createMany(group, dto.boulders);
     }
 
     // Add registrations if this is the qualifiers
     if (round.type === CompetitionRoundType.QUALIFIER) {
-      const registrations = competition.registrations.getItems();
-      const climbersRegistered = registrations.map((r) => r.climber);
+      const registrations = await competition.registrations.init({
+        populate: ['climber'],
+      });
+
+      const climbersRegistered = registrations.getItems().map((r) => r.climber);
       await this.addClimbers(round, ...climbersRegistered);
     }
 

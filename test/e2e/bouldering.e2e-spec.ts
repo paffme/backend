@@ -188,6 +188,38 @@ describe('Bouldering (e2e)', () => {
         expect(group.boulders[i]).toHaveProperty('id');
       }
     });
+
+    it('should create a qualifier bouldering round and add already registered climbers', async function () {
+      const { user, credentials } = await utils.givenUser();
+      const { user: climber } = await utils.givenUser({
+        birthYear: 20,
+        sex: Sex.Male,
+      });
+      const auth = await utils.login(credentials);
+      const competition = await utils.givenCompetition(user);
+      await utils.addJuryPresidentInCompetition(user, competition);
+      await utils.registerUserInCompetition(climber, competition);
+      utils.clearORM();
+
+      const dto: CreateBoulderingRoundDto = {
+        boulders: 1,
+        name: 'Youhou',
+        rankingType: BoulderingRoundRankingType.CIRCUIT,
+        type: CompetitionRoundType.QUALIFIER,
+        sex: Sex.Male,
+        category: CategoryName.Veteran,
+        groups: 1,
+        maxTries: 2,
+      };
+
+      const { body } = await api
+        .post(`/competitions/${competition.id}/bouldering-rounds`)
+        .set('Authorization', `Bearer ${auth.token}`)
+        .send(dto)
+        .expect(201);
+
+      expect(body.groups[0].climbers[0]).toEqual(climber.id);
+    });
   });
 
   describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders/:boulderId/results', () => {
