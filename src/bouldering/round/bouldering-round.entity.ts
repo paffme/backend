@@ -18,6 +18,7 @@ import {
   BoulderingGroupState,
 } from '../group/bouldering-group.entity';
 import { CompetitionRoundType } from '../../competition/competition-round-type.enum';
+import { InternalServerErrorException } from '@nestjs/common';
 
 export enum BoulderingRoundRankingType {
   CIRCUIT = 'CIRCUIT',
@@ -137,6 +138,10 @@ export class BoulderingRound extends BaseEntity
   rankings?: BoulderingRoundRankings;
 
   get state(): BoulderingRoundState {
+    if (!this.groups.isInitialized()) {
+      throw new InternalServerErrorException('Groups not initialized');
+    }
+
     const groups = this.groups.getItems();
 
     if (groups.every((g) => g.state === BoulderingGroupState.ENDED)) {

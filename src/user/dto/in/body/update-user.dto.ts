@@ -1,6 +1,14 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, Length } from 'class-validator';
+import {
+  IsEmail,
+  IsInt,
+  IsOptional,
+  IsString,
+  Length,
+  Validate,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
+import { BirthYear } from './register.dto';
 
 export class UpdateUserDto {
   @ApiPropertyOptional()
@@ -15,7 +23,6 @@ export class UpdateUserDto {
   readonly email?: string;
 
   @ApiPropertyOptional({
-    required: true,
     minLength: 6,
     maxLength: 32,
     type: String,
@@ -25,4 +32,16 @@ export class UpdateUserDto {
   @IsString()
   @Length(6, 32)
   password?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(2, 32)
+  club?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Validate(BirthYear)
+  readonly birthYear?: number;
 }

@@ -47,7 +47,7 @@ export function givenCreateCompetitionDto(
     city: data?.city ?? uuid.v4(),
     name: data?.name ?? uuid.v4(),
     postalCode: data?.postalCode ?? uuid.v4(),
-    type: data?.type ?? CompetitionType.Lead,
+    type: data?.type ?? CompetitionType.Bouldering,
     startDate: data?.startDate ?? today,
     endDate: data?.endDate ?? tomorrow,
   };

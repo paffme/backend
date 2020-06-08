@@ -318,6 +318,43 @@ describe('Competition (e2e)', () => {
         expect(registration).toBeTruthy();
       });
 
+      it('creates a registrations and add the user in the qualifier round', async function () {
+        const { user, credentials } = await utils.givenUser();
+        const auth = await utils.login(credentials);
+
+        const competition = await utils.givenCompetition(user, {
+          type: CompetitionType.Bouldering,
+        });
+
+        const qRound = await utils.addBoulderingRound(competition, {
+          sex: user.sex,
+          category: user.getCategory(competition.getSeason()).name,
+          type: CompetitionRoundType.QUALIFIER,
+        });
+
+        utils.clearORM();
+
+        await api
+          .put(`/competitions/${competition.id}/registrations/${user.id}`)
+          .set('Authorization', `Bearer ${auth.token}`)
+          .expect(204);
+
+        const registrations = await utils.getRegistrations(competition);
+
+        const registration = registrations.find(
+          (r) =>
+            r.competition.id === competition.id && r.climber.id === user.id,
+        );
+
+        expect(registration).toBeTruthy();
+
+        const group = await utils.getBoulderingGroup(
+          qRound.groups.getItems()[0].id,
+        );
+
+        expect(group.climbers.getItems()[0].id).toEqual(user.id);
+      });
+
       it('allows admin to create a registration for a user', async () => {
         const { user } = await utils.givenUser();
         const { credentials } = await utils.givenAdminUser();

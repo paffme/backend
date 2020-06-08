@@ -155,7 +155,9 @@ export class CompetitionService {
     competitionId: typeof Competition.prototype.id,
     userId: typeof User.prototype.id,
   ): Promise<void> {
-    const competition = await this.getOrFail(competitionId);
+    const competition = await this.getOrFail(competitionId, [
+      'boulderingRounds.groups.climbers',
+    ]);
 
     if (!competition.takesRegistrations()) {
       throw new RegistrationsClosedError();
@@ -174,7 +176,6 @@ export class CompetitionService {
     if (competition.type === CompetitionType.Bouldering) {
       const season = competition.getSeason();
       const climberCategory = user.getCategory(season);
-      await competition.boulderingRounds.loadItems();
       const qualifierRound = competition.getQualifierRound(climberCategory);
 
       if (qualifierRound && qualifierRound.takesNewClimbers()) {

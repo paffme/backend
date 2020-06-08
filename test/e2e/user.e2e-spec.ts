@@ -337,12 +337,16 @@ describe('User (e2e)', () => {
       const { user, credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
       const newEmail = `${uuid.v4()}@${uuid.v4()}.fr`;
+      const newClub = uuid.v4().substring(0, 5);
+      const newBirthYear = user.birthYear + 1;
 
       const { body } = await api
         .patch('/users/' + auth.userId)
         .set('Authorization', 'Bearer ' + auth.token)
         .send({
           email: newEmail,
+          club: newClub,
+          birthYear: newBirthYear,
         })
         .expect(200);
 
@@ -350,6 +354,8 @@ describe('User (e2e)', () => {
         {
           ...user,
           email: newEmail,
+          club: newClub,
+          birthYear: newBirthYear,
         },
         body,
       );

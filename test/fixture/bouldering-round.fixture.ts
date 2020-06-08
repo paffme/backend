@@ -84,5 +84,7 @@ export function givenBoulderingRound(
     },
   };
 
+  round.groups.isInitialized = () => true;
+
   return round;
 }
