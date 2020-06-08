@@ -1,11 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../../../user/user.entity';
 import { BoulderDto } from './boulder.dto';
 import { BoulderingRound } from '../../round/bouldering-round.entity';
 import {
   BoulderingGroup,
   BoulderingGroupState,
 } from '../../group/bouldering-group.entity';
+import { UserLimitedDto } from '../../../user/dto/out/user-limited.dto';
 
 export class BoulderingGroupDto {
   @ApiProperty()
@@ -16,9 +16,9 @@ export class BoulderingGroupDto {
 
   @ApiProperty({
     isArray: true,
-    type: Number,
+    type: UserLimitedDto,
   })
-  readonly climbers!: typeof User.prototype.id[];
+  readonly climbers!: UserLimitedDto[];
 
   @ApiProperty({
     isArray: true,

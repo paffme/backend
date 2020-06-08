@@ -4,19 +4,20 @@ import { morphism } from 'morphism';
 import { BoulderingGroup } from '../../bouldering/group/bouldering-group.entity';
 import { BoulderingGroupDto } from '../../bouldering/dto/out/bouldering-group.dto';
 import { BoulderMapper } from './boulder.mapper';
+import { LimitedUserMapper } from './limited-user.mapper';
 
 @Injectable()
 export class BoulderingGroupMapper extends BaseMapper<
   BoulderingGroupDto,
   BoulderingGroup
 > {
-  constructor(boulderMapper: BoulderMapper) {
+  constructor(boulderMapper: BoulderMapper, userMapper: LimitedUserMapper) {
     super({
       id: 'id',
       name: 'name',
       state: 'state',
       roundId: (group) => group.round.id,
-      climbers: (group) => group.climbers.getItems().map((c) => c.id),
+      climbers: (group) => userMapper.mapArray(group.climbers.getItems()),
       boulders: (group) => boulderMapper.mapArray(group.boulders.getItems()),
     });
   }
