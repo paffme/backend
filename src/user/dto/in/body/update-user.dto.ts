@@ -14,7 +14,14 @@ export class UpdateUserDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  readonly username?: string;
+  @Length(2, 32)
+  readonly firstName?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Length(2, 32)
+  readonly lastName?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -37,7 +44,7 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   @Length(2, 32)
-  club?: string;
+  readonly club?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

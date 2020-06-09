@@ -337,6 +337,8 @@ describe('User (e2e)', () => {
       const { user, credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
       const newEmail = `${uuid.v4()}@${uuid.v4()}.fr`;
+      const newFirstName = uuid.v4().substring(0, 10);
+      const newLastName = uuid.v4().substring(0, 10);
       const newClub = uuid.v4().substring(0, 5);
       const newBirthYear = user.birthYear + 1;
 
@@ -347,6 +349,8 @@ describe('User (e2e)', () => {
           email: newEmail,
           club: newClub,
           birthYear: newBirthYear,
+          firstName: newFirstName,
+          lastName: newLastName,
         })
         .expect(200);
 
@@ -356,6 +360,8 @@ describe('User (e2e)', () => {
           email: newEmail,
           club: newClub,
           birthYear: newBirthYear,
+          firstName: newFirstName,
+          lastName: newLastName,
         },
         body,
       );
