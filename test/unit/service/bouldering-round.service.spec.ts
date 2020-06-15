@@ -39,6 +39,7 @@ import { InvalidRoundError } from '../../../src/bouldering/errors/invalid-round.
 import { LimitedUserMapper } from '../../../src/shared/mappers/limited-user.mapper';
 import { GroupNotFoundError } from '../../../src/bouldering/errors/group-not-found.error';
 import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
+import { BulkBoulderingResultsDto } from '../../../src/competition/dto/in/body/bulk-bouldering-results.dto';
 
 const boulderingRoundRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -49,7 +50,9 @@ const boulderingRoundRepositoryMock: RepositoryMock = {
   removeAndFlush: jest.fn(),
 };
 
-const boulderingResultServiceMock: ServiceMock = {};
+const boulderingResultServiceMock: ServiceMock = {
+  bulkResults: jest.fn(),
+};
 
 const boulderingGroupServiceMock: ServiceMock = {
   create: jest.fn(),
@@ -415,18 +418,25 @@ describe('Bouldering round service (unit)', () => {
   });
 
   function givenRoundWithOneGroup(
+    roundData?: Partial<BoulderingRound>,
+    groupData?: Partial<BoulderingGroup>,
     verifyWhere = true,
   ): {
     group: BoulderingGroup;
     round: BoulderingRound;
   } {
-    const group = givenBoulderingGroup();
+    const group = givenBoulderingGroup(groupData);
+    const groups = [group];
+
     const round = givenBoulderingRound(
-      undefined,
+      roundData,
       undefined,
       undefined,
       undefined,
       {
+        getItems(): BoulderingGroup[] {
+          return groups;
+        },
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         async init(
@@ -440,7 +450,7 @@ describe('Bouldering round service (unit)', () => {
 
           return {
             getItems(): BoulderingGroup[] {
-              return [group];
+              return groups;
             },
           };
         },
@@ -576,7 +586,11 @@ describe('Bouldering round service (unit)', () => {
   });
 
   it('deletes a round', async () => {
-    const { round, group } = givenRoundWithOneGroup(false);
+    const { round, group } = givenRoundWithOneGroup(
+      undefined,
+      undefined,
+      false,
+    );
 
     boulderingRoundRepositoryMock.removeLater.mockImplementation(
       () => undefined,
@@ -716,5 +730,44 @@ describe('Bouldering round service (unit)', () => {
     return expect(
       boulderingRoundService.getGroupBoulders(round, 1),
     ).rejects.toBeInstanceOf(GroupNotFoundError);
+  });
+
+  it('adds bulk results', async () => {
+    const { round, group } = givenRoundWithOneGroup({
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+    });
+
+    boulderingResultServiceMock.bulkResults.mockImplementation(
+      async () => undefined,
+    );
+
+    const rankings: BoulderingRoundUnlimitedContestRankings = {
+      type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      groups: [],
+    };
+
+    boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    boulderingUnlimitedContestRankingServiceMock.getRankings.mockImplementation(
+      () => rankings,
+    );
+
+    const dto = {} as BulkBoulderingResultsDto;
+
+    const groupRankings = await boulderingRoundService.bulkResults(
+      round,
+      group.id,
+      dto,
+    );
+
+    expect(groupRankings).toBe(round.rankings!.groups[0]);
+    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(
+      boulderingUnlimitedContestRankingServiceMock.getRankings,
+    ).toHaveBeenCalledTimes(1);
   });
 });

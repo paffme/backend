@@ -17,11 +17,15 @@ import {
 import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
 import { ClimberNotInGroupError } from '../../../src/bouldering/errors/climber-not-in-group.error';
 import { BoulderNotInGroupError } from '../../../src/bouldering/errors/boulder-not-in-group.error';
+import { BulkBoulderingResultsDto } from '../../../src/competition/dto/in/body/bulk-bouldering-results.dto';
+import { IncoherentTopInTriesError } from '../../../src/bouldering/errors/incoherent-top-in-tries.error';
+import { IncoherentZoneInTriesError } from '../../../src/bouldering/errors/incoherent-zone-in-tries.error';
 
 const boulderingResultRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
   persistLater: jest.fn(),
   findOne: jest.fn(),
+  flush: jest.fn(),
 };
 
 describe('Bouldering result service (unit)', () => {
@@ -644,5 +648,573 @@ describe('Bouldering result service (unit)', () => {
     return expect(
       boulderingResultService.addResult(group, boulder, user, dto),
     ).rejects.toBeInstanceOf(BoulderNotInGroupError);
+  });
+
+  it('creates the result if it does not exists when adding bulk results', async () => {
+    const boulder = {
+      id: 0,
+    } as Boulder;
+
+    const user = {
+      id: 0,
+    } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound({
+          rankingType: BoulderingRoundRankingType.CIRCUIT,
+        }),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [
+        {
+          climberId: 0,
+          boulderId: 0,
+          top: true,
+          topInTries: 1,
+          zone: true,
+          zoneInTries: 1,
+          type: BoulderingRoundRankingType.CIRCUIT,
+        },
+      ],
+    };
+
+    boulderingResultRepositoryMock.flush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderingResultService.bulkResults(group, dto);
+
+    expect(boulderingResultRepositoryMock.persistLater).toHaveBeenCalledTimes(
+      2,
+    );
+
+    expect(
+      boulderingResultRepositoryMock.persistLater.mock.calls[0][0],
+    ).toEqual(
+      expect.objectContaining({
+        boulder,
+        climber: user,
+      }),
+    );
+
+    expect(boulderingResultRepositoryMock.persistLater.mock.calls[0][0]).toBe(
+      boulderingResultRepositoryMock.persistLater.mock.calls[1][0],
+    );
+  });
+
+  it('use an already existing result when adding bulk results', async () => {
+    const boulder = {
+      id: 0,
+    } as Boulder;
+
+    const user = {
+      id: 0,
+    } as User;
+
+    const instance = {} as BoulderingResult;
+
+    boulderingResultRepositoryMock.findOne.mockImplementation(
+      async () => instance,
+    );
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound({
+          rankingType: BoulderingRoundRankingType.CIRCUIT,
+        }),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [user],
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [
+        {
+          climberId: 0,
+          boulderId: 0,
+          top: true,
+          topInTries: 1,
+          zone: true,
+          zoneInTries: 1,
+          type: BoulderingRoundRankingType.CIRCUIT,
+        },
+      ],
+    };
+
+    boulderingResultRepositoryMock.flush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderingResultService.bulkResults(group, dto);
+
+    expect(boulderingResultRepositoryMock.persistLater).toHaveBeenCalledTimes(
+      1,
+    );
+
+    expect(boulderingResultRepositoryMock.persistLater.mock.calls[0][0]).toBe(
+      instance,
+    );
+  });
+
+  it('handles bulk results for a group for a circuit', async () => {
+    const boulder1 = {
+      id: 0,
+    } as Boulder;
+
+    const boulder2 = {
+      id: 1,
+    } as Boulder;
+
+    const user = {
+      id: 0,
+    } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound({
+          rankingType: BoulderingRoundRankingType.CIRCUIT,
+        }),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder1, boulder2],
+      [user],
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [
+        {
+          climberId: 0,
+          boulderId: 0,
+          top: true,
+          topInTries: 1,
+          zone: true,
+          zoneInTries: 1,
+          type: BoulderingRoundRankingType.CIRCUIT,
+        },
+        {
+          climberId: 0,
+          boulderId: 1,
+          top: true,
+          topInTries: 1,
+          zone: true,
+          zoneInTries: 1,
+          type: BoulderingRoundRankingType.CIRCUIT,
+        },
+      ],
+    };
+
+    boulderingResultRepositoryMock.flush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderingResultService.bulkResults(group, dto);
+
+    expect(boulderingResultRepositoryMock.persistLater).toHaveBeenCalledTimes(
+      4, // 2 by the result creation, 2 at the end to save, they all points to the same objects so we only test the first two calls
+    );
+
+    expect(
+      boulderingResultRepositoryMock.persistLater.mock.calls[0][0],
+    ).toEqual(
+      expect.objectContaining({
+        boulder: boulder1,
+        climber: user,
+        zone: true,
+        top: true,
+        zoneInTries: 1,
+        topInTries: 1,
+        tries: 1,
+      }),
+    );
+
+    expect(
+      boulderingResultRepositoryMock.persistLater.mock.calls[1][0],
+    ).toEqual(
+      expect.objectContaining({
+        boulder: boulder2,
+        climber: user,
+        zone: true,
+        top: true,
+        zoneInTries: 1,
+        topInTries: 1,
+        tries: 1,
+      }),
+    );
+
+    expect(boulderingResultRepositoryMock.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles bulk results for a group for a limited contest', async () => {
+    const boulder1 = {
+      id: 0,
+    } as Boulder;
+
+    const boulder2 = {
+      id: 1,
+    } as Boulder;
+
+    const user = {
+      id: 0,
+    } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound({
+          rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
+        }),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder1, boulder2],
+      [user],
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [
+        {
+          climberId: 0,
+          boulderId: 0,
+          top: true,
+          topInTries: 1,
+          zone: true,
+          zoneInTries: 1,
+          type: BoulderingRoundRankingType.LIMITED_CONTEST,
+        },
+        {
+          climberId: 0,
+          boulderId: 1,
+          top: true,
+          topInTries: 1,
+          zone: true,
+          zoneInTries: 1,
+          type: BoulderingRoundRankingType.LIMITED_CONTEST,
+        },
+      ],
+    };
+
+    boulderingResultRepositoryMock.flush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderingResultService.bulkResults(group, dto);
+
+    expect(boulderingResultRepositoryMock.persistLater).toHaveBeenCalledTimes(
+      4, // 2 by the result creation, 2 at the end to save, they all points to the same objects so we only test the first two calls
+    );
+
+    expect(
+      boulderingResultRepositoryMock.persistLater.mock.calls[0][0],
+    ).toEqual(
+      expect.objectContaining({
+        boulder: boulder1,
+        climber: user,
+        zone: true,
+        top: true,
+        zoneInTries: 1,
+        topInTries: 1,
+        tries: 1,
+      }),
+    );
+
+    expect(
+      boulderingResultRepositoryMock.persistLater.mock.calls[1][0],
+    ).toEqual(
+      expect.objectContaining({
+        boulder: boulder2,
+        climber: user,
+        zone: true,
+        top: true,
+        zoneInTries: 1,
+        topInTries: 1,
+        tries: 1,
+      }),
+    );
+
+    expect(boulderingResultRepositoryMock.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it('handles bulk results for a group for an unlimited contest', async () => {
+    const boulder1 = {
+      id: 0,
+    } as Boulder;
+
+    const boulder2 = {
+      id: 1,
+    } as Boulder;
+
+    const user = {
+      id: 0,
+    } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound({
+          rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        }),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder1, boulder2],
+      [user],
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [
+        {
+          climberId: 0,
+          boulderId: 0,
+          top: true,
+          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        },
+        {
+          climberId: 0,
+          boulderId: 1,
+          top: true,
+          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        },
+      ],
+    };
+
+    boulderingResultRepositoryMock.flush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderingResultService.bulkResults(group, dto);
+
+    expect(boulderingResultRepositoryMock.persistLater).toHaveBeenCalledTimes(
+      4, // 2 by the result creation, 2 at the end to save, they all points to the same objects so we only test the first two calls
+    );
+
+    expect(
+      boulderingResultRepositoryMock.persistLater.mock.calls[0][0],
+    ).toEqual(
+      expect.objectContaining({
+        boulder: boulder1,
+        climber: user,
+        zone: false,
+        top: true,
+        zoneInTries: 0,
+        topInTries: 0,
+        tries: 0,
+      }),
+    );
+
+    expect(
+      boulderingResultRepositoryMock.persistLater.mock.calls[1][0],
+    ).toEqual(
+      expect.objectContaining({
+        boulder: boulder2,
+        climber: user,
+        zone: false,
+        top: true,
+        zoneInTries: 0,
+        topInTries: 0,
+        tries: 0,
+      }),
+    );
+
+    expect(boulderingResultRepositoryMock.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not change results if not needed when adding bulk results for a circuit', async () => {
+    const boulder1 = {
+      id: 0,
+    } as Boulder;
+
+    const user = {
+      id: 0,
+    } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound({
+          rankingType: BoulderingRoundRankingType.CIRCUIT,
+        }),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder1],
+      [user],
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [
+        {
+          climberId: 0,
+          boulderId: 0,
+          type: BoulderingRoundRankingType.CIRCUIT,
+        },
+      ],
+    };
+
+    boulderingResultRepositoryMock.flush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderingResultService.bulkResults(group, dto);
+
+    expect(boulderingResultRepositoryMock.persistLater).toHaveBeenCalledTimes(
+      2, // 1 by the result creation, 1 at the end to save, they all points to the same objects so we only test the first call
+    );
+
+    expect(
+      boulderingResultRepositoryMock.persistLater.mock.calls[0][0],
+    ).toEqual(
+      expect.objectContaining({
+        boulder: boulder1,
+        climber: user,
+        zone: false,
+        top: false,
+        zoneInTries: 0,
+        topInTries: 0,
+        tries: 0,
+      }),
+    );
+
+    expect(boulderingResultRepositoryMock.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it('throws BoulderNotInGroupError when adding bulk results with an unknown boulder', () => {
+    const user = {
+      id: 0,
+    } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound(),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [],
+      [user],
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [
+        {
+          boulderId: 0,
+          climberId: 0,
+          top: true,
+          zone: true,
+          topInTries: 1,
+          zoneInTries: 1,
+          type: BoulderingRoundRankingType.CIRCUIT,
+        },
+      ],
+    };
+
+    return expect(
+      boulderingResultService.bulkResults(group, dto),
+    ).rejects.toBeInstanceOf(BoulderNotInGroupError);
+  });
+
+  it('throws ClimberNotInGroupError when adding bulk results with an unknown climber', () => {
+    const boulder = {
+      id: 0,
+    } as Boulder;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound(),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [],
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [
+        {
+          boulderId: 0,
+          climberId: 0,
+          top: true,
+          zone: true,
+          topInTries: 1,
+          zoneInTries: 1,
+          type: BoulderingRoundRankingType.CIRCUIT,
+        },
+      ],
+    };
+
+    return expect(
+      boulderingResultService.bulkResults(group, dto),
+    ).rejects.toBeInstanceOf(ClimberNotInGroupError);
+  });
+
+  it('throws IncoherentTopInTriesError when adding bulk results with a top and no topInTries', () => {
+    const boulder = {
+      id: 0,
+    } as Boulder;
+
+    const climber = {
+      id: 0,
+    } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound(),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [climber],
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [
+        {
+          boulderId: 0,
+          climberId: 0,
+          top: true,
+          zone: true,
+          topInTries: 0,
+          zoneInTries: 1,
+          type: BoulderingRoundRankingType.CIRCUIT,
+        },
+      ],
+    };
+
+    return expect(
+      boulderingResultService.bulkResults(group, dto),
+    ).rejects.toBeInstanceOf(IncoherentTopInTriesError);
+  });
+
+  it('throws IncoherentZoneInTriesError when adding bulk results with a top and no topInTries', () => {
+    const boulder = {
+      id: 0,
+    } as Boulder;
+
+    const climber = {
+      id: 0,
+    } as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound(),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [climber],
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [
+        {
+          boulderId: 0,
+          climberId: 0,
+          top: true,
+          zone: true,
+          topInTries: 1,
+          zoneInTries: 0,
+          type: BoulderingRoundRankingType.CIRCUIT,
+        },
+      ],
+    };
+
+    return expect(
+      boulderingResultService.bulkResults(group, dto),
+    ).rejects.toBeInstanceOf(IncoherentZoneInTriesError);
   });
 });

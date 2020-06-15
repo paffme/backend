@@ -166,7 +166,17 @@ export class BoulderingController {
     @Param() params: BulkBoulderingResultsParamsDto,
     @Body() dto: BulkBoulderingResultsDto,
   ): Promise<BoulderingGroupRankingsDto> {
-    return {} as BoulderingGroupRankingsDto;
+    const {
+      rankings,
+      type,
+    } = await this.competitionService.bulkBoulderingResults(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      dto,
+    );
+
+    return this.boulderingRoundRankingMapper.mapGroup(rankings, type);
   }
 
   @Post(

@@ -5,11 +5,20 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 
-import { BoulderingRoundRankingType } from '../../../../bouldering/round/bouldering-round.entity';
-import { IsBoolean, IsInt, IsOptional, Min } from 'class-validator';
+import {
+  Equals,
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested,
+} from 'class-validator';
+
 import { User } from '../../../../user/user.entity';
 import { Type } from 'class-transformer';
 import { Boulder } from '../../../../bouldering/boulder/boulder.entity';
+import { BoulderingRoundRankingType } from '../../../../bouldering/round/bouldering-round.entity';
 
 class BaseResult {
   @ApiProperty({
@@ -26,48 +35,115 @@ class BaseResult {
   readonly boulderId!: typeof Boulder.prototype.id;
 }
 
-class ContestResult extends BaseResult {
+export class UnlimitedContestResult extends BaseResult {
   @ApiProperty()
   @IsBoolean()
   readonly top!: boolean;
+
+  @ApiProperty()
+  @IsString()
+  @Equals(BoulderingRoundRankingType.UNLIMITED_CONTEST)
+  readonly type!: BoulderingRoundRankingType.UNLIMITED_CONTEST;
 }
 
-class CircuitResult extends BaseResult {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  readonly triesToTop?: number;
+export class CircuitResult extends BaseResult {
+  @ApiProperty()
+  @IsString()
+  @Equals(BoulderingRoundRankingType.CIRCUIT)
+  readonly type!: BoulderingRoundRankingType.CIRCUIT;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsInt()
   @Min(0)
-  readonly triesToZone?: number;
+  readonly topInTries?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
   @IsInt()
   @Min(0)
-  readonly tries?: number;
+  readonly zoneInTries?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  readonly top?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  readonly zone?: boolean;
 }
 
-type BulkResult = ContestResult | CircuitResult;
+export class LimitedContestResult extends BaseResult {
+  @ApiProperty()
+  @IsString()
+  @Equals(BoulderingRoundRankingType.LIMITED_CONTEST)
+  readonly type!: BoulderingRoundRankingType.LIMITED_CONTEST;
 
-@ApiExtraModels(ContestResult, CircuitResult)
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  readonly topInTries?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  readonly zoneInTries?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  readonly top?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  readonly zone?: boolean;
+}
+
+export type BulkResult =
+  | UnlimitedContestResult
+  | LimitedContestResult
+  | CircuitResult;
+
+@ApiExtraModels(UnlimitedContestResult, LimitedContestResult, CircuitResult)
 export class BulkBoulderingResultsDto {
-  @ApiProperty({ enum: BoulderingRoundRankingType })
-  readonly type!: BoulderingRoundRankingType;
-
   @ApiProperty({
     type: 'array',
     items: {
       oneOf: [
         {
-          $ref: getSchemaPath(ContestResult),
+          $ref: getSchemaPath(UnlimitedContestResult),
+        },
+        {
+          $ref: getSchemaPath(LimitedContestResult),
         },
         {
           $ref: getSchemaPath(CircuitResult),
+        },
+      ],
+    },
+  })
+  @ValidateNested()
+  @Type(() => BaseResult, {
+    keepDiscriminatorProperty: true,
+    discriminator: {
+      property: 'type',
+      subTypes: [
+        {
+          value: UnlimitedContestResult,
+          name: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        },
+        {
+          value: LimitedContestResult,
+          name: BoulderingRoundRankingType.LIMITED_CONTEST,
+        },
+        {
+          value: CircuitResult,
+          name: BoulderingRoundRankingType.CIRCUIT,
         },
       ],
     },

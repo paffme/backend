@@ -36,6 +36,7 @@ import { AlreadyRegisteredError } from '../../../src/competition/errors/already-
 import { CompetitionNotFoundError } from '../../../src/competition/errors/competition-not-found.error';
 import { RoundNotFoundError } from '../../../src/bouldering/errors/round-not-found.error';
 import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
+import { BulkBoulderingResultsDto } from '../../../src/competition/dto/in/body/bulk-bouldering-results.dto';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -73,6 +74,7 @@ const boulderingRoundServiceMock: ServiceMock = {
   assignJudgeToBoulder: jest.fn(),
   removeJudgeAssignmentToBoulder: jest.fn(),
   getGroupBoulders: jest.fn(),
+  bulkResults: jest.fn(),
 };
 
 const boulderingRankingServiceMock: ServiceMock = {
@@ -1331,5 +1333,53 @@ describe('Competition service (unit)', () => {
     const groups = await competitionService.getBoulderingGroups(1, 2);
 
     expect(groups).toBe(competitionRounds[0].groups.getItems());
+  });
+
+  it('adds bulk bouldering results', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+      }),
+    ];
+
+    competition.boulderingRounds = ({
+      // eslint-disable-next-line sonarjs/no-identical-functions
+      async init(): Promise<Collection<BoulderingRound>> {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        return {
+          getItems(): typeof competitionRounds {
+            return competitionRounds;
+          },
+        };
+      },
+    } as unknown) as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    const dto: BulkBoulderingResultsDto = {
+      results: [],
+    };
+
+    const fakeRankings = {};
+
+    boulderingRoundServiceMock.bulkResults.mockImplementation(
+      async () => fakeRankings,
+    );
+
+    const res = await competitionService.bulkBoulderingResults(1, 2, 3, dto);
+
+    expect(res.type).toEqual(competitionRounds[0].rankingType);
+    expect(res.rankings).toBe(fakeRankings);
+    expect(boulderingRoundServiceMock.bulkResults).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundServiceMock.bulkResults).toHaveBeenCalledWith(
+      competitionRounds[0],
+      3,
+      dto,
+    );
   });
 });
