@@ -31,6 +31,7 @@ class CategoryDto {
 export class CreateCompetitionDTO {
   @ApiProperty()
   @IsString()
+  @Length(2, 64)
   name!: string;
 
   @ApiProperty({
@@ -67,14 +68,17 @@ export class CreateCompetitionDTO {
 
   @ApiProperty()
   @IsString()
+  @Length(4, 128)
   address!: string;
 
   @ApiProperty()
   @IsString()
+  @Length(1, 64)
   city!: string;
 
   @ApiProperty()
   @IsString()
+  @Length(1, 12)
   postalCode!: string;
 
   @ApiProperty({
