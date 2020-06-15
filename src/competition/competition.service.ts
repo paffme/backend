@@ -22,9 +22,14 @@ import { User } from '../user/user.entity';
 import { BoulderingRoundService } from '../bouldering/round/bouldering-round.service';
 import {
   BaseBoulderingRoundRanking,
+  BaseGroup,
+  BoulderingGroupRankings,
   BoulderingRound,
+  BoulderingRoundCountedRanking,
   BoulderingRoundRankings,
+  BoulderingRoundRankingType,
   BoulderingRoundState,
+  BoulderingRoundUnlimitedContestRanking,
 } from '../bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
 import { BoulderingResult } from '../bouldering/result/bouldering-result.entity';
@@ -56,6 +61,8 @@ import { RoundNotFoundError } from '../bouldering/errors/round-not-found.error';
 import { RankingsNotFoundError } from './errors/rankings-not-found.error';
 import { RoundByCategoryByType } from './types/round-by-category-by-type.type';
 import { NoPreviousRoundRankingsError } from './errors/no-previous-round-rankings.error';
+import { BulkBoulderingResultsDto } from './dto/in/body/bulk-bouldering-results.dto';
+import { BoulderingGroupRankingsDto } from '../bouldering/dto/out/bouldering-group-rankings.dto';
 
 @Injectable()
 export class CompetitionService {
@@ -839,5 +846,29 @@ export class CompetitionService {
     );
 
     return round.groups.getItems();
+  }
+
+  async bulkBoulderingResults(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    dto: BulkBoulderingResultsDto,
+  ): Promise<{
+    rankings: BoulderingGroupRankings;
+    type: BoulderingRoundRankingType;
+  }> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return {
+      type: round.rankingType,
+      rankings: await this.boulderingRoundService.bulkResults(
+        round,
+        groupId,
+        dto,
+      ),
+    };
   }
 }

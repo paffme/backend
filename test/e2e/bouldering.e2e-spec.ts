@@ -32,6 +32,7 @@ import { UpdateBoulderingRoundDto } from '../../src/competition/dto/in/body/upda
 import * as uuid from 'uuid';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
 import { BoulderingGroupState } from '../../src/bouldering/group/bouldering-group.entity';
+import { BulkBoulderingResultsDto } from '../../src/competition/dto/in/body/bulk-bouldering-results.dto';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -1193,6 +1194,74 @@ describe('Bouldering (e2e)', () => {
       expect(body[0].climbers[0].lastName).toEqual(climber.lastName);
       expect(body[0].boulders[0].id).toEqual(boulder.id);
       expect(body[0].boulders[0].judges[0].id).toEqual(judge.id);
+    });
+  });
+
+  describe('POST /{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/bulk-results', () => {
+    it('adds bulk results', async () => {
+      const {
+        competition,
+        round,
+        juryPresidentAuth,
+        climber,
+        boulder,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const dto: BulkBoulderingResultsDto = {
+        results: [
+          {
+            type: BoulderingRoundRankingType.CIRCUIT,
+            climberId: climber.id,
+            boulderId: boulder.id,
+            top: true,
+            zone: true,
+            topInTries: 1,
+            zoneInTries: 1,
+          },
+        ],
+      };
+
+      const { body } = await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/bulk-results`,
+        )
+        .set('Authorization', `Bearer ${juryPresidentAuth.token}`)
+        .send(dto)
+        .expect(201);
+
+      expect(body.type).toEqual(BoulderingRoundRankingType.CIRCUIT);
+      expect(body.group.id).toEqual(round.groups[0].id);
+      expect(body.group.rankings[0].climber.id).toEqual(climber.id);
+      expect(body.group.rankings[0].ranking).toEqual(1);
+      expect(body.group.rankings[0].tops).toEqual([true]);
+      expect(body.group.rankings[0].topsInTries).toEqual([1]);
+      expect(body.group.rankings[0].zones).toEqual([true]);
+      expect(body.group.rankings[0].zonesInTries).toEqual([1]);
+    });
+
+    it('returns 401 when adding bulk results without auth', async () => {
+      const { competition, round } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/bulk-results`,
+        )
+        .expect(401);
+    });
+
+    it('returns 403 when adding bulk results without being the jury president', async () => {
+      const { competition, round, judgeAuth } = await givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/bulk-results`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .expect(403);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotImplementedException } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { BoulderingResult } from './bouldering-result.entity';
@@ -14,6 +14,15 @@ import { MaxTriesReachedError } from '../errors/max-tries-reached.error';
 import { AddResultWithoutOngoingGroupError } from '../../competition/errors/add-result-without-ongoing-group.error';
 import { ClimberNotInGroupError } from '../errors/climber-not-in-group.error';
 import { BoulderNotInGroupError } from '../errors/boulder-not-in-group.error';
+import {
+  BulkBoulderingResultsDto,
+  BulkResult,
+  CircuitResult,
+  UnlimitedContestResult,
+} from '../../competition/dto/in/body/bulk-bouldering-results.dto';
+import { BoulderingRoundRankingType } from '../round/bouldering-round.entity';
+import { IncoherentZoneInTriesError } from '../errors/incoherent-zone-in-tries.error';
+import { IncoherentTopInTriesError } from '../errors/incoherent-top-in-tries.error';
 
 @Injectable()
 export class BoulderingResultService {
@@ -125,5 +134,87 @@ export class BoulderingResultService {
 
     await this.boulderingResultRepository.persistAndFlush(result);
     return result;
+  }
+
+  // eslint-disable-next-line sonarjs/cognitive-complexity
+  private async processBulkResult(
+    group: BoulderingGroup,
+    climber: User,
+    boulder: Boulder,
+    result: BulkResult,
+  ): Promise<void> {
+    const instance = await this.getOrCreateNewInstance(group, boulder, climber);
+
+    if (
+      group.round.rankingType === BoulderingRoundRankingType.CIRCUIT ||
+      group.round.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST
+    ) {
+      const countedTriesResult = result as CircuitResult;
+      const top = countedTriesResult.top ?? instance.top;
+      const topInTries = countedTriesResult.topInTries ?? instance.topInTries;
+
+      if (top && topInTries === 0) {
+        throw new IncoherentTopInTriesError(
+          'topInTries cannot be 0 if there is a top',
+        );
+      }
+
+      const zone = countedTriesResult.zone ?? instance.zone;
+      const zoneInTries =
+        countedTriesResult.zoneInTries ?? instance.zoneInTries;
+
+      if (zone && zoneInTries === 0) {
+        throw new IncoherentZoneInTriesError(
+          'zoneInTries cannot be 0 if there is a zone',
+        );
+      }
+
+      const tries = instance.tries > zoneInTries ? instance.tries : zoneInTries;
+
+      instance.top = top;
+      instance.topInTries = topInTries;
+      instance.zone = zone;
+      instance.zoneInTries = zoneInTries;
+      instance.tries = tries;
+    } else if (
+      group.round.rankingType === BoulderingRoundRankingType.UNLIMITED_CONTEST
+    ) {
+      const unlimitedResult = result as UnlimitedContestResult;
+      instance.top = unlimitedResult.top;
+    } else {
+      throw new NotImplementedException('Unhandled ranking type');
+    }
+
+    this.boulderingResultRepository.persistLater(instance);
+  }
+
+  async bulkResults(
+    group: BoulderingGroup,
+    dto: BulkBoulderingResultsDto,
+  ): Promise<void> {
+    const [climbers, boulders] = await Promise.all([
+      group.climbers.loadItems(),
+      group.boulders.loadItems(),
+    ]);
+
+    await Promise.all(
+      dto.results.map((result) => {
+        const boulder = boulders.find((b) => b.id === result.boulderId);
+
+        if (!boulder) {
+          throw new BoulderNotInGroupError();
+        }
+
+        const climber = climbers.find((c) => c.id === result.climberId);
+
+        if (!climber) {
+          throw new ClimberNotInGroupError();
+        }
+
+        return this.processBulkResult(group, climber, boulder, result);
+      }),
+    );
+
+    await this.boulderingResultRepository.flush();
   }
 }

@@ -66,6 +66,9 @@ import { RemoveJudgeAssignmentToBoulderParamsDto } from './dto/in/params/remove-
 import { BoulderJudgeAuthorizationGuard } from './authorization/boulder-judge.authorization.guard';
 import { GetBouldersParamsDto } from './dto/in/params/get-boulders-params.dto';
 import { GetBoulderingGroupsParamsDto } from './dto/in/params/get-bouldering-groups-params.dto';
+import { BulkBoulderingResultsParamsDto } from './dto/in/params/bulk-bouldering-results-params.dto';
+import { BulkBoulderingResultsDto } from './dto/in/body/bulk-bouldering-results.dto';
+import { BoulderingGroupRankingsDto } from '../bouldering/dto/out/bouldering-group-rankings.dto';
 
 @Controller('competitions')
 @ApiTags('Bouldering')
@@ -143,6 +146,37 @@ export class BoulderingController {
     );
 
     return this.boulderingLimitedRoundMapper.map(updatedRound);
+  }
+
+  @Post(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/bulk-results',
+  )
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    JuryPresidentAuthorizationGuard,
+  )
+  @ApiCreatedResponse({
+    type: BoulderingGroupRankingsDto,
+  })
+  @ApiOperation(GetOperationId(Competition.name, 'BulkBoulderingResults'))
+  async bulkResults(
+    @Param() params: BulkBoulderingResultsParamsDto,
+    @Body() dto: BulkBoulderingResultsDto,
+  ): Promise<BoulderingGroupRankingsDto> {
+    const {
+      rankings,
+      type,
+    } = await this.competitionService.bulkBoulderingResults(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      dto,
+    );
+
+    return this.boulderingRoundRankingMapper.mapGroup(rankings, type);
   }
 
   @Post(

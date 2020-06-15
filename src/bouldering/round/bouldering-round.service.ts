@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository, wrap } from 'mikro-orm';
 import {
+  BoulderingGroupRankings,
   BoulderingRound,
   BoulderingRoundRankingType,
   BoulderingRoundRelation,
@@ -32,6 +33,8 @@ import {
   RoundQuotaConfig,
   RoundQuotaConfigValue,
 } from '../../../config/round-quota';
+import { BulkBoulderingResultsDto } from '../../competition/dto/in/body/bulk-bouldering-results.dto';
+import { BoulderingGroupRankingsDto } from '../dto/out/bouldering-group-rankings.dto';
 
 @Injectable()
 export class BoulderingRoundService {
@@ -391,5 +394,22 @@ export class BoulderingRoundService {
   ): Promise<Boulder[]> {
     const group = await this.getGroupOrFail(round, groupId);
     return this.boulderingGroupService.getBoulders(group);
+  }
+
+  async bulkResults(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    dto: BulkBoulderingResultsDto,
+  ): Promise<BoulderingGroupRankings> {
+    const group = await this.getGroupOrFail(round, groupId);
+    await this.boulderingResultService.bulkResults(group, dto);
+    await this.updateRankings(round);
+
+    const groupIndex = round.rankings!.groups.findIndex(
+      (g: { id: typeof BoulderingGroup.prototype.id }): boolean =>
+        g.id === groupId,
+    );
+
+    return round.rankings!.groups[groupIndex];
   }
 }

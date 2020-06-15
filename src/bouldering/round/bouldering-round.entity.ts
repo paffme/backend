@@ -80,6 +80,12 @@ export interface BoulderingRoundUnlimitedContestRankings {
   >[];
 }
 
+export type BoulderingGroupRankings =
+  | BaseGroup<BoulderingRoundCountedRanking>
+  | BoulderingRoundUnlimitedContestGroup<
+      BoulderingRoundUnlimitedContestRanking
+    >;
+
 export type BoulderingRoundRankings =
   | BoulderingRoundCircuitRankings
   | BoulderingRoundLimitedContestRankings

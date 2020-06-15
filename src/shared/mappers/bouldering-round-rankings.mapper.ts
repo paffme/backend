@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotImplementedException } from '@nestjs/common';
 import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';
 import {
   BaseGroup,
+  BoulderingGroupRankings,
   BoulderingRoundCountedRanking,
   BoulderingRoundRankings,
   BoulderingRoundRankingType,
@@ -15,6 +16,7 @@ import {
   LimitedContestGroupDto,
   UnlimitedContestGroupDto,
 } from '../../bouldering/dto/out/bouldering-round-rankings.dto';
+import { BoulderingGroupRankingsDto } from '../../bouldering/dto/out/bouldering-group-rankings.dto';
 
 @Injectable()
 export class BoulderingRoundRankingsMapper extends BaseMapper<
@@ -33,9 +35,43 @@ export class BoulderingRoundRankingsMapper extends BaseMapper<
           return rankings.groups.map(this.mapLimitedContestGroupRankings);
         }
 
-        return rankings.groups.map(this.mapUnlimitedContestGroupRankings);
+        if (rankings.type === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+          return rankings.groups.map(this.mapUnlimitedContestGroupRankings);
+        }
+
+        throw new NotImplementedException('Unknown ranking type');
       },
     });
+  }
+
+  public mapGroup(
+    group: BoulderingGroupRankings,
+    type: BoulderingRoundRankingType,
+  ): BoulderingGroupRankingsDto {
+    let groupRankings;
+
+    if (type === BoulderingRoundRankingType.CIRCUIT) {
+      groupRankings = this.mapCircuitGroupRankings(
+        group as BaseGroup<BoulderingRoundCountedRanking>,
+      );
+    } else if (type === BoulderingRoundRankingType.LIMITED_CONTEST) {
+      groupRankings = this.mapLimitedContestGroupRankings(
+        group as BaseGroup<BoulderingRoundCountedRanking>,
+      );
+    } else if (type === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+      groupRankings = this.mapUnlimitedContestGroupRankings(
+        group as BoulderingRoundUnlimitedContestGroup<
+          BoulderingRoundUnlimitedContestRanking
+        >,
+      );
+    } else {
+      throw new NotImplementedException('Unknown ranking type');
+    }
+
+    return {
+      type,
+      group: groupRankings,
+    };
   }
 
   private mapCircuitGroupRankings(
