@@ -24,7 +24,10 @@ import { givenCategory } from '../../fixture/category.fixture';
 import { UpdateCompetitionByIdDto } from '../../../src/competition/dto/in/body/update-competition-by-id.dto';
 import { Collection, QueryOrder } from 'mikro-orm';
 import { CreateBoulderDto } from '../../../src/competition/dto/in/body/create-boulder.dto';
-import { BoulderingRound } from '../../../src/bouldering/round/bouldering-round.entity';
+import {
+  BoulderingRound,
+  BoulderingRoundRankingType,
+} from '../../../src/bouldering/round/bouldering-round.entity';
 import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
 import { InitOptions } from 'mikro-orm/dist/entity/Collection';
 import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
@@ -277,6 +280,7 @@ describe('Competition service (unit)', () => {
       type: CompetitionType.Bouldering,
       rankings: {},
       registrations: {
+        init: jest.fn().mockImplementation(async () => undefined),
         getItems: jest.fn().mockImplementation(() => [{ climber: user }]),
       },
       boulderingRounds: {
@@ -1344,6 +1348,21 @@ describe('Competition service (unit)', () => {
       }),
     ];
 
+    const groupId = competitionRounds[0].groups.getItems()[0].id;
+
+    competitionRounds[0].rankings = {
+      type: BoulderingRoundRankingType.CIRCUIT,
+      groups: [
+        {
+          rankings: [],
+          id: groupId,
+        },
+      ],
+    };
+
+    competition.registrations.init = () =>
+      Promise.resolve(competition.registrations);
+
     competition.boulderingRounds = ({
       // eslint-disable-next-line sonarjs/no-identical-functions
       async init(): Promise<Collection<BoulderingRound>> {
@@ -1355,6 +1374,9 @@ describe('Competition service (unit)', () => {
           },
         };
       },
+      async loadItems(): Promise<typeof competitionRounds> {
+        return competitionRounds;
+      },
     } as unknown) as Collection<BoulderingRound>;
 
     competitionRepositoryMock.findOne.mockImplementation(
@@ -1365,21 +1387,34 @@ describe('Competition service (unit)', () => {
       results: [],
     };
 
-    const fakeRankings = {};
+    const fakeMapRankings = new Map();
 
     boulderingRoundServiceMock.bulkResults.mockImplementation(
-      async () => fakeRankings,
+      async () => undefined,
     );
 
-    const res = await competitionService.bulkBoulderingResults(1, 2, 3, dto);
+    boulderingRankingServiceMock.getRankings.mockImplementation(
+      () => fakeMapRankings,
+    );
+
+    const res = await competitionService.bulkBoulderingResults(
+      competition.id,
+      competitionRounds[0].id,
+      groupId,
+      dto,
+    );
 
     expect(res.type).toEqual(competitionRounds[0].rankingType);
-    expect(res.rankings).toBe(fakeRankings);
+    expect(res.rankings).toBe(competitionRounds[0].rankings!.groups[0]);
     expect(boulderingRoundServiceMock.bulkResults).toHaveBeenCalledTimes(1);
     expect(boulderingRoundServiceMock.bulkResults).toHaveBeenCalledWith(
       competitionRounds[0],
-      3,
+      groupId,
       dto,
+    );
+    expect(boulderingRankingServiceMock.getRankings).toHaveBeenCalledTimes(1);
+    expect(boulderingRankingServiceMock.getRankings).toHaveBeenCalledWith(
+      competitionRounds,
     );
   });
 });

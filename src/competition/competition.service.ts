@@ -459,7 +459,7 @@ export class CompetitionService {
       dto,
     );
 
-    await this.updateRankingsForCategory(
+    await this.updateMainRankingsForCategory(
       competition,
       user.getCategory(competition.getSeason()),
     );
@@ -467,7 +467,7 @@ export class CompetitionService {
     return result;
   }
 
-  private async updateRankingsForCategory(
+  private async updateMainRankingsForCategory(
     competition: Competition,
     category: Category,
   ): Promise<void> {
@@ -485,6 +485,7 @@ export class CompetitionService {
     }
 
     const season = competition.getSeason();
+    await competition.registrations.init();
 
     const climbers = competition.registrations
       .getItems()
@@ -497,6 +498,8 @@ export class CompetitionService {
         );
       })
       .map((r) => r.climber);
+
+    competition.rankings = competition.rankings || {};
 
     const rankingsByCategory = (competition.rankings[category.name] =
       competition.rankings[category.name] ?? {});
@@ -857,18 +860,26 @@ export class CompetitionService {
     rankings: BoulderingGroupRankings;
     type: BoulderingRoundRankingType;
   }> {
-    const { round } = await this.getBoulderingRoundOrFail(
+    const { competition, round } = await this.getBoulderingRoundOrFail(
       competitionId,
       roundId,
     );
 
+    await this.boulderingRoundService.bulkResults(round, groupId, dto);
+
+    await this.updateMainRankingsForCategory(competition, {
+      name: round.category,
+      sex: round.sex,
+    });
+
+    const groupIndex = round.rankings!.groups.findIndex(
+      (g: { id: typeof BoulderingGroup.prototype.id }): boolean =>
+        g.id === groupId,
+    );
+
     return {
       type: round.rankingType,
-      rankings: await this.boulderingRoundService.bulkResults(
-        round,
-        groupId,
-        dto,
-      ),
+      rankings: round.rankings!.groups[groupIndex],
     };
   }
 }

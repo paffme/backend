@@ -38,7 +38,7 @@ export function givenBoulderingRound(
 
   const defaultGroups: BoulderingGroup[] = [
     {
-      id: 0,
+      id: utils.getRandomId(),
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore
       results: {
