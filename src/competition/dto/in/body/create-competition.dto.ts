@@ -4,6 +4,7 @@ import { CategoryName } from '../../../../shared/types/category-name.enum';
 import { CompetitionType } from '../../../types/competition-type.enum';
 
 import {
+  ArrayNotEmpty,
   IsArray,
   IsBoolean,
   IsDateString,
@@ -86,6 +87,7 @@ export class CreateCompetitionDTO {
     isArray: true,
   })
   @IsArray()
+  @ArrayNotEmpty()
   @ValidateNested({ each: true })
   @Type(() => CategoryDto)
   categories!: CategoryDto[];
