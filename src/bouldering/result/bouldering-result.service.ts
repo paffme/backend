@@ -84,21 +84,21 @@ export class BoulderingResultService {
 
     const result = await this.getOrCreateNewInstance(group, boulder, climber);
 
-    if (dto.try) {
+    if (typeof dto.try === 'number') {
       if (!group.round.isRankingWithCountedTries()) {
         throw new WrongResultForRoundError(
-          "Can't add a try for this kind of round",
+          "Can't modify tries for this kind of round",
         );
       }
 
       if (
         typeof group.round.maxTries === 'number' &&
-        result.tries >= group.round.maxTries
+        result.tries + dto.try >= group.round.maxTries
       ) {
         throw new MaxTriesReachedError();
       }
 
-      result.tries++;
+      result.tries = Math.max(0, result.tries + dto.try);
     }
 
     if (typeof dto.top === 'boolean') {

@@ -311,7 +311,7 @@ describe('Bouldering (e2e)', () => {
       const dto: CreateBoulderingResultDto = {
         top: true,
         zone: true,
-        try: true,
+        try: 1,
         climberId: climber.id,
       };
 
@@ -347,7 +347,7 @@ describe('Bouldering (e2e)', () => {
       const dto: CreateBoulderingResultDto = {
         top: true,
         zone: true,
-        try: true,
+        try: 1,
         climberId: climber.id,
       };
 
@@ -650,7 +650,7 @@ describe('Bouldering (e2e)', () => {
         climber,
         {
           climberId: climber.id,
-          try: true,
+          try: 1,
           zone: true,
           top: true,
         },

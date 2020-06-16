@@ -21,7 +21,7 @@ export class CreateBoulderingResultDto {
   zone?: boolean;
 
   @ApiPropertyOptional()
-  @IsBoolean()
+  @IsInt()
   @IsOptional()
-  try?: boolean;
+  try?: number;
 }

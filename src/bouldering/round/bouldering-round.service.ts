@@ -400,16 +400,9 @@ export class BoulderingRoundService {
     round: BoulderingRound,
     groupId: typeof BoulderingGroup.prototype.id,
     dto: BulkBoulderingResultsDto,
-  ): Promise<BoulderingGroupRankings> {
+  ): Promise<void> {
     const group = await this.getGroupOrFail(round, groupId);
     await this.boulderingResultService.bulkResults(group, dto);
     await this.updateRankings(round);
-
-    const groupIndex = round.rankings!.groups.findIndex(
-      (g: { id: typeof BoulderingGroup.prototype.id }): boolean =>
-        g.id === groupId,
-    );
-
-    return round.rankings!.groups[groupIndex];
   }
 }

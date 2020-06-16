@@ -236,7 +236,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const dto: CreateBoulderingResultDto = {
-      try: true,
+      try: 1,
       top: true,
       zone: true,
       climberId: user.id,
@@ -304,7 +304,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const dto: CreateBoulderingResultDto = {
-      try: true,
+      try: 1,
       top: true,
       zone: true,
       climberId: user.id,
@@ -367,7 +367,7 @@ describe('Bouldering result service (unit)', () => {
     );
 
     const dto: CreateBoulderingResultDto = {
-      try: true,
+      try: 1,
       climberId: user.id,
     };
 
@@ -591,7 +591,7 @@ describe('Bouldering result service (unit)', () => {
     }));
 
     const dto: CreateBoulderingResultDto = {
-      try: true,
+      try: 1,
       climberId: 123,
     };
 
@@ -616,7 +616,7 @@ describe('Bouldering result service (unit)', () => {
     boulderingResultRepositoryMock.findOne.mockImplementation(async () => ({}));
 
     const dto: CreateBoulderingResultDto = {
-      try: true,
+      try: 1,
       climberId: 123,
     };
 
@@ -641,7 +641,7 @@ describe('Bouldering result service (unit)', () => {
     boulderingResultRepositoryMock.findOne.mockImplementation(async () => ({}));
 
     const dto: CreateBoulderingResultDto = {
-      try: true,
+      try: 1,
       climberId: 123,
     };
 
