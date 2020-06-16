@@ -1239,6 +1239,156 @@ describe('Bouldering (e2e)', () => {
       expect(body.group.rankings[0].zonesInTries).toEqual([1]);
     });
 
+    it('validates bulk results with an empty array', async () => {
+      const {
+        competition,
+        round,
+        juryPresidentAuth,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const dto: BulkBoulderingResultsDto = {
+        results: [],
+      };
+
+      const { body } = await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/bulk-results`,
+        )
+        .set('Authorization', `Bearer ${juryPresidentAuth.token}`)
+        .send(dto)
+        .expect(422);
+
+      expect(body.errors[0].property).toEqual('results');
+      expect(body.errors[0].constraints).toHaveProperty('arrayNotEmpty');
+    });
+
+    it('validates bulk results for a circuit', async () => {
+      const {
+        competition,
+        round,
+        juryPresidentAuth,
+        climber,
+        boulder,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const dto: BulkBoulderingResultsDto = {
+        results: [
+          {
+            type: BoulderingRoundRankingType.CIRCUIT,
+            climberId: climber.id,
+            boulderId: boulder.id,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            top: 123,
+            zone: true,
+            topInTries: 1,
+            zoneInTries: 1,
+          },
+        ],
+      };
+
+      const { body } = await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/bulk-results`,
+        )
+        .set('Authorization', `Bearer ${juryPresidentAuth.token}`)
+        .send(dto)
+        .expect(422);
+
+      expect(body.errors[0].property).toEqual('results');
+      expect(body.errors[0].children[0].property).toEqual('0');
+      expect(body.errors[0].children[0].children[0].property).toEqual('top');
+      expect(body.errors[0].children[0].children[0].constraints).toHaveProperty(
+        'isBoolean',
+      );
+    });
+
+    it('validates bulk results for a limited contest', async () => {
+      const {
+        competition,
+        round,
+        juryPresidentAuth,
+        climber,
+        boulder,
+      } = await givenReadyCompetition(
+        BoulderingRoundRankingType.LIMITED_CONTEST,
+        {
+          maxTries: 5,
+        },
+      );
+
+      const dto: BulkBoulderingResultsDto = {
+        results: [
+          {
+            type: BoulderingRoundRankingType.LIMITED_CONTEST,
+            climberId: climber.id,
+            boulderId: boulder.id,
+            top: true,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            zone: 123,
+            topInTries: 1,
+            zoneInTries: 1,
+          },
+        ],
+      };
+
+      const { body } = await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/bulk-results`,
+        )
+        .set('Authorization', `Bearer ${juryPresidentAuth.token}`)
+        .send(dto)
+        .expect(422);
+
+      expect(body.errors[0].property).toEqual('results');
+      expect(body.errors[0].children[0].property).toEqual('0');
+      expect(body.errors[0].children[0].children[0].property).toEqual('zone');
+      expect(body.errors[0].children[0].children[0].constraints).toHaveProperty(
+        'isBoolean',
+      );
+    });
+
+    it('validates bulk results for an unlimited contest', async () => {
+      const {
+        competition,
+        round,
+        juryPresidentAuth,
+        climber,
+        boulder,
+      } = await givenReadyCompetition(
+        BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      );
+
+      const dto: BulkBoulderingResultsDto = {
+        results: [
+          {
+            type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+            climberId: climber.id,
+            boulderId: boulder.id,
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            top: '123',
+          },
+        ],
+      };
+
+      const { body } = await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/bulk-results`,
+        )
+        .set('Authorization', `Bearer ${juryPresidentAuth.token}`)
+        .send(dto)
+        .expect(422);
+
+      expect(body.errors[0].property).toEqual('results');
+      expect(body.errors[0].children[0].property).toEqual('0');
+      expect(body.errors[0].children[0].children[0].property).toEqual('top');
+      expect(body.errors[0].children[0].children[0].constraints).toHaveProperty(
+        'isBoolean',
+      );
+    });
+
     it('returns 401 when adding bulk results without auth', async () => {
       const { competition, round } = await givenReadyCompetition(
         BoulderingRoundRankingType.CIRCUIT,

@@ -6,7 +6,9 @@ import {
 } from '@nestjs/swagger';
 
 import {
+  ArrayNotEmpty,
   Equals,
+  IsArray,
   IsBoolean,
   IsInt,
   IsOptional,
@@ -127,6 +129,8 @@ export class BulkBoulderingResultsDto {
       ],
     },
   })
+  @IsArray()
+  @ArrayNotEmpty()
   @ValidateNested()
   @Type(() => BaseResult, {
     keepDiscriminatorProperty: true,

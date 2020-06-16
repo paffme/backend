@@ -232,7 +232,7 @@ export default class TestUtils {
       climberId: climber.id,
       top: partialDto?.top ?? false,
       zone: partialDto?.zone ?? false,
-      try: partialDto?.try ?? true,
+      try: partialDto?.try ?? 1,
     };
 
     return this.competitionService!.addBoulderingResult(
