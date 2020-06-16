@@ -294,6 +294,22 @@ describe('Competition (e2e)', () => {
       expect(body.errors[0].property).toEqual('categories');
     });
 
+    it('prevents empty categories (2)', async () => {
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+      const competition = givenCreateCompetitionDto({
+        categories: [],
+      });
+
+      const { body } = await api
+        .post('/competitions')
+        .set('Authorization', `Bearer ${auth.token}`)
+        .send(competition)
+        .expect(422);
+
+      expect(body.errors[0].property).toEqual('categories');
+    });
+
     it('prevents empty name', async () => {
       const { credentials } = await utils.givenUser();
       const auth = await utils.login(credentials);
