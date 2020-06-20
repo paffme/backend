@@ -21,15 +21,10 @@ import { CompetitionRegistration } from '../shared/entity/competition-registrati
 import { User } from '../user/user.entity';
 import { BoulderingRoundService } from '../bouldering/round/bouldering-round.service';
 import {
-  BaseBoulderingRoundRanking,
-  BaseGroup,
-  BoulderingGroupRankings,
   BoulderingRound,
-  BoulderingRoundCountedRanking,
   BoulderingRoundRankings,
   BoulderingRoundRankingType,
   BoulderingRoundState,
-  BoulderingRoundUnlimitedContestRanking,
 } from '../bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
 import { BoulderingResult } from '../bouldering/result/bouldering-result.entity';
@@ -42,6 +37,7 @@ import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id
 import { SearchQuery } from '../shared/decorators/search.decorator';
 import {
   BoulderingGroup,
+  BoulderingGroupRankings,
   BoulderingGroupState,
 } from '../bouldering/group/bouldering-group.entity';
 import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
@@ -62,7 +58,6 @@ import { RankingsNotFoundError } from './errors/rankings-not-found.error';
 import { RoundByCategoryByType } from './types/round-by-category-by-type.type';
 import { NoPreviousRoundRankingsError } from './errors/no-previous-round-rankings.error';
 import { BulkBoulderingResultsDto } from './dto/in/body/bulk-bouldering-results.dto';
-import { BoulderingGroupRankingsDto } from '../bouldering/dto/out/bouldering-group-rankings.dto';
 
 @Injectable()
 export class CompetitionService {
@@ -605,6 +600,19 @@ export class CompetitionService {
     return round.rankings;
   }
 
+  async getBoulderingGroupRankings(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<BoulderingGroupRankings> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return this.boulderingRoundService.getGroupRankings(round, groupId);
+  }
+
   async createBoulderingGroup(
     competitionId: typeof Competition.prototype.id,
     roundId: typeof BoulderingRound.prototype.id,
@@ -671,24 +679,13 @@ export class CompetitionService {
         }
 
         if (previousRound.quota > 0) {
-          const groups = previousRound.groups.getItems();
           const getClimberJobs: Promise<User>[] = [];
 
           for (let i = 1; i <= previousRound.quota; i++) {
-            const group = groups[i % groups.length];
-
-            const groupIndexInRankings = previousRound.rankings.groups.findIndex(
-              (g: { id: typeof BoulderingGroup.prototype.id }) =>
-                g.id === group.id,
-            );
-
-            const groupRankings =
-              previousRound.rankings.groups[groupIndexInRankings].rankings;
-
             let addedClimbers = 0;
 
-            for (const ranking of groupRankings) {
-              const rank: BaseBoulderingRoundRanking = ranking;
+            for (const ranking of previousRound.rankings) {
+              const rank = ranking;
 
               if (rank.ranking === i) {
                 getClimberJobs.push(
@@ -865,21 +862,20 @@ export class CompetitionService {
       roundId,
     );
 
-    await this.boulderingRoundService.bulkResults(round, groupId, dto);
+    const groupRankings = await this.boulderingRoundService.bulkGroupResults(
+      round,
+      groupId,
+      dto,
+    );
 
     await this.updateMainRankingsForCategory(competition, {
       name: round.category,
       sex: round.sex,
     });
 
-    const groupIndex = round.rankings!.groups.findIndex(
-      (g: { id: typeof BoulderingGroup.prototype.id }): boolean =>
-        g.id === groupId,
-    );
-
     return {
       type: round.rankingType,
-      rankings: round.rankings!.groups[groupIndex],
+      rankings: groupRankings,
     };
   }
 }

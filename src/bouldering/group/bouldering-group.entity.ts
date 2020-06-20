@@ -9,17 +9,68 @@ import {
 } from 'mikro-orm';
 
 import { User } from '../../user/user.entity';
-import { BoulderingRound } from '../round/bouldering-round.entity';
-import { BaseGroup } from '../../competition/base-group';
 import { BaseEntity } from '../../shared/base.entity';
 import { Boulder } from '../boulder/boulder.entity';
 import { BoulderingResult } from '../result/bouldering-result.entity';
+
+import {
+  BoulderingRound,
+  BoulderingRoundRankingType,
+} from '../round/bouldering-round.entity';
+
+import type { BaseGroup } from '../../competition/base-group';
+import type { ClimberRankingInfos } from '../types/climber-ranking-infos.interface';
 
 export enum BoulderingGroupState {
   PENDING = 'PENDING',
   ONGOING = 'ONGOING',
   ENDED = 'ENDED',
 }
+
+export interface BaseBoulderingRanking {
+  ranking: number;
+  tops: boolean[];
+  climber: ClimberRankingInfos;
+}
+
+export interface BoulderingLimitedContestRanking extends BaseBoulderingRanking {
+  topsInTries: number[];
+  zones: boolean[];
+  zonesInTries: number[];
+}
+
+export interface BoulderingCircuitRanking extends BaseBoulderingRanking {
+  topsInTries: number[];
+  zones: boolean[];
+  zonesInTries: number[];
+}
+
+export interface BoulderingUnlimitedContestRanking
+  extends BaseBoulderingRanking {
+  nbTops: number;
+  points: number;
+}
+
+export interface BoulderingCircuitRankings {
+  type: BoulderingRoundRankingType.CIRCUIT;
+  rankings: BoulderingCircuitRanking[];
+}
+
+export interface BoulderingLimitedContestRankings {
+  type: BoulderingRoundRankingType.LIMITED_CONTEST;
+  rankings: BoulderingLimitedContestRanking[];
+}
+
+export interface BoulderingUnlimitedContestRankings {
+  type: BoulderingRoundRankingType.UNLIMITED_CONTEST;
+  rankings: BoulderingUnlimitedContestRanking[];
+  bouldersPoints: number[];
+}
+
+export type BoulderingGroupRankings =
+  | BoulderingCircuitRankings
+  | BoulderingLimitedContestRankings
+  | BoulderingUnlimitedContestRankings;
 
 @Entity()
 export class BoulderingGroup extends BaseEntity
@@ -46,6 +97,10 @@ export class BoulderingGroup extends BaseEntity
   results: Collection<BoulderingResult> = new Collection<BoulderingResult>(
     this,
   );
+
+  // This will store the computed rankings after each new result
+  @Property()
+  rankings?: BoulderingGroupRankings;
 
   @ManyToOne()
   round: BoulderingRound;

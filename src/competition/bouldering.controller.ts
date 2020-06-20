@@ -69,6 +69,8 @@ import { GetBoulderingGroupsParamsDto } from './dto/in/params/get-bouldering-gro
 import { BulkBoulderingResultsParamsDto } from './dto/in/params/bulk-bouldering-results-params.dto';
 import { BulkBoulderingResultsDto } from './dto/in/body/bulk-bouldering-results.dto';
 import { BoulderingGroupRankingsDto } from '../bouldering/dto/out/bouldering-group-rankings.dto';
+import { GetBoulderingGroupRankingsParamsDto } from './dto/in/params/get-bouldering-group-rankings-params.dto';
+import { BoulderingGroupRankingsMapper } from '../shared/mappers/bouldering-group-rankings.mapper';
 
 @Controller('competitions')
 @ApiTags('Bouldering')
@@ -82,6 +84,7 @@ export class BoulderingController {
     private readonly boulderingRoundsByCategoryByTypeMapper: BoulderingRoundsByCategoryByTypeMapper,
     private readonly boulderMapper: BoulderMapper,
     private readonly boulderingGroupMapper: BoulderingGroupMapper,
+    private readonly boulderingGroupRankingsMapper: BoulderingGroupRankingsMapper,
   ) {}
 
   @Post('/:competitionId/bouldering-rounds')
@@ -176,7 +179,7 @@ export class BoulderingController {
       dto,
     );
 
-    return this.boulderingRoundRankingMapper.mapGroup(rankings, type);
+    return this.boulderingRoundRankingMapper.mapGroupRankings(rankings, type);
   }
 
   @Post(
@@ -228,6 +231,21 @@ export class BoulderingController {
     );
 
     return this.boulderingRoundRankingMapper.map(rankings);
+  }
+
+  @Get('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/rankings')
+  @ApiOkResponse({ type: BoulderingRoundRankingsDto })
+  @ApiOperation(GetOperationId(Competition.name, 'GetBoulderingGroupRankings'))
+  async getBoulderingGroupRankings(
+    @Param() params: GetBoulderingGroupRankingsParamsDto,
+  ): Promise<BoulderingGroupRankingsDto> {
+    const rankings = await this.competitionService.getBoulderingGroupRankings(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+    );
+
+    return this.boulderingGroupRankingsMapper.map(rankings);
   }
 
   @Post('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders')

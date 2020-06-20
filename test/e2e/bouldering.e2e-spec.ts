@@ -33,6 +33,7 @@ import * as uuid from 'uuid';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
 import { BoulderingGroupState } from '../../src/bouldering/group/bouldering-group.entity';
 import { BulkBoulderingResultsDto } from '../../src/competition/dto/in/body/bulk-bouldering-results.dto';
+import { MaxTriesReachedError } from '../../src/bouldering/errors/max-tries-reached.error';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -333,6 +334,38 @@ describe('Bouldering (e2e)', () => {
       expect(body.zone).toEqual(true);
       expect(body.zoneInTries).toEqual(1);
       expect(body.tries).toEqual(1);
+    });
+
+    it('throws MAX_TRIES_REACHED when adding a bouldering result for a limited contest and exceed the maxTries limit', async function () {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+        judgeAuth,
+      } = await givenReadyCompetition(
+        BoulderingRoundRankingType.LIMITED_CONTEST,
+        {
+          maxTries: 5,
+        },
+      );
+
+      const dto: CreateBoulderingResultDto = {
+        top: true,
+        zone: true,
+        try: 6,
+        climberId: climber.id,
+      };
+
+      const { body } = await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .send(dto)
+        .expect(422);
+
+      expect(body.code).toEqual(new MaxTriesReachedError().code);
     });
 
     it('adds a bouldering result for a circuit', async function () {

@@ -286,7 +286,7 @@ describe('Bouldering round service (unit)', () => {
       () => rankings,
     );
 
-    const res = await boulderingRoundService.updateRankings(round);
+    const res = await boulderingRoundService.updateRoundRankings(round);
 
     expect(res).toBeUndefined();
     expect(round.rankings).toBe(rankings);
@@ -327,7 +327,7 @@ describe('Bouldering round service (unit)', () => {
       () => rankings,
     );
 
-    const res = await boulderingRoundService.updateRankings(round);
+    const res = await boulderingRoundService.updateRoundRankings(round);
 
     expect(res).toBeUndefined();
     expect(round.rankings).toBe(rankings);
@@ -368,7 +368,7 @@ describe('Bouldering round service (unit)', () => {
       () => rankings,
     );
 
-    const res = await boulderingRoundService.updateRankings(round);
+    const res = await boulderingRoundService.updateRoundRankings(round);
 
     expect(res).toBeUndefined();
     expect(round.rankings).toBe(rankings);
