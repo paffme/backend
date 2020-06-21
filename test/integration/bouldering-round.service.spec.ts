@@ -112,6 +112,7 @@ describe('Bouldering round service (integration)', () => {
       boulders: partialDto?.boulders ?? 4,
       category: partialDto?.category ?? CategoryName.Minime,
       sex: partialDto?.sex ?? Sex.Female,
+      groups: partialDto?.groups ?? 1,
     };
 
     return boulderingRoundService.createRound(competition, dto);
@@ -193,6 +194,37 @@ describe('Bouldering round service (integration)', () => {
 
     await boulderingRoundService.addClimbers(round, climber);
     expect(round.groups[0].climbers.contains(climber)).toEqual(true);
+  });
+
+  it('adds climbers alternately in groups', async () => {
+    const round = await givenBoulderingRound(
+      {
+        rankingType: BoulderingRoundRankingType.CIRCUIT,
+        state: BoulderingRoundState.PENDING,
+        sex: Sex.Female,
+        category: CategoryName.Minime,
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        groups: 2,
+      },
+      {
+        startDate: new Date(2019, 10, 1),
+      },
+    );
+
+    const { user: climber1 } = await utils.givenUser({
+      sex: Sex.Female,
+      birthYear: 2006,
+    });
+
+    const { user: climber2 } = await utils.givenUser({
+      sex: Sex.Female,
+      birthYear: 2006,
+    });
+
+    await boulderingRoundService.addClimbers(round, climber1, climber2);
+    expect(round.groups[0].climbers).toContain(climber1);
+    expect(round.groups[1].climbers).toContain(climber2);
   });
 
   it('adds a climber when is in ongoing state', async () => {
