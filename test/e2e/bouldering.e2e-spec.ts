@@ -750,7 +750,6 @@ describe('Bouldering (e2e)', () => {
       const body: BoulderingGroupRankingsDto = res.body;
 
       expect(body.type).toEqual(BoulderingRoundRankingType.CIRCUIT);
-      expect(body.data.type).toEqual(BoulderingRoundRankingType.CIRCUIT);
       expect(body.data.boulders).toHaveLength(1);
       expect(body.data.boulders[0]).toEqual(boulder.id);
 
@@ -1318,8 +1317,6 @@ describe('Bouldering (e2e)', () => {
       expect(body.type).toEqual(BoulderingRoundRankingType.CIRCUIT);
 
       const circuitRankings = body.data as CircuitGroupRankingsDto;
-      expect(circuitRankings.type).toEqual(BoulderingRoundRankingType.CIRCUIT);
-
       expect(circuitRankings.rankings[0].climber.id).toEqual(climber.id);
       expect(circuitRankings.rankings[0].ranking).toEqual(1);
       expect(circuitRankings.rankings[0].tops).toEqual([true]);

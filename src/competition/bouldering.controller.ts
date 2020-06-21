@@ -231,7 +231,7 @@ export class BoulderingController {
   }
 
   @Get('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/rankings')
-  @ApiOkResponse({ type: BoulderingRoundRankingsDto })
+  @ApiOkResponse({ type: BoulderingGroupRankingsDto })
   @ApiOperation(GetOperationId(Competition.name, 'GetBoulderingGroupRankings'))
   async getBoulderingGroupRankings(
     @Param() params: GetBoulderingGroupRankingsParamsDto,

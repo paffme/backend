@@ -20,17 +20,19 @@ export class BoulderingRoundRankingsDto {
 
   @ApiProperty({
     type: 'array',
-    oneOf: [
-      {
-        $ref: getSchemaPath(BoulderingUnlimitedContestRankingDto),
-      },
-      {
-        $ref: getSchemaPath(BoulderingLimitedContestRankingDto),
-      },
-      {
-        $ref: getSchemaPath(BoulderingCircuitRankingDto),
-      },
-    ],
+    items: {
+      oneOf: [
+        {
+          $ref: getSchemaPath(BoulderingUnlimitedContestRankingDto),
+        },
+        {
+          $ref: getSchemaPath(BoulderingLimitedContestRankingDto),
+        },
+        {
+          $ref: getSchemaPath(BoulderingCircuitRankingDto),
+        },
+      ],
+    },
   })
   readonly data!: RankingDataDto[];
 }

@@ -11,9 +11,6 @@ class BaseRankingsDto {
 }
 
 export class UnlimitedContestGroupRankingsDto extends BaseRankingsDto {
-  @ApiProperty()
-  type!: BoulderingRoundRankingType.UNLIMITED_CONTEST;
-
   @ApiProperty({ isArray: true, type: Number })
   bouldersPoints!: number[];
 
@@ -22,17 +19,11 @@ export class UnlimitedContestGroupRankingsDto extends BaseRankingsDto {
 }
 
 export class LimitedContestGroupRankingsDto extends BaseRankingsDto {
-  @ApiProperty()
-  type!: BoulderingRoundRankingType.LIMITED_CONTEST;
-
   @ApiProperty({ isArray: true, type: BoulderingLimitedContestRankingDto })
   rankings!: BoulderingLimitedContestRankingDto[];
 }
 
 export class CircuitGroupRankingsDto extends BaseRankingsDto {
-  @ApiProperty()
-  type!: BoulderingRoundRankingType.CIRCUIT;
-
   @ApiProperty({ isArray: true, type: BoulderingCircuitRankingDto })
   rankings!: BoulderingCircuitRankingDto[];
 }

@@ -58,7 +58,6 @@ export class BoulderingGroupRankingsMapper extends BaseMapper<
     UnlimitedContestGroupRankingsDto,
     BoulderingUnlimitedContestRankings
   > = {
-    type: 'type',
     bouldersPoints: 'bouldersPoints',
     boulders: 'boulders',
     rankings: (unlimitedContestRankings) =>
@@ -77,7 +76,6 @@ export class BoulderingGroupRankingsMapper extends BaseMapper<
     LimitedContestGroupRankingsDto,
     BoulderingLimitedContestRankings
   > = {
-    type: 'type',
     boulders: 'boulders',
     rankings: (unlimitedContestRankings) =>
       this.boulderingLimitedContestRankingMapper.mapArray(
@@ -95,7 +93,6 @@ export class BoulderingGroupRankingsMapper extends BaseMapper<
     CircuitGroupRankingsDto,
     BoulderingCircuitRankings
   > = {
-    type: 'type',
     boulders: 'boulders',
     rankings: (circuitRankings) =>
       this.boulderingCircuitRankingMapper.mapArray(circuitRankings.rankings),
