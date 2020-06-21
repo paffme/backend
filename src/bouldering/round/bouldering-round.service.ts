@@ -154,13 +154,16 @@ export class BoulderingRoundService {
   }
 
   private mergeGroupRankings(round: BoulderingRound): BoulderingRoundRankings {
-    const mergedRankings: BoulderingRoundRankings = [];
+    const mergedRankings: BoulderingRoundRankings = {
+      type: round.rankingType,
+      rankings: [],
+    };
 
     for (const group of round.groups.getItems()) {
       if (group.rankings) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        mergedRankings.push(...group.rankings.rankings);
+        mergedRankings.rankings.push(...group.rankings.rankings);
       }
     }
 

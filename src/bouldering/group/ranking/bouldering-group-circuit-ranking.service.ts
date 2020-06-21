@@ -1,5 +1,5 @@
 import { BoulderingGroupRankingService } from './bouldering-group-ranking.service';
-import { InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { User } from '../../../user/user.entity';
 import { RankingsMap } from '../../types/rankings-map';
@@ -41,6 +41,7 @@ type AggregatedClimbersResultsMap = Map<
   AggregatedClimbersResultsEntry[1]
 >;
 
+@Injectable()
 export class BoulderingGroupCircuitRankingService
   implements BoulderingGroupRankingService {
   private groupResultsByClimber(
@@ -352,14 +353,30 @@ export class BoulderingGroupCircuitRankingService
     }
   }
 
+  private handleNonRankedClimbers(
+    rankings: RankingsMap,
+    climbers: User[],
+  ): void {
+    const lastRanking =
+      Math.max(...Array.from(rankings, ([, ranking]) => ranking)) + 1;
+
+    for (const climber of climbers) {
+      if (rankings.has(climber.id)) {
+        continue;
+      }
+
+      rankings.set(climber.id, lastRanking);
+    }
+  }
+
   getRankings(group: BoulderingGroup): BoulderingCircuitRankings {
     // Compute group ranking
-    const boulders = group.boulders.count();
+    const bouldersCount = group.boulders.count();
     const results = group.results.getItems();
     const climbers = group.climbers.getItems();
 
     // Group results by climber and aggregate results
-    const climberResults = this.groupResultsByClimber(results, boulders);
+    const climberResults = this.groupResultsByClimber(results, bouldersCount);
 
     // Compute rankings
     const groupRankings = this.computeRankings(climberResults);
@@ -369,20 +386,29 @@ export class BoulderingGroupCircuitRankingService
       this.handlePodiumExAequos(groupRankings, climberResults);
     }
 
+    // Handle climbers with no results in semi-final or final
+    if (
+      group.round.type === CompetitionRoundType.SEMI_FINAL ||
+      group.round.type === CompetitionRoundType.FINAL
+    ) {
+      this.handleNonRankedClimbers(groupRankings, climbers);
+    }
+
     // Gather all information
     return {
       type: BoulderingRoundRankingType.CIRCUIT,
+      boulders: group.boulders.getItems().map((b) => b.id),
       rankings: Array.from(
         groupRankings,
         ([climberId, ranking]): BoulderingCircuitRanking => {
           const climber = climbers.find((c) => c.id === climberId)!;
-          const climberResult = climberResults.get(climber.id)!;
+          const climberResult = climberResults.get(climber.id);
 
           return {
-            tops: climberResult.tops,
-            topsInTries: climberResult.topsInTries,
-            zones: climberResult.zones,
-            zonesInTries: climberResult.zonesInTries,
+            tops: climberResult?.tops || [],
+            topsInTries: climberResult?.topsInTries || [],
+            zones: climberResult?.zones || [],
+            zonesInTries: climberResult?.zonesInTries || [],
             climber: {
               id: climberId,
               firstName: climber.firstName,

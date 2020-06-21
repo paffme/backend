@@ -19,7 +19,7 @@ import {
 } from '../round/bouldering-round.entity';
 
 import type { BaseGroup } from '../../competition/base-group';
-import type { ClimberRankingInfos } from '../types/climber-ranking-infos.interface';
+import type { ClimberRankingInfos } from '../../competition/types/climber-ranking-infos.interface';
 
 export enum BoulderingGroupState {
   PENDING = 'PENDING',
@@ -51,17 +51,25 @@ export interface BoulderingUnlimitedContestRanking
   points: number;
 }
 
-export interface BoulderingCircuitRankings {
+interface BaseBoulderingRankings {
+  type: BoulderingRoundRankingType;
+  boulders: typeof Boulder.prototype.id[];
+  rankings: unknown[];
+}
+
+export interface BoulderingCircuitRankings extends BaseBoulderingRankings {
   type: BoulderingRoundRankingType.CIRCUIT;
   rankings: BoulderingCircuitRanking[];
 }
 
-export interface BoulderingLimitedContestRankings {
+export interface BoulderingLimitedContestRankings
+  extends BaseBoulderingRankings {
   type: BoulderingRoundRankingType.LIMITED_CONTEST;
   rankings: BoulderingLimitedContestRanking[];
 }
 
-export interface BoulderingUnlimitedContestRankings {
+export interface BoulderingUnlimitedContestRankings
+  extends BaseBoulderingRankings {
   type: BoulderingRoundRankingType.UNLIMITED_CONTEST;
   rankings: BoulderingUnlimitedContestRanking[];
   bouldersPoints: number[];

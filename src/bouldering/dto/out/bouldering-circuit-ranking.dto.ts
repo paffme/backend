@@ -1,7 +1,7 @@
 import { BaseRankingDto } from './base-ranking.dto';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CircuitContestRankingDto extends BaseRankingDto {
+export class BoulderingCircuitRankingDto extends BaseRankingDto {
   @ApiProperty({ type: Number, isArray: true })
   topsInTries!: number[];
 

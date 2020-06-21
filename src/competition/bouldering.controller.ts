@@ -80,7 +80,7 @@ export class BoulderingController {
     private readonly boulderingRoundMapper: BoulderingRoundMapper,
     private readonly boulderingLimitedRoundMapper: BoulderingLimitedRoundMapper,
     private readonly boulderingResultMapper: BoulderingResultMapper,
-    private readonly boulderingRoundRankingMapper: BoulderingRoundRankingsMapper,
+    private readonly boulderingRoundRankingsMapper: BoulderingRoundRankingsMapper,
     private readonly boulderingRoundsByCategoryByTypeMapper: BoulderingRoundsByCategoryByTypeMapper,
     private readonly boulderMapper: BoulderMapper,
     private readonly boulderingGroupMapper: BoulderingGroupMapper,
@@ -169,17 +169,14 @@ export class BoulderingController {
     @Param() params: BulkBoulderingResultsParamsDto,
     @Body() dto: BulkBoulderingResultsDto,
   ): Promise<BoulderingGroupRankingsDto> {
-    const {
-      rankings,
-      type,
-    } = await this.competitionService.bulkBoulderingResults(
+    const rankings = await this.competitionService.bulkBoulderingResults(
       params.competitionId,
       params.roundId,
       params.groupId,
       dto,
     );
 
-    return this.boulderingRoundRankingMapper.mapGroupRankings(rankings, type);
+    return this.boulderingGroupRankingsMapper.map(rankings);
   }
 
   @Post(
@@ -230,7 +227,7 @@ export class BoulderingController {
       params.roundId,
     );
 
-    return this.boulderingRoundRankingMapper.map(rankings);
+    return this.boulderingRoundRankingsMapper.map(rankings);
   }
 
   @Get('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/rankings')

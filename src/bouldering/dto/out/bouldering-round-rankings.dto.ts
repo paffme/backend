@@ -1,18 +1,18 @@
 import { BoulderingRoundRankingType } from '../../round/bouldering-round.entity';
 import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
-import { UnlimitedContestRankingDto } from './unlimited-contest-ranking.dto';
-import { LimitedContestRankingDto } from './limited-contest-ranking.dto';
-import { CircuitContestRankingDto } from './circuit-contest-ranking.dto';
+import { BoulderingUnlimitedContestRankingDto } from './bouldering-unlimited-contest-ranking.dto';
+import { BoulderingLimitedContestRankingDto } from './bouldering-limited-contest-ranking.dto';
+import { BoulderingCircuitRankingDto } from './bouldering-circuit-ranking.dto';
 
-type RankingData =
-  | UnlimitedContestRankingDto
-  | LimitedContestRankingDto
-  | CircuitContestRankingDto;
+export type RankingDataDto =
+  | BoulderingUnlimitedContestRankingDto
+  | BoulderingLimitedContestRankingDto
+  | BoulderingCircuitRankingDto;
 
 @ApiExtraModels(
-  UnlimitedContestRankingDto,
-  LimitedContestRankingDto,
-  CircuitContestRankingDto,
+  BoulderingUnlimitedContestRankingDto,
+  BoulderingLimitedContestRankingDto,
+  BoulderingCircuitRankingDto,
 )
 export class BoulderingRoundRankingsDto {
   @ApiProperty({ enum: BoulderingRoundRankingType })
@@ -22,15 +22,15 @@ export class BoulderingRoundRankingsDto {
     type: 'array',
     oneOf: [
       {
-        $ref: getSchemaPath(UnlimitedContestRankingDto),
+        $ref: getSchemaPath(BoulderingUnlimitedContestRankingDto),
       },
       {
-        $ref: getSchemaPath(LimitedContestRankingDto),
+        $ref: getSchemaPath(BoulderingLimitedContestRankingDto),
       },
       {
-        $ref: getSchemaPath(CircuitContestRankingDto),
+        $ref: getSchemaPath(BoulderingCircuitRankingDto),
       },
     ],
   })
-  readonly data!: RankingData[];
+  readonly data!: RankingDataDto[];
 }

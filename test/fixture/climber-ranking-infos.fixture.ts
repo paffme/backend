@@ -1,5 +1,5 @@
-import { ClimberRankingInfos } from '../../src/bouldering/round/bouldering-round.entity';
 import * as uuid from 'uuid';
+import { ClimberRankingInfos } from '../../src/competition/types/climber-ranking-infos.interface';
 
 export function givenClimberRankingInfos(id: number): ClimberRankingInfos {
   return {

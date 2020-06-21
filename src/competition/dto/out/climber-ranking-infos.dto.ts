@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { User } from '../../../user/user.entity';
 
-export class ClimberRankingDto {
+export class ClimberRankingInfosDto {
   @ApiProperty({
     type: Number,
   })

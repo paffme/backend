@@ -11,7 +11,7 @@ import {
 import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
 import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
 import { CreateBoulderDto } from '../../../src/competition/dto/in/body/create-boulder.dto';
-import { Collection, InitOptions } from 'mikro-orm';
+import { Collection } from 'mikro-orm';
 import TestUtils from '../../utils';
 import { UserService } from '../../../src/user/user.service';
 import { User } from '../../../src/user/user.entity';

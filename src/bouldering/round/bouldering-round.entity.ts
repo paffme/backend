@@ -29,10 +29,25 @@ export enum BoulderingRoundRankingType {
   LIMITED_CONTEST = 'LIMITED_CONTEST',
 }
 
+export interface BoulderingRoundCircuitRankings {
+  type: BoulderingRoundRankingType.CIRCUIT;
+  rankings: BoulderingCircuitRanking[];
+}
+
+export interface BoulderingRoundLimitedContestRankings {
+  type: BoulderingRoundRankingType.LIMITED_CONTEST;
+  rankings: BoulderingLimitedContestRanking[];
+}
+
+export interface BoulderingRoundUnlimitedContestRankings {
+  type: BoulderingRoundRankingType.UNLIMITED_CONTEST;
+  rankings: BoulderingUnlimitedContestRanking[];
+}
+
 export type BoulderingRoundRankings =
-  | BoulderingCircuitRanking[]
-  | BoulderingLimitedContestRanking[]
-  | BoulderingUnlimitedContestRanking[];
+  | BoulderingRoundCircuitRankings
+  | BoulderingRoundLimitedContestRankings
+  | BoulderingRoundUnlimitedContestRankings;
 
 export enum BoulderingRoundState {
   PENDING = 'PENDING',

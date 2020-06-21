@@ -77,7 +77,7 @@ const boulderingRoundServiceMock: ServiceMock = {
   assignJudgeToBoulder: jest.fn(),
   removeJudgeAssignmentToBoulder: jest.fn(),
   getGroupBoulders: jest.fn(),
-  bulkResults: jest.fn(),
+  bulkGroupResults: jest.fn(),
 };
 
 const boulderingRankingServiceMock: ServiceMock = {
@@ -901,17 +901,12 @@ describe('Competition service (unit)', () => {
     const competitionRounds: BoulderingRound[] = [
       givenBoulderingRound({
         type: CompetitionRoundType.QUALIFIER,
+        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
         category: CategoryName.Senior,
         sex: Sex.Male,
         rankings: {
-          groups: [
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            {
-              id: 0,
-              rankings: [],
-            },
-          ],
+          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+          rankings: [],
         },
       }),
       givenBoulderingRound({
@@ -971,15 +966,10 @@ describe('Competition service (unit)', () => {
         type: CompetitionRoundType.SEMI_FINAL,
         sex: Sex.Male,
         category: CategoryName.Senior,
+        rankingType: BoulderingRoundRankingType.CIRCUIT,
         rankings: {
-          groups: [
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            {
-              id: 0,
-              rankings: [],
-            },
-          ],
+          type: BoulderingRoundRankingType.CIRCUIT,
+          rankings: [],
         },
       }),
       givenBoulderingRound({
@@ -1352,12 +1342,7 @@ describe('Competition service (unit)', () => {
 
     competitionRounds[0].rankings = {
       type: BoulderingRoundRankingType.CIRCUIT,
-      groups: [
-        {
-          rankings: [],
-          id: groupId,
-        },
-      ],
+      rankings: [],
     };
 
     competition.registrations.init = () =>
@@ -1388,9 +1373,10 @@ describe('Competition service (unit)', () => {
     };
 
     const fakeMapRankings = new Map();
+    const fakeGroupRankings = {};
 
-    boulderingRoundServiceMock.bulkResults.mockImplementation(
-      async () => undefined,
+    boulderingRoundServiceMock.bulkGroupResults.mockImplementation(
+      async () => fakeGroupRankings,
     );
 
     boulderingRankingServiceMock.getRankings.mockImplementation(
@@ -1404,10 +1390,11 @@ describe('Competition service (unit)', () => {
       dto,
     );
 
-    expect(res.type).toEqual(competitionRounds[0].rankingType);
-    expect(res.rankings).toBe(competitionRounds[0].rankings!.groups[0]);
-    expect(boulderingRoundServiceMock.bulkResults).toHaveBeenCalledTimes(1);
-    expect(boulderingRoundServiceMock.bulkResults).toHaveBeenCalledWith(
+    expect(res).toBe(fakeGroupRankings);
+    expect(boulderingRoundServiceMock.bulkGroupResults).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(boulderingRoundServiceMock.bulkGroupResults).toHaveBeenCalledWith(
       competitionRounds[0],
       groupId,
       dto,

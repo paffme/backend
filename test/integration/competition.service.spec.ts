@@ -15,12 +15,13 @@ import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.
 import { BoulderingResultService } from '../../src/bouldering/result/bouldering-result.service';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
-import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
-import { BoulderingRoundCountedRankingService } from '../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
 import { BoulderingRankingService } from '../../src/bouldering/ranking/bouldering-ranking.service';
 import { givenCreateCompetitionDto } from '../fixture/competition.fixture';
 import { BoulderingGroupService } from '../../src/bouldering/group/bouldering-group.service';
 import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.entity';
+import { BoulderingGroupUnlimitedContestRankingService } from '../../src/bouldering/group/ranking/bouldering-group-unlimited-contest-ranking.service';
+import { BoulderingGroupCircuitRankingService } from '../../src/bouldering/group/ranking/bouldering-group-circuit-ranking.service';
+import { BoulderingGroupLimitedContestRankingService } from '../../src/bouldering/group/ranking/bouldering-group-limited-contest-ranking.service';
 
 describe('Competition service (integration)', () => {
   let competitionService: CompetitionService;
@@ -35,8 +36,9 @@ describe('Competition service (integration)', () => {
         BoulderingRoundService,
         BoulderingResultService,
         BoulderService,
-        BoulderingRoundUnlimitedContestRankingService,
-        BoulderingRoundCountedRankingService,
+        BoulderingGroupUnlimitedContestRankingService,
+        BoulderingGroupLimitedContestRankingService,
+        BoulderingGroupCircuitRankingService,
         BoulderingRankingService,
         BoulderingGroupService,
       ],

@@ -18,12 +18,22 @@ import {
   BoulderingUnlimitedContestRankings,
 } from '../../bouldering/group/bouldering-group.entity';
 
+import { ClimberRankingInfosMapper } from './climber-ranking-infos.mapper';
+import { BoulderingUnlimitedContestRankingMapper } from './bouldering-unlimited-contest-ranking.mapper';
+import { BoulderingLimitedContestRankingMapper } from './bouldering-limited-contest-ranking.mapper';
+import { BoulderingCircuitRankingMapper } from './bouldering-circuit-ranking.mapper';
+
 @Injectable()
 export class BoulderingGroupRankingsMapper extends BaseMapper<
   BoulderingGroupRankingsDto,
   BoulderingGroupRankings
 > {
-  constructor() {
+  constructor(
+    private readonly climberRankingInfosMapper: ClimberRankingInfosMapper,
+    private readonly boulderingUnlimitedContestRankingMapper: BoulderingUnlimitedContestRankingMapper,
+    private readonly boulderingLimitedContestRankingMapper: BoulderingLimitedContestRankingMapper,
+    private readonly boulderingCircuitRankingMapper: BoulderingCircuitRankingMapper,
+  ) {
     super({
       type: 'type',
       data: (group): RankingsDataDto => {
@@ -50,7 +60,11 @@ export class BoulderingGroupRankingsMapper extends BaseMapper<
   > = {
     type: 'type',
     bouldersPoints: 'bouldersPoints',
-    rankings: 'rankings',
+    boulders: 'boulders',
+    rankings: (unlimitedContestRankings) =>
+      this.boulderingUnlimitedContestRankingMapper.mapArray(
+        unlimitedContestRankings.rankings,
+      ),
   };
 
   private mapUnlimitedContest(
@@ -64,7 +78,11 @@ export class BoulderingGroupRankingsMapper extends BaseMapper<
     BoulderingLimitedContestRankings
   > = {
     type: 'type',
-    rankings: 'rankings',
+    boulders: 'boulders',
+    rankings: (unlimitedContestRankings) =>
+      this.boulderingLimitedContestRankingMapper.mapArray(
+        unlimitedContestRankings.rankings,
+      ),
   };
 
   private mapLimitedContest(
@@ -73,18 +91,20 @@ export class BoulderingGroupRankingsMapper extends BaseMapper<
     return morphism(this.limitedContestGroupRankingsSchema, limitedContest);
   }
 
-  private readonly circuitContestGroupRankingsSchema: StrictSchema<
+  private readonly circuitGroupRankingsSchema: StrictSchema<
     CircuitGroupRankingsDto,
     BoulderingCircuitRankings
   > = {
     type: 'type',
-    rankings: 'rankings',
+    boulders: 'boulders',
+    rankings: (circuitRankings) =>
+      this.boulderingCircuitRankingMapper.mapArray(circuitRankings.rankings),
   };
 
   private mapCircuit(
     circuit: BoulderingCircuitRankings,
   ): CircuitGroupRankingsDto {
-    return morphism(this.circuitContestGroupRankingsSchema, circuit);
+    return morphism(this.circuitGroupRankingsSchema, circuit);
   }
 
   public map(rankings: BoulderingGroupRankings): BoulderingGroupRankingsDto {

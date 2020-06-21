@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ClimberRankingDto } from '../../../competition/dto/out/climber-ranking.dto';
+import { ClimberRankingInfosDto } from '../../../competition/dto/out/climber-ranking-infos.dto';
 
 export class BaseRankingDto {
   @ApiProperty()
@@ -8,6 +8,6 @@ export class BaseRankingDto {
   @ApiProperty({ isArray: true, type: Boolean })
   tops!: boolean[];
 
-  @ApiProperty({ type: ClimberRankingDto })
-  climber!: ClimberRankingDto;
+  @ApiProperty({ type: ClimberRankingInfosDto })
+  climber!: ClimberRankingInfosDto;
 }

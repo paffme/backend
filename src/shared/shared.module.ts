@@ -26,6 +26,10 @@ import {
 } from './mappers/bouldering-rounds-by-category-by-type.mapper';
 import { JudgementAssignmentsMapper } from './mappers/judgement-assignments.mapper';
 import { BoulderingGroupRankingsMapper } from './mappers/bouldering-group-rankings.mapper';
+import { ClimberRankingInfosMapper } from './mappers/climber-ranking-infos.mapper';
+import { BoulderingUnlimitedContestRankingMapper } from './mappers/bouldering-unlimited-contest-ranking.mapper';
+import { BoulderingLimitedContestRankingMapper } from './mappers/bouldering-limited-contest-ranking.mapper';
+import { BoulderingCircuitRankingMapper } from './mappers/bouldering-circuit-ranking.mapper';
 
 @Global()
 @Module({
@@ -47,6 +51,10 @@ import { BoulderingGroupRankingsMapper } from './mappers/bouldering-group-rankin
     BoulderingRoundsByCategoryByTypeMapper,
     RoundBySexMapper,
     RoundByTypeMapper,
+    ClimberRankingInfosMapper,
+    BoulderingUnlimitedContestRankingMapper,
+    BoulderingLimitedContestRankingMapper,
+    BoulderingCircuitRankingMapper,
     BoulderingGroupRankingsMapper,
     JudgementAssignmentsMapper,
     UserAuthorizationService,
@@ -69,6 +77,10 @@ import { BoulderingGroupRankingsMapper } from './mappers/bouldering-group-rankin
     BoulderingRoundsByCategoryByTypeMapper,
     RoundBySexMapper,
     RoundByTypeMapper,
+    ClimberRankingInfosMapper,
+    BoulderingUnlimitedContestRankingMapper,
+    BoulderingLimitedContestRankingMapper,
+    BoulderingCircuitRankingMapper,
     BoulderingGroupRankingsMapper,
     JudgementAssignmentsMapper,
     UserAuthorizationService,

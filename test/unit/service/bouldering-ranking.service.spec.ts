@@ -10,16 +10,11 @@ import { CategoryName } from '../../../src/shared/types/category-name.enum';
 import { Sex } from '../../../src/shared/types/sex.enum';
 import * as uuid from 'uuid';
 import { Competition } from '../../../src/competition/competition.entity';
-import {
-  BoulderingGroup,
-  BoulderingGroupState,
-} from '../../../src/bouldering/group/bouldering-group.entity';
+import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
 import { Collection } from 'mikro-orm';
-import { BoulderingResult } from '../../../src/bouldering/result/bouldering-result.entity';
-import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
-import { User } from '../../../src/user/user.entity';
 import { givenClimberRankingInfos } from '../../fixture/climber-ranking-infos.fixture';
 import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
+import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
 
 describe('Bouldering round service (unit)', () => {
   let utils: TestUtils;
@@ -35,7 +30,11 @@ describe('Bouldering round service (unit)', () => {
   });
 
   function givenBoulderingRounds(
-    ...data: [CompetitionRoundType, BoulderingRoundRankings][]
+    ...data: [
+      CompetitionRoundType,
+      BoulderingRoundRankings,
+      BoulderingGroup[],
+    ][]
   ): BoulderingRound[] {
     const rounds = [];
 
@@ -54,32 +53,12 @@ describe('Bouldering round service (unit)', () => {
 
       round.id = utils.getRandomId();
 
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      const groups: BoulderingGroup[] = d[1].groups.map(
-        (g: { id: number; rankings: [] }): BoulderingGroup => ({
-          id: g.id ?? utils.getRandomId(),
-          round,
-          results: {} as Collection<BoulderingResult>,
-          climbers: {
-            count(): number {
-              return g.rankings.length;
-            },
-          } as Collection<User>,
-          boulders: {} as Collection<Boulder>,
-          name: uuid.v4(),
-          updatedAt: new Date(),
-          createdAt: new Date(),
-          state: BoulderingGroupState.ONGOING,
-        }),
-      );
-
       round.groups = {
-        getItems(): BoulderingGroup[] {
-          return groups;
-        },
         count(): number {
-          return groups.length;
+          return d[2].length;
+        },
+        getItems(): BoulderingGroup[] {
+          return d[2];
         },
       } as Collection<BoulderingGroup>;
 
@@ -96,109 +75,96 @@ describe('Bouldering round service (unit)', () => {
         CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              bouldersPoints: [50, 50, 50, 50],
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, false],
-                  nbTops: 3,
-                  points: 150,
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, false, false],
-                  nbTops: 2,
-                  points: 100,
-                  ranking: 3,
-                  climber: givenClimberRankingInfos(3),
-                },
-                {
-                  tops: [true, false, false, false],
-                  nbTops: 1,
-                  points: 50,
-                  ranking: 4,
-                  climber: givenClimberRankingInfos(4),
-                },
-              ],
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, false],
+              nbTops: 3,
+              points: 150,
+              ranking: 2,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, false, false],
+              nbTops: 2,
+              points: 100,
+              ranking: 3,
+              climber: givenClimberRankingInfos(3),
+            },
+            {
+              tops: [true, false, false, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 4,
+              climber: givenClimberRankingInfos(4),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [false, false, false, false],
-                  topsInTries: [0, 0, 0, 4],
-                  zones: [false, false, false, true],
-                  zonesInTries: [0, 0, 0, 1],
-                  ranking: 3,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, false],
-                  topsInTries: [1, 2, 3, 0],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 2, 3, 4],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(3),
-                },
-              ],
+              tops: [false, false, false, false],
+              topsInTries: [0, 0, 0, 4],
+              zones: [false, false, false, true],
+              zonesInTries: [0, 0, 0, 1],
+              ranking: 3,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, false],
+              topsInTries: [1, 2, 3, 0],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 2,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 2, 3, 4],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(3),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, true, false],
-                  topsInTries: [1, 2, 3, 0],
-                  zones: [true, true, true, false],
-                  zonesInTries: [1, 1, 1, 0],
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(3),
-                },
-              ],
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, true, false],
+              topsInTries: [1, 2, 3, 0],
+              zones: [true, true, true, false],
+              zonesInTries: [1, 1, 1, 0],
+              ranking: 2,
+              climber: givenClimberRankingInfos(3),
             },
           ],
         },
+        [],
       ],
     );
 
@@ -218,109 +184,96 @@ describe('Bouldering round service (unit)', () => {
         CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              bouldersPoints: [50, 50, 50, 50],
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, false, false],
-                  nbTops: 2,
-                  points: 100,
-                  ranking: 3,
-                  climber: givenClimberRankingInfos(3),
-                },
-                {
-                  tops: [true, false, false, false],
-                  nbTops: 1,
-                  points: 50,
-                  ranking: 4,
-                  climber: givenClimberRankingInfos(4),
-                },
-              ],
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, false, false],
+              nbTops: 2,
+              points: 100,
+              ranking: 3,
+              climber: givenClimberRankingInfos(3),
+            },
+            {
+              tops: [true, false, false, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 4,
+              climber: givenClimberRankingInfos(4),
             },
           ],
         },
+        [givenBoulderingGroup()],
       ],
       [
         CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [false, false, false, false],
-                  topsInTries: [0, 0, 0, 4],
-                  zones: [false, false, false, true],
-                  zonesInTries: [0, 0, 0, 1],
-                  ranking: 3,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 2, 3, 4],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 2, 3, 4],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(3),
-                },
-              ],
+              tops: [false, false, false, false],
+              topsInTries: [0, 0, 0, 4],
+              zones: [false, false, false, true],
+              zonesInTries: [0, 0, 0, 1],
+              ranking: 3,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 2, 3, 4],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 2, 3, 4],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(3),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(3),
-                },
-              ],
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(3),
             },
           ],
         },
+        [],
       ],
     );
 
@@ -340,109 +293,96 @@ describe('Bouldering round service (unit)', () => {
         CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              bouldersPoints: [50, 50, 50, 50],
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, false, false],
-                  nbTops: 2,
-                  points: 100,
-                  ranking: 3,
-                  climber: givenClimberRankingInfos(3),
-                },
-                {
-                  tops: [true, false, false, false],
-                  nbTops: 1,
-                  points: 50,
-                  ranking: 4,
-                  climber: givenClimberRankingInfos(4),
-                },
-              ],
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, false, false],
+              nbTops: 2,
+              points: 100,
+              ranking: 3,
+              climber: givenClimberRankingInfos(3),
+            },
+            {
+              tops: [true, false, false, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 4,
+              climber: givenClimberRankingInfos(4),
             },
           ],
         },
+        [givenBoulderingGroup()],
       ],
       [
         CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [false, false, false, false],
-                  topsInTries: [0, 0, 0, 4],
-                  zones: [false, false, false, true],
-                  zonesInTries: [0, 0, 0, 1],
-                  ranking: 3,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 2, 3, 4],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 2, 3, 4],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(3),
-                },
-              ],
+              tops: [false, false, false, false],
+              topsInTries: [0, 0, 0, 4],
+              zones: [false, false, false, true],
+              zonesInTries: [0, 0, 0, 1],
+              ranking: 3,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 2, 3, 4],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 2, 3, 4],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(3),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(3),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-              ],
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(3),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
             },
           ],
         },
+        [],
       ],
     );
 
@@ -462,80 +402,71 @@ describe('Bouldering round service (unit)', () => {
         CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              bouldersPoints: [50, 50, 50, 50],
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, false],
-                  nbTops: 3,
-                  points: 150,
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, true, false],
-                  nbTops: 3,
-                  points: 150,
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(3),
-                },
-                {
-                  tops: [true, false, false, false],
-                  nbTops: 1,
-                  points: 50,
-                  ranking: 4,
-                  climber: givenClimberRankingInfos(4),
-                },
-              ],
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, false],
+              nbTops: 3,
+              points: 150,
+              ranking: 2,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, true, false],
+              nbTops: 3,
+              points: 150,
+              ranking: 2,
+              climber: givenClimberRankingInfos(3),
+            },
+            {
+              tops: [true, false, false, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 4,
+              climber: givenClimberRankingInfos(4),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, false],
-                  topsInTries: [1, 1, 1, 0],
-                  zones: [true, true, true, false],
-                  zonesInTries: [1, 1, 1, 0],
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, true, false],
-                  topsInTries: [1, 1, 1, 0],
-                  zones: [true, true, true, false],
-                  zonesInTries: [1, 1, 1, 0],
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(3),
-                },
-              ],
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, false],
+              topsInTries: [1, 1, 1, 0],
+              zones: [true, true, true, false],
+              zonesInTries: [1, 1, 1, 0],
+              ranking: 2,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, true, false],
+              topsInTries: [1, 1, 1, 0],
+              zones: [true, true, true, false],
+              zonesInTries: [1, 1, 1, 0],
+              ranking: 2,
+              climber: givenClimberRankingInfos(3),
             },
           ],
         },
+        [],
       ],
     );
 
@@ -555,87 +486,78 @@ describe('Bouldering round service (unit)', () => {
         CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              bouldersPoints: [50, 50, 50, 50],
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(3),
-                },
-                {
-                  tops: [true, false, false, false],
-                  nbTops: 1,
-                  points: 50,
-                  ranking: 4,
-                  climber: givenClimberRankingInfos(4),
-                },
-                {
-                  tops: [true, false, false, false],
-                  nbTops: 1,
-                  points: 50,
-                  ranking: 4,
-                  climber: givenClimberRankingInfos(5),
-                },
-              ],
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(3),
+            },
+            {
+              tops: [true, false, false, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 4,
+              climber: givenClimberRankingInfos(4),
+            },
+            {
+              tops: [true, false, false, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 4,
+              climber: givenClimberRankingInfos(5),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-                {
-                  tops: [true, true, true, false],
-                  topsInTries: [1, 1, 1, 0],
-                  zones: [true, true, true, false],
-                  zonesInTries: [1, 1, 1, 0],
-                  ranking: 3,
-                  climber: givenClimberRankingInfos(3),
-                },
-              ],
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true, true, false],
+              topsInTries: [1, 1, 1, 0],
+              zones: [true, true, true, false],
+              zonesInTries: [1, 1, 1, 0],
+              ranking: 3,
+              climber: givenClimberRankingInfos(3),
             },
           ],
         },
+        [],
       ],
     );
 
@@ -656,58 +578,49 @@ describe('Bouldering round service (unit)', () => {
         CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              bouldersPoints: [50, 50, 50, 50],
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-              ],
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(2),
-                },
-              ],
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(2),
             },
           ],
         },
+        [],
       ],
     );
 
@@ -724,50 +637,45 @@ describe('Bouldering round service (unit)', () => {
       CompetitionRoundType.QUALIFIER,
       {
         type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-        groups: [
+        rankings: [
           {
-            id: 0,
-            bouldersPoints: [50, 50, 50, 50],
-            rankings: [
-              {
-                tops: [true, true, true, true],
-                nbTops: 4,
-                points: 200,
-                ranking: 1,
-                climber: givenClimberRankingInfos(1),
-              },
-              {
-                tops: [true, true, true, false],
-                nbTops: 3,
-                points: 150,
-                ranking: 2,
-                climber: givenClimberRankingInfos(2),
-              },
-              {
-                tops: [true, true, true, false],
-                nbTops: 3,
-                points: 150,
-                ranking: 2,
-                climber: givenClimberRankingInfos(3),
-              },
-              {
-                tops: [true, true, true, false],
-                nbTops: 3,
-                points: 150,
-                ranking: 2,
-                climber: givenClimberRankingInfos(4),
-              },
-              {
-                tops: [false, false, false, false],
-                nbTops: 0,
-                points: 0,
-                ranking: 5,
-                climber: givenClimberRankingInfos(5),
-              },
-            ],
+            tops: [true, true, true, true],
+            nbTops: 4,
+            points: 200,
+            ranking: 1,
+            climber: givenClimberRankingInfos(1),
+          },
+          {
+            tops: [true, true, true, false],
+            nbTops: 3,
+            points: 150,
+            ranking: 2,
+            climber: givenClimberRankingInfos(2),
+          },
+          {
+            tops: [true, true, true, false],
+            nbTops: 3,
+            points: 150,
+            ranking: 2,
+            climber: givenClimberRankingInfos(3),
+          },
+          {
+            tops: [true, true, true, false],
+            nbTops: 3,
+            points: 150,
+            ranking: 2,
+            climber: givenClimberRankingInfos(4),
+          },
+          {
+            tops: [false, false, false, false],
+            nbTops: 0,
+            points: 0,
+            ranking: 5,
+            climber: givenClimberRankingInfos(5),
           },
         ],
       },
+      [],
     ]);
 
     const rankings = boulderingRankingService.getRankings(rounds);
@@ -793,22 +701,17 @@ describe('Bouldering round service (unit)', () => {
       CompetitionRoundType.QUALIFIER,
       {
         type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-        groups: [
+        rankings: [
           {
-            id: 0,
-            bouldersPoints: [50, 50, 50, 50],
-            rankings: [
-              {
-                tops: [true, true, true, true],
-                nbTops: 4,
-                points: 200,
-                ranking: 1,
-                climber: givenClimberRankingInfos(1),
-              },
-            ],
+            tops: [true, true, true, true],
+            nbTops: 4,
+            points: 200,
+            ranking: 1,
+            climber: givenClimberRankingInfos(1),
           },
         ],
       },
+      [],
     ]);
 
     rounds.push(({
@@ -831,58 +734,49 @@ describe('Bouldering round service (unit)', () => {
         CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              bouldersPoints: [50, 50, 50, 50],
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  nbTops: 4,
-                  points: 200,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, false],
-                  nbTops: 3,
-                  points: 150,
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(2),
-                },
-              ],
+              tops: [true, true, true, true],
+              nbTops: 4,
+              points: 200,
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, false],
+              nbTops: 3,
+              points: 150,
+              ranking: 2,
+              climber: givenClimberRankingInfos(2),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 2, 3, 4],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, false],
-                  topsInTries: [1, 2, 3, 0],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(2),
-                },
-              ],
+              tops: [true, true, true, true],
+              topsInTries: [1, 2, 3, 4],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, false],
+              topsInTries: [1, 2, 3, 0],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 2,
+              climber: givenClimberRankingInfos(2),
             },
           ],
         },
+        [],
       ],
     );
 
@@ -894,54 +788,43 @@ describe('Bouldering round service (unit)', () => {
     expect(rankings.get(2)).toEqual(2);
   });
 
-  it('handles a competition with multiple qualifiers groups and only one round', () => {
+  it('handles a competition with only one qualifier round', () => {
     const rounds = givenBoulderingRounds([
       CompetitionRoundType.QUALIFIER,
       {
         type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-        groups: [
+        rankings: [
           {
-            id: 0,
-            bouldersPoints: [50, 50],
-            rankings: [
-              {
-                tops: [true, true],
-                nbTops: 2,
-                points: 100,
-                ranking: 1,
-                climber: givenClimberRankingInfos(1),
-              },
-              {
-                tops: [true, false],
-                nbTops: 1,
-                points: 50,
-                ranking: 2,
-                climber: givenClimberRankingInfos(2),
-              },
-            ],
+            tops: [true, true],
+            nbTops: 2,
+            points: 100,
+            ranking: 1,
+            climber: givenClimberRankingInfos(1),
           },
           {
-            id: 1,
-            bouldersPoints: [50, 50],
-            rankings: [
-              {
-                tops: [true, true],
-                nbTops: 2,
-                points: 100,
-                ranking: 1,
-                climber: givenClimberRankingInfos(3),
-              },
-              {
-                tops: [true, false],
-                nbTops: 1,
-                points: 50,
-                ranking: 2,
-                climber: givenClimberRankingInfos(4),
-              },
-            ],
+            tops: [true, false],
+            nbTops: 1,
+            points: 50,
+            ranking: 2,
+            climber: givenClimberRankingInfos(2),
+          },
+          {
+            tops: [true, true],
+            nbTops: 2,
+            points: 100,
+            ranking: 1,
+            climber: givenClimberRankingInfos(3),
+          },
+          {
+            tops: [true, false],
+            nbTops: 1,
+            points: 50,
+            ranking: 2,
+            climber: givenClimberRankingInfos(4),
           },
         ],
       },
+      [],
     ]);
 
     const rankings = boulderingRankingService.getRankings(rounds);
@@ -954,91 +837,76 @@ describe('Bouldering round service (unit)', () => {
     expect(rankings.get(4)).toEqual(3);
   });
 
-  it('handles a competition with multiple qualifiers groups for the qualifications and one semi-final round', () => {
+  it('handles a competition with one qualifier round and one semi-final round', () => {
     const rounds = givenBoulderingRounds(
       [
         CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              bouldersPoints: [50, 50],
-              rankings: [
-                {
-                  tops: [true, true],
-                  nbTops: 2,
-                  points: 100,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, false],
-                  nbTops: 1,
-                  points: 50,
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(2),
-                },
-              ],
+              tops: [true, true],
+              nbTops: 2,
+              points: 100,
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
             },
             {
-              id: 1,
-              bouldersPoints: [50, 50],
-              rankings: [
-                {
-                  tops: [true, true],
-                  nbTops: 2,
-                  points: 100,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(3),
-                },
-                {
-                  tops: [true, false],
-                  nbTops: 1,
-                  points: 50,
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(4),
-                },
-                {
-                  tops: [false, false],
-                  nbTops: 0,
-                  points: 0,
-                  ranking: 3,
-                  climber: givenClimberRankingInfos(5),
-                },
-              ],
+              tops: [true, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 2,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true],
+              nbTops: 2,
+              points: 100,
+              ranking: 1,
+              climber: givenClimberRankingInfos(3),
+            },
+            {
+              tops: [true, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 2,
+              climber: givenClimberRankingInfos(4),
+            },
+            {
+              tops: [false, false],
+              nbTops: 0,
+              points: 0,
+              ranking: 3,
+              climber: givenClimberRankingInfos(5),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(3),
-                },
-              ],
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(3),
             },
           ],
         },
+        [],
       ],
     );
 
@@ -1053,120 +921,101 @@ describe('Bouldering round service (unit)', () => {
     expect(rankings.get(5)).toEqual(5);
   });
 
-  it('handles a competition with multiple qualifiers groups for the qualifications, one semi-final round and one final round', () => {
+  it('handles a competition with one qualification round, one semi-final round and one final round', () => {
     const rounds = givenBoulderingRounds(
       [
         CompetitionRoundType.QUALIFIER,
         {
           type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              bouldersPoints: [50, 50],
-              rankings: [
-                {
-                  tops: [true, true],
-                  nbTops: 2,
-                  points: 100,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, false],
-                  nbTops: 1,
-                  points: 50,
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(2),
-                },
-              ],
+              tops: [true, true],
+              nbTops: 2,
+              points: 100,
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
             },
             {
-              id: 1,
-              bouldersPoints: [50, 50],
-              rankings: [
-                {
-                  tops: [true, true],
-                  nbTops: 2,
-                  points: 100,
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(3),
-                },
-                {
-                  tops: [true, false],
-                  nbTops: 1,
-                  points: 50,
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(4),
-                },
-                {
-                  tops: [false, false],
-                  nbTops: 0,
-                  points: 0,
-                  ranking: 3,
-                  climber: givenClimberRankingInfos(5),
-                },
-              ],
+              tops: [true, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 2,
+              climber: givenClimberRankingInfos(2),
+            },
+            {
+              tops: [true, true],
+              nbTops: 2,
+              points: 100,
+              ranking: 1,
+              climber: givenClimberRankingInfos(3),
+            },
+            {
+              tops: [true, false],
+              nbTops: 1,
+              points: 50,
+              ranking: 2,
+              climber: givenClimberRankingInfos(4),
+            },
+            {
+              tops: [false, false],
+              nbTops: 0,
+              points: 0,
+              ranking: 3,
+              climber: givenClimberRankingInfos(5),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.SEMI_FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(3),
-                },
-              ],
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(3),
             },
           ],
         },
+        [],
       ],
       [
         CompetitionRoundType.FINAL,
         {
           type: BoulderingRoundRankingType.CIRCUIT,
-          groups: [
+          rankings: [
             {
-              id: 0,
-              rankings: [
-                {
-                  tops: [true, true, true, true],
-                  topsInTries: [1, 1, 1, 1],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 1,
-                  climber: givenClimberRankingInfos(1),
-                },
-                {
-                  tops: [true, true, true, false],
-                  topsInTries: [1, 1, 1, 0],
-                  zones: [true, true, true, true],
-                  zonesInTries: [1, 1, 1, 1],
-                  ranking: 2,
-                  climber: givenClimberRankingInfos(3),
-                },
-              ],
+              tops: [true, true, true, true],
+              topsInTries: [1, 1, 1, 1],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 1,
+              climber: givenClimberRankingInfos(1),
+            },
+            {
+              tops: [true, true, true, false],
+              topsInTries: [1, 1, 1, 0],
+              zones: [true, true, true, true],
+              zonesInTries: [1, 1, 1, 1],
+              ranking: 2,
+              climber: givenClimberRankingInfos(3),
             },
           ],
         },
+        [],
       ],
     );
 

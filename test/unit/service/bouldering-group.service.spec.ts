@@ -8,6 +8,10 @@ import { ConflictException } from '@nestjs/common';
 import { BoulderService } from '../../../src/bouldering/boulder/boulder.service';
 import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
 import { BoulderNotFoundError } from '../../../src/bouldering/errors/boulder-not-found.error';
+import { BoulderingGroupUnlimitedContestRankingService } from '../../../src/bouldering/group/ranking/bouldering-group-unlimited-contest-ranking.service';
+import { BoulderingGroupCircuitRankingService } from '../../../src/bouldering/group/ranking/bouldering-group-circuit-ranking.service';
+import { BoulderingGroupLimitedContestRankingService } from '../../../src/bouldering/group/ranking/bouldering-group-limited-contest-ranking.service';
+import { BoulderingResultService } from '../../../src/bouldering/result/bouldering-result.service';
 
 const boulderingGroupRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -19,6 +23,11 @@ const boulderServiceMock: ServiceMock = {
   assignJudge: jest.fn(),
   removeJudgeAssignment: jest.fn(),
 };
+
+const boulderingGroupUnlimitedContestRankingServiceMock: ServiceMock = {};
+const boulderingGroupLimitedContestRankingServiceMock: ServiceMock = {};
+const boulderingGroupCircuitRankingServiceMock: ServiceMock = {};
+const boulderingResultServiceMock: ServiceMock = {};
 
 const boulderInitFn = jest.fn();
 
@@ -51,6 +60,22 @@ describe('Bouldering group service (unit)', () => {
           provide: getRepositoryToken(BoulderingGroup),
           useFactory: (): typeof boulderingGroupRepositoryMock =>
             boulderingGroupRepositoryMock,
+        },
+        {
+          provide: BoulderingGroupUnlimitedContestRankingService,
+          useValue: boulderingGroupUnlimitedContestRankingServiceMock,
+        },
+        {
+          provide: BoulderingGroupLimitedContestRankingService,
+          useValue: boulderingGroupLimitedContestRankingServiceMock,
+        },
+        {
+          provide: BoulderingGroupCircuitRankingService,
+          useValue: boulderingGroupCircuitRankingServiceMock,
+        },
+        {
+          provide: BoulderingResultService,
+          useValue: boulderingResultServiceMock,
         },
         {
           provide: BoulderService,

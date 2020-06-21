@@ -43,7 +43,7 @@ export class BoulderingRankingService {
       return roundRankingsMap;
     }
 
-    for (const ranking of round.rankings) {
+    for (const ranking of round.rankings.rankings) {
       roundRankingsMap.set(ranking.climber.id, ranking.ranking);
     }
 

@@ -22,6 +22,7 @@ export class BoulderingGroupLimitedContestRankingService
     return {
       type: BoulderingRoundRankingType.LIMITED_CONTEST,
       rankings: circuitRankings.rankings,
+      boulders: circuitRankings.boulders,
     };
   }
 }

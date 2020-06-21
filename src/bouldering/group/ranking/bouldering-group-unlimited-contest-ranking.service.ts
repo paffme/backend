@@ -97,18 +97,18 @@ export class BoulderingGroupUnlimitedContestRankingService
 
   getRankings(group: BoulderingGroup): BoulderingUnlimitedContestRankings {
     // Compute group ranking
-    const boulders = group.boulders.count();
+    const bouldersCount = group.boulders.count();
     const results = group.results.getItems();
     const climbers = group.climbers.getItems();
 
     // First compute each boulder points
-    const bouldersPoints = this.getBouldersPoints(results, boulders);
+    const bouldersPoints = this.getBouldersPoints(results, bouldersCount);
 
     // Group results by climber and aggregate results
     const climbersResults = this.groupResultsByClimber(
       results,
       bouldersPoints,
-      boulders,
+      bouldersCount,
     );
 
     // Compute rankings
@@ -118,6 +118,7 @@ export class BoulderingGroupUnlimitedContestRankingService
     return {
       type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       bouldersPoints,
+      boulders: group.boulders.getItems().map((b) => b.id),
       rankings: Array.from(
         groupRankings,
         ([climberId, ranking]): BoulderingUnlimitedContestRanking => {

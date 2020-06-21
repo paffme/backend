@@ -17,8 +17,6 @@ import { SharedModule } from '../../src/shared/shared.module';
 import { CompetitionService } from '../../src/competition/competition.service';
 import { BoulderingResultService } from '../../src/bouldering/result/bouldering-result.service';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
-import { BoulderingRoundUnlimitedContestRankingService } from '../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
-import { BoulderingRoundCountedRankingService } from '../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
 import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
 import { CompetitionRegistration } from '../../src/shared/entity/competition-registration.entity';
 import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
@@ -42,6 +40,9 @@ import { UpdateBoulderingRoundDto } from '../../src/competition/dto/in/body/upda
 import * as uuid from 'uuid';
 import { givenCompetition } from '../fixture/competition.fixture';
 import { MaxClimbersReachedError } from '../../src/bouldering/errors/max-climbers-reached.error';
+import { BoulderingGroupUnlimitedContestRankingService } from '../../src/bouldering/group/ranking/bouldering-group-unlimited-contest-ranking.service';
+import { BoulderingGroupLimitedContestRankingService } from '../../src/bouldering/group/ranking/bouldering-group-limited-contest-ranking.service';
+import { BoulderingGroupCircuitRankingService } from '../../src/bouldering/group/ranking/bouldering-group-circuit-ranking.service';
 
 describe('Bouldering round service (integration)', () => {
   let boulderingRoundService: BoulderingRoundService;
@@ -57,10 +58,11 @@ describe('Bouldering round service (integration)', () => {
         BoulderingResultService,
         CompetitionService,
         BoulderService,
-        BoulderingRoundUnlimitedContestRankingService,
-        BoulderingRoundCountedRankingService,
         BoulderingRankingService,
         BoulderingGroupService,
+        BoulderingGroupUnlimitedContestRankingService,
+        BoulderingGroupLimitedContestRankingService,
+        BoulderingGroupCircuitRankingService,
       ],
       imports: [
         MikroOrmModule.forRoot(config),
@@ -297,29 +299,24 @@ describe('Bouldering round service (integration)', () => {
       dto,
     );
 
-    const rankings = round.rankings as BoulderingRoundUnlimitedContestRankings;
+    const roundRankings = round.rankings! as BoulderingRoundUnlimitedContestRankings;
 
-    expect(rankings).toBeTruthy();
-    expect(rankings.type).toEqual(BoulderingRoundRankingType.UNLIMITED_CONTEST);
-    expect(rankings.groups[0].bouldersPoints).toHaveLength(
-      round.groups[0].boulders.count(),
+    expect(roundRankings).toBeTruthy();
+    expect(roundRankings.type).toEqual(
+      BoulderingRoundRankingType.UNLIMITED_CONTEST,
     );
 
-    for (let i = 0; i < round.groups[0].boulders.count(); i++) {
-      expect(rankings.groups[0].bouldersPoints[i]).toEqual(1000);
-    }
+    const rankings = roundRankings.rankings;
 
-    expect(rankings.groups[0].rankings).toHaveLength(1);
-    expect(rankings.groups[0].rankings[0].ranking).toEqual(1);
-    expect(rankings.groups[0].rankings[0].nbTops).toEqual(0);
-    expect(rankings.groups[0].rankings[0].points).toEqual(0);
-    expect(rankings.groups[0].rankings[0].climber.id).toEqual(climber.id);
-    expect(rankings.groups[0].rankings[0].tops).toHaveLength(
-      round.groups[0].boulders.count(),
-    );
+    expect(rankings).toHaveLength(1);
+    expect(rankings[0].ranking).toEqual(1);
+    expect(rankings[0].nbTops).toEqual(0);
+    expect(rankings[0].points).toEqual(0);
+    expect(rankings[0].climber.id).toEqual(climber.id);
+    expect(rankings[0].tops).toHaveLength(round.groups[0].boulders.count());
 
     for (let i = 0; i < round.groups[0].boulders.count(); i++) {
-      expect(rankings.groups[0].rankings[0].tops[i]).toEqual(false);
+      expect(rankings[0].tops[i]).toEqual(false);
     }
   });
 

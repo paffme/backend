@@ -12,6 +12,18 @@ import {
   OffsetLimitResponse,
 } from '../shared/pagination/pagination.service';
 
+import {
+  BoulderingRound,
+  BoulderingRoundRankings,
+  BoulderingRoundState,
+} from '../bouldering/round/bouldering-round.entity';
+
+import {
+  BoulderingGroup,
+  BoulderingGroupRankings,
+  BoulderingGroupState,
+} from '../bouldering/group/bouldering-group.entity';
+
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { CompetitionMapper } from '../shared/mappers/competition.mapper';
@@ -20,12 +32,6 @@ import { UserService } from '../user/user.service';
 import { CompetitionRegistration } from '../shared/entity/competition-registration.entity';
 import { User } from '../user/user.entity';
 import { BoulderingRoundService } from '../bouldering/round/bouldering-round.service';
-import {
-  BoulderingRound,
-  BoulderingRoundRankings,
-  BoulderingRoundRankingType,
-  BoulderingRoundState,
-} from '../bouldering/round/bouldering-round.entity';
 import { CreateBoulderingResultDto } from './dto/in/body/create-bouldering-result.dto';
 import { BoulderingResult } from '../bouldering/result/bouldering-result.entity';
 import { CreateBoulderingRoundDto } from './dto/in/body/create-bouldering-round.dto';
@@ -35,11 +41,6 @@ import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
 import { UpdateCompetitionByIdDto } from './dto/in/body/update-competition-by-id.dto';
 import { SearchQuery } from '../shared/decorators/search.decorator';
-import {
-  BoulderingGroup,
-  BoulderingGroupRankings,
-  BoulderingGroupState,
-} from '../bouldering/group/bouldering-group.entity';
 import { CreateBoulderDto } from './dto/in/body/create-boulder.dto';
 import { CreateBoulderingGroupDto } from './dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from './competition-round-type.enum';
@@ -684,7 +685,7 @@ export class CompetitionService {
           for (let i = 1; i <= previousRound.quota; i++) {
             let addedClimbers = 0;
 
-            for (const ranking of previousRound.rankings) {
+            for (const ranking of previousRound.rankings.rankings) {
               const rank = ranking;
 
               if (rank.ranking === i) {
@@ -853,10 +854,7 @@ export class CompetitionService {
     roundId: typeof BoulderingRound.prototype.id,
     groupId: typeof BoulderingGroup.prototype.id,
     dto: BulkBoulderingResultsDto,
-  ): Promise<{
-    rankings: BoulderingGroupRankings;
-    type: BoulderingRoundRankingType;
-  }> {
+  ): Promise<BoulderingGroupRankings> {
     const { competition, round } = await this.getBoulderingRoundOrFail(
       competitionId,
       roundId,
@@ -873,9 +871,6 @@ export class CompetitionService {
       sex: round.sex,
     });
 
-    return {
-      type: round.rankingType,
-      rankings: groupRankings,
-    };
+    return groupRankings;
   }
 }
