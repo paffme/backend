@@ -1,29 +1,28 @@
-import { BoulderingRoundRankingService } from './bouldering-round-ranking.service';
-
-import {
-  BoulderingRound,
-  BoulderingRoundCircuitRankings,
-  BoulderingRoundCountedRanking,
-  BoulderingRoundLimitedContestRankings,
-  BoulderingRoundRankingType,
-} from '../bouldering-round.entity';
-
-import { InternalServerErrorException } from '@nestjs/common';
+import { BoulderingGroupRankingService } from './bouldering-group-ranking.service';
+import { Injectable } from '@nestjs/common';
 import { BoulderingResult } from '../../result/bouldering-result.entity';
 import { User } from '../../../user/user.entity';
+import { RankingsMap } from '../../types/rankings-map';
+
 import {
   getExAequoClimbers,
   getPodium,
   handleExAequosRankings,
 } from '../../ranking/ranking.utils';
-import { RankingsMap } from '../../types/rankings-map';
-import { BoulderingGroup } from '../../group/bouldering-group.entity';
+
+import {
+  BoulderingCircuitRanking,
+  BoulderingCircuitRankings,
+  BoulderingGroup,
+} from '../bouldering-group.entity';
+
 import { CompetitionRoundType } from '../../../competition/competition-round-type.enum';
+import { BoulderingRoundRankingType } from '../../round/bouldering-round.entity';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 type AggregatedBoulderingCircuitResults = Pick<
-  BoulderingRoundCountedRanking,
+  BoulderingCircuitRanking,
   'tops' | 'topsInTries' | 'zones' | 'zonesInTries'
 > & {
   sumTops: number;
@@ -42,8 +41,9 @@ type AggregatedClimbersResultsMap = Map<
   AggregatedClimbersResultsEntry[1]
 >;
 
-export class BoulderingRoundCountedRankingService
-  implements BoulderingRoundRankingService {
+@Injectable()
+export class BoulderingGroupCircuitRankingService
+  implements BoulderingGroupRankingService {
   private groupResultsByClimber(
     results: BoulderingResult[],
     boulders: number,
@@ -353,97 +353,72 @@ export class BoulderingRoundCountedRankingService
     }
   }
 
-  // eslint-disable-next-line sonarjs/cognitive-complexity
-  getRankings(
-    round: BoulderingRound,
-  ): BoulderingRoundCircuitRankings | BoulderingRoundLimitedContestRankings {
-    if (
-      round.rankingType !== BoulderingRoundRankingType.CIRCUIT &&
-      round.rankingType !== BoulderingRoundRankingType.LIMITED_CONTEST
-    ) {
-      throw new InternalServerErrorException('Wrong ranking type');
-    }
+  private handleNonRankedClimbers(
+    rankings: RankingsMap,
+    climbers: User[],
+  ): void {
+    const lastRanking =
+      Math.max(...Array.from(rankings, ([, ranking]) => ranking)) + 1;
 
-    // Compute each group ranking
-    const groupsRankings = new Map<
-      typeof BoulderingGroup.prototype.id,
-      RankingsMap
-    >();
-
-    const groupsResults = new Map<
-      typeof BoulderingGroup.prototype.id,
-      AggregatedClimbersResultsMap
-    >();
-
-    for (const group of round.groups.getItems()) {
-      const boulders = group.boulders.count();
-      const results = group.results.getItems();
-
-      // Group results by climber and aggregate results
-      const climberResults = this.groupResultsByClimber(results, boulders);
-
-      // Compute rankings
-      const groupRankings = this.computeRankings(climberResults);
-
-      // Handle equality in the podium for the final
-      if (round.type === CompetitionRoundType.FINAL) {
-        this.handlePodiumExAequos(groupRankings, climberResults);
+    for (const climber of climbers) {
+      if (rankings.has(climber.id)) {
+        continue;
       }
 
-      // Save
-      groupsResults.set(group.id, climberResults);
-      groupsRankings.set(group.id, groupRankings);
+      rankings.set(climber.id, lastRanking);
+    }
+  }
+
+  getRankings(group: BoulderingGroup): BoulderingCircuitRankings {
+    // Compute group ranking
+    const bouldersCount = group.boulders.count();
+    const results = group.results.getItems();
+    const climbers = group.climbers.getItems();
+
+    // Group results by climber and aggregate results
+    const climberResults = this.groupResultsByClimber(results, bouldersCount);
+
+    // Compute rankings
+    const groupRankings = this.computeRankings(climberResults);
+
+    // Handle equality in the podium for the final
+    if (group.round.type === CompetitionRoundType.FINAL) {
+      this.handlePodiumExAequos(groupRankings, climberResults);
+    }
+
+    // Handle climbers with no results in semi-final or final
+    if (
+      group.round.type === CompetitionRoundType.SEMI_FINAL ||
+      group.round.type === CompetitionRoundType.FINAL
+    ) {
+      this.handleNonRankedClimbers(groupRankings, climbers);
     }
 
     // Gather all information
     return {
-      type: round.rankingType,
-      groups: Array.from(groupsRankings, ([groupId, groupRankings]) => {
-        const currentGroup = round.groups
-          .getItems()
-          .find((g) => g.id === groupId)!;
+      type: BoulderingRoundRankingType.CIRCUIT,
+      boulders: group.boulders.getItems().map((b) => b.id),
+      rankings: Array.from(
+        groupRankings,
+        ([climberId, ranking]): BoulderingCircuitRanking => {
+          const climber = climbers.find((c) => c.id === climberId)!;
+          const climberResult = climberResults.get(climber.id);
 
-        if (round.type !== CompetitionRoundType.QUALIFIER) {
-          const lastRanking = Array.from(groupRankings).reduce(
-            (lastRanking, [, ranking]) =>
-              ranking >= lastRanking ? ranking + 1 : lastRanking,
-            1,
-          );
-
-          for (const climber of currentGroup.climbers.getItems()) {
-            if (groupRankings.get(climber.id)) {
-              continue;
-            }
-
-            groupRankings.set(climber.id, lastRanking);
-          }
-        }
-
-        const rankings = Array.from(
-          groupRankings,
-          ([climberId, ranking]): BoulderingRoundCountedRanking => {
-            const climber = currentGroup.climbers
-              .getItems()
-              .find((c) => c.id === climberId)!;
-
-            return {
-              ...groupsResults.get(groupId)!.get(climberId)!,
-              climber: {
-                id: climberId,
-                firstName: climber.firstName,
-                lastName: climber.lastName,
-                club: climber.club,
-              },
-              ranking,
-            };
-          },
-        );
-
-        return {
-          id: groupId,
-          rankings,
-        };
-      }),
+          return {
+            tops: climberResult?.tops || [],
+            topsInTries: climberResult?.topsInTries || [],
+            zones: climberResult?.zones || [],
+            zonesInTries: climberResult?.zonesInTries || [],
+            climber: {
+              id: climberId,
+              firstName: climber.firstName,
+              lastName: climber.lastName,
+              club: climber.club,
+            },
+            ranking,
+          };
+        },
+      ),
     };
   }
 }

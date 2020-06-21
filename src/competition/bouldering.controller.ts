@@ -69,6 +69,8 @@ import { GetBoulderingGroupsParamsDto } from './dto/in/params/get-bouldering-gro
 import { BulkBoulderingResultsParamsDto } from './dto/in/params/bulk-bouldering-results-params.dto';
 import { BulkBoulderingResultsDto } from './dto/in/body/bulk-bouldering-results.dto';
 import { BoulderingGroupRankingsDto } from '../bouldering/dto/out/bouldering-group-rankings.dto';
+import { GetBoulderingGroupRankingsParamsDto } from './dto/in/params/get-bouldering-group-rankings-params.dto';
+import { BoulderingGroupRankingsMapper } from '../shared/mappers/bouldering-group-rankings.mapper';
 
 @Controller('competitions')
 @ApiTags('Bouldering')
@@ -78,10 +80,11 @@ export class BoulderingController {
     private readonly boulderingRoundMapper: BoulderingRoundMapper,
     private readonly boulderingLimitedRoundMapper: BoulderingLimitedRoundMapper,
     private readonly boulderingResultMapper: BoulderingResultMapper,
-    private readonly boulderingRoundRankingMapper: BoulderingRoundRankingsMapper,
+    private readonly boulderingRoundRankingsMapper: BoulderingRoundRankingsMapper,
     private readonly boulderingRoundsByCategoryByTypeMapper: BoulderingRoundsByCategoryByTypeMapper,
     private readonly boulderMapper: BoulderMapper,
     private readonly boulderingGroupMapper: BoulderingGroupMapper,
+    private readonly boulderingGroupRankingsMapper: BoulderingGroupRankingsMapper,
   ) {}
 
   @Post('/:competitionId/bouldering-rounds')
@@ -166,17 +169,14 @@ export class BoulderingController {
     @Param() params: BulkBoulderingResultsParamsDto,
     @Body() dto: BulkBoulderingResultsDto,
   ): Promise<BoulderingGroupRankingsDto> {
-    const {
-      rankings,
-      type,
-    } = await this.competitionService.bulkBoulderingResults(
+    const rankings = await this.competitionService.bulkBoulderingResults(
       params.competitionId,
       params.roundId,
       params.groupId,
       dto,
     );
 
-    return this.boulderingRoundRankingMapper.mapGroup(rankings, type);
+    return this.boulderingGroupRankingsMapper.map(rankings);
   }
 
   @Post(
@@ -227,7 +227,22 @@ export class BoulderingController {
       params.roundId,
     );
 
-    return this.boulderingRoundRankingMapper.map(rankings);
+    return this.boulderingRoundRankingsMapper.map(rankings);
+  }
+
+  @Get('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/rankings')
+  @ApiOkResponse({ type: BoulderingGroupRankingsDto })
+  @ApiOperation(GetOperationId(Competition.name, 'GetBoulderingGroupRankings'))
+  async getBoulderingGroupRankings(
+    @Param() params: GetBoulderingGroupRankingsParamsDto,
+  ): Promise<BoulderingGroupRankingsDto> {
+    const rankings = await this.competitionService.getBoulderingGroupRankings(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+    );
+
+    return this.boulderingGroupRankingsMapper.map(rankings);
   }
 
   @Post('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders')

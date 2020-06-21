@@ -5,7 +5,6 @@ import { Boulder } from '../../src/bouldering/boulder/boulder.entity';
 import TestUtils from '../utils';
 import { User } from '../../src/user/user.entity';
 import { BoulderingResult } from '../../src/bouldering/result/bouldering-result.entity';
-import { Collection } from 'mikro-orm';
 
 const utils = new TestUtils();
 
@@ -13,6 +12,7 @@ export function givenBoulderingGroup(
   data?: Partial<BoulderingGroup>,
   boulders?: Partial<Boulder>[],
   climbers?: Partial<User>[],
+  results?: Partial<BoulderingResult>[],
 ): BoulderingGroup {
   const group = new BoulderingGroup(
     data?.name ?? uuid.v4(),
@@ -41,6 +41,9 @@ export function givenBoulderingGroup(
       async loadItems(): Promise<Boulder[]> {
         return boulders as Boulder[];
       },
+      count(): number {
+        return boulders.length;
+      },
     };
   }
 
@@ -65,10 +68,18 @@ export function givenBoulderingGroup(
     };
   }
 
-  group.results = {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    init() {},
-  } as Collection<BoulderingResult>;
+  if (results) {
+    group.results = {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      async init() {
+        return results;
+      },
+      getItems(): BoulderingResult[] {
+        return results as BoulderingResult[];
+      },
+    };
+  }
 
   group.id = utils.getRandomId();
 

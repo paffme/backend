@@ -18,8 +18,6 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import { BoulderingRoundUnlimitedContestRankingService } from '../../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
-import { BoulderingRoundCountedRankingService } from '../../../src/bouldering/round/ranking/bouldering-round-counted-ranking.service';
 import { Sex } from '../../../src/shared/types/sex.enum';
 import { CategoryName } from '../../../src/shared/types/category-name.enum';
 import { BoulderingGroupService } from '../../../src/bouldering/group/bouldering-group.service';
@@ -50,24 +48,13 @@ const boulderingRoundRepositoryMock: RepositoryMock = {
   removeAndFlush: jest.fn(),
 };
 
-const boulderingResultServiceMock: ServiceMock = {
-  bulkResults: jest.fn(),
-};
-
 const boulderingGroupServiceMock: ServiceMock = {
   create: jest.fn(),
   delete: jest.fn(),
   assignJudgeToBoulder: jest.fn(),
   removeJudgeAssignmentToBoulder: jest.fn(),
   getBoulders: jest.fn(),
-};
-
-const boulderingUnlimitedContestRankingServiceMock: ServiceMock = {
-  getRankings: jest.fn(),
-};
-
-const boulderingRoundCountedRankingServiceMock: ServiceMock = {
-  getRankings: jest.fn(),
+  bulkResults: jest.fn(),
 };
 
 const boulderServiceMock: ServiceMock = {
@@ -90,23 +77,8 @@ describe('Bouldering round service (unit)', () => {
             boulderingRoundRepositoryMock,
         },
         {
-          provide: BoulderingResultService,
-          useFactory: (): typeof boulderingResultServiceMock =>
-            boulderingResultServiceMock,
-        },
-        {
           provide: BoulderService,
           useFactory: (): typeof boulderServiceMock => boulderServiceMock,
-        },
-        {
-          provide: BoulderingRoundUnlimitedContestRankingService,
-          useFactory: (): typeof boulderingUnlimitedContestRankingServiceMock =>
-            boulderingUnlimitedContestRankingServiceMock,
-        },
-        {
-          provide: BoulderingRoundCountedRankingService,
-          useFactory: (): typeof boulderingRoundCountedRankingServiceMock =>
-            boulderingRoundCountedRankingServiceMock,
         },
         {
           provide: BoulderingGroupService,
@@ -266,38 +238,85 @@ describe('Bouldering round service (unit)', () => {
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
-  it('updates rankings for an unlimited contest', async () => {
+  it('updates rankings by merging group rankings', async () => {
+    const rankings1 = [Math.random()];
+    const rankings2 = [Math.random()];
+
     const round = ({
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
       groups: {
         getItems() {
-          return [];
+          return [
+            {
+              rankings: {
+                type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+                rankings: rankings1,
+              },
+            },
+            {
+              rankings: {
+                type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+                rankings: rankings2,
+              },
+            },
+          ];
         },
       },
     } as unknown) as BoulderingRound;
-
-    const rankings = {} as BoulderingRoundUnlimitedContestRankings;
 
     boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
       async () => undefined,
     );
 
-    boulderingUnlimitedContestRankingServiceMock.getRankings.mockImplementation(
-      () => rankings,
-    );
-
-    const res = await boulderingRoundService.updateRankings(round);
+    const res = await boulderingRoundService.updateRoundRankings(round);
 
     expect(res).toBeUndefined();
-    expect(round.rankings).toBe(rankings);
+    expect(round.rankings!.type).toEqual(
+      BoulderingRoundRankingType.UNLIMITED_CONTEST,
+    );
+    expect(round.rankings!.rankings).toHaveLength(2);
+    expect(round.rankings!.rankings[0]).toEqual(rankings1[0]);
+    expect(round.rankings!.rankings[1]).toEqual(rankings2[0]);
 
-    expect(
-      boulderingUnlimitedContestRankingServiceMock.getRankings,
-    ).toHaveBeenCalledTimes(1);
+    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledWith(
+      round,
+    );
+  });
 
-    expect(
-      boulderingUnlimitedContestRankingServiceMock.getRankings,
-    ).toHaveBeenCalledWith(round);
+  it('updates rankings for an unlimited contest', async () => {
+    const rankings = [Math.random()];
+
+    const round = ({
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      groups: {
+        getItems() {
+          return [
+            {
+              rankings: {
+                type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+                rankings,
+              },
+            },
+          ];
+        },
+      },
+    } as unknown) as BoulderingRound;
+
+    boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    const res = await boulderingRoundService.updateRoundRankings(round);
+
+    expect(res).toBeUndefined();
+    expect(round.rankings!.type).toEqual(
+      BoulderingRoundRankingType.UNLIMITED_CONTEST,
+    );
+    expect(round.rankings!.rankings).toHaveLength(1);
+    expect(round.rankings!.rankings[0]).toEqual(rankings[0]);
 
     expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
       1,
@@ -308,37 +327,36 @@ describe('Bouldering round service (unit)', () => {
   });
 
   it('updates rankings for a limited contest', async () => {
+    const rankings = [Math.random()];
+
     const round = ({
       rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
       groups: {
         getItems() {
-          return [];
+          return [
+            {
+              rankings: {
+                type: BoulderingRoundRankingType.LIMITED_CONTEST,
+                rankings,
+              },
+            },
+          ];
         },
       },
     } as unknown) as BoulderingRound;
-
-    const rankings = {} as BoulderingRoundUnlimitedContestRankings;
 
     boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
       async () => undefined,
     );
 
-    boulderingRoundCountedRankingServiceMock.getRankings.mockImplementation(
-      () => rankings,
-    );
-
-    const res = await boulderingRoundService.updateRankings(round);
+    const res = await boulderingRoundService.updateRoundRankings(round);
 
     expect(res).toBeUndefined();
-    expect(round.rankings).toBe(rankings);
-
-    expect(
-      boulderingRoundCountedRankingServiceMock.getRankings,
-    ).toHaveBeenCalledTimes(1);
-
-    expect(
-      boulderingRoundCountedRankingServiceMock.getRankings,
-    ).toHaveBeenCalledWith(round);
+    expect(round.rankings!.type).toEqual(
+      BoulderingRoundRankingType.LIMITED_CONTEST,
+    );
+    expect(round.rankings!.rankings).toHaveLength(1);
+    expect(round.rankings!.rankings[0]).toEqual(rankings[0]);
 
     expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
       1,
@@ -349,37 +367,34 @@ describe('Bouldering round service (unit)', () => {
   });
 
   it('updates rankings for a circuit', async () => {
+    const rankings = [Math.random()];
+
     const round = ({
       rankingType: BoulderingRoundRankingType.CIRCUIT,
       groups: {
         getItems() {
-          return [];
+          return [
+            {
+              rankings: {
+                type: BoulderingRoundRankingType.CIRCUIT,
+                rankings,
+              },
+            },
+          ];
         },
       },
     } as unknown) as BoulderingRound;
-
-    const rankings = {} as BoulderingRoundUnlimitedContestRankings;
 
     boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
       async () => undefined,
     );
 
-    boulderingRoundCountedRankingServiceMock.getRankings.mockImplementation(
-      () => rankings,
-    );
-
-    const res = await boulderingRoundService.updateRankings(round);
+    const res = await boulderingRoundService.updateRoundRankings(round);
 
     expect(res).toBeUndefined();
-    expect(round.rankings).toBe(rankings);
-
-    expect(
-      boulderingRoundCountedRankingServiceMock.getRankings,
-    ).toHaveBeenCalledTimes(1);
-
-    expect(
-      boulderingRoundCountedRankingServiceMock.getRankings,
-    ).toHaveBeenCalledWith(round);
+    expect(round.rankings!.type).toEqual(BoulderingRoundRankingType.CIRCUIT);
+    expect(round.rankings!.rankings).toHaveLength(1);
+    expect(round.rankings!.rankings[0]).toEqual(rankings[0]);
 
     expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
       1,
@@ -737,37 +752,27 @@ describe('Bouldering round service (unit)', () => {
       rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
     });
 
-    boulderingResultServiceMock.bulkResults.mockImplementation(
-      async () => undefined,
-    );
+    const fakeRankings = {};
 
-    const rankings: BoulderingRoundUnlimitedContestRankings = {
-      type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      groups: [],
-    };
+    boulderingGroupServiceMock.bulkResults.mockImplementation(
+      async () => fakeRankings,
+    );
 
     boulderingRoundRepositoryMock.persistAndFlush.mockImplementation(
       async () => undefined,
     );
 
-    boulderingUnlimitedContestRankingServiceMock.getRankings.mockImplementation(
-      () => rankings,
-    );
-
     const dto = {} as BulkBoulderingResultsDto;
 
-    const groupRankings = await boulderingRoundService.bulkResults(
+    const groupRankings = await boulderingRoundService.bulkGroupResults(
       round,
       group.id,
       dto,
     );
 
-    expect(groupRankings).toBe(round.rankings!.groups[0]);
+    expect(groupRankings).toBe(fakeRankings);
     expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
       1,
     );
-    expect(
-      boulderingUnlimitedContestRankingServiceMock.getRankings,
-    ).toHaveBeenCalledTimes(1);
   });
 });

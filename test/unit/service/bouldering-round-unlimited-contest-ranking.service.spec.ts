@@ -1,40 +1,26 @@
 import { Test } from '@nestjs/testing';
-import { BoulderingRoundUnlimitedContestRankingService } from '../../../src/bouldering/round/ranking/bouldering-round-unlimited-contest-ranking.service';
 import { BoulderingRoundRankingType } from '../../../src/bouldering/round/bouldering-round.entity';
-import { InternalServerErrorException } from '@nestjs/common';
 import { givenBoulderingRound } from '../../fixture/bouldering-round.fixture';
 import { givenUser } from '../../fixture/user.fixture';
 import { givenBoulder } from '../../fixture/boulder.fixture';
 import { givenResult } from '../../fixture/bouldering-result.fixture';
 import { CompetitionRoundType } from '../../../src/competition/competition-round-type.enum';
+import { BoulderingGroupUnlimitedContestRankingService } from '../../../src/bouldering/group/ranking/bouldering-group-unlimited-contest-ranking.service';
+import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
 describe('Bouldering unlimited contest ranking service (unit)', () => {
-  let boulderingUnlimitedContestRankingService: BoulderingRoundUnlimitedContestRankingService;
+  let boulderingUnlimitedContestRankingService: BoulderingGroupUnlimitedContestRankingService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      providers: [BoulderingRoundUnlimitedContestRankingService],
+      providers: [BoulderingGroupUnlimitedContestRankingService],
     }).compile();
 
     boulderingUnlimitedContestRankingService = module.get(
-      BoulderingRoundUnlimitedContestRankingService,
+      BoulderingGroupUnlimitedContestRankingService,
     );
-  });
-
-  it('throws when getting rankings for an non unlimited contest round', () => {
-    return expect(() =>
-      boulderingUnlimitedContestRankingService.getRankings(
-        givenBoulderingRound(
-          {
-            rankingType: BoulderingRoundRankingType.CIRCUIT,
-          },
-          [],
-          [],
-        ),
-      ),
-    ).toThrow(InternalServerErrorException);
   });
 
   it('gets rankings', async () => {
@@ -58,22 +44,23 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
       }),
     ];
 
-    const round = givenBoulderingRound(
+    const group = givenBoulderingGroup(
       {
-        type: CompetitionRoundType.QUALIFIER,
-        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        round: givenBoulderingRound({
+          type: CompetitionRoundType.QUALIFIER,
+          rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        }),
       },
       boulders,
+      [firstClimber, secondClimber],
       results,
     );
 
     const {
-      groups,
+      rankings,
+      bouldersPoints,
       type,
-    } = await boulderingUnlimitedContestRankingService.getRankings(round);
-
-    expect(groups).toHaveLength(1);
-    const { rankings, bouldersPoints } = groups[0];
+    } = await boulderingUnlimitedContestRankingService.getRankings(group);
 
     expect(rankings).toHaveLength(2);
     expect(bouldersPoints).toHaveLength(2);
@@ -124,22 +111,25 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
       }),
     ];
 
-    const round = givenBoulderingRound(
+    const group = givenBoulderingGroup(
       {
-        type: CompetitionRoundType.QUALIFIER,
-        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        round: givenBoulderingRound({
+          type: CompetitionRoundType.QUALIFIER,
+          rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        }),
       },
       boulders,
+      [firstClimber, secondClimber],
       results,
     );
 
-    const { groups } = boulderingUnlimitedContestRankingService.getRankings(
-      round,
-    );
+    const {
+      rankings,
+      bouldersPoints,
+      type,
+    } = boulderingUnlimitedContestRankingService.getRankings(group);
 
-    expect(groups).toHaveLength(1);
-    const { rankings, bouldersPoints } = groups[0];
-
+    expect(type).toEqual(BoulderingRoundRankingType.UNLIMITED_CONTEST);
     expect(rankings).toHaveLength(2);
     expect(bouldersPoints).toHaveLength(1);
     expect(bouldersPoints[0]).toEqual(500);
@@ -176,22 +166,25 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
     const boulders = [givenBoulder(0)];
     const results = [givenResult(firstClimber, boulders[0])];
 
-    const round = givenBoulderingRound(
+    const group = givenBoulderingGroup(
       {
-        type: CompetitionRoundType.QUALIFIER,
-        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        round: givenBoulderingRound({
+          type: CompetitionRoundType.QUALIFIER,
+          rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        }),
       },
       boulders,
+      [firstClimber],
       results,
     );
 
-    const { groups } = boulderingUnlimitedContestRankingService.getRankings(
-      round,
-    );
+    const {
+      rankings,
+      bouldersPoints,
+      type,
+    } = boulderingUnlimitedContestRankingService.getRankings(group);
 
-    expect(groups).toHaveLength(1);
-    const { rankings, bouldersPoints } = groups[0];
-
+    expect(type).toEqual(BoulderingRoundRankingType.UNLIMITED_CONTEST);
     expect(rankings).toHaveLength(1);
     expect(bouldersPoints).toHaveLength(1);
     expect(bouldersPoints[0]).toEqual(1000);
@@ -227,22 +220,25 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
       }),
     ];
 
-    const round = givenBoulderingRound(
+    const group = givenBoulderingGroup(
       {
-        type: CompetitionRoundType.QUALIFIER,
-        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        round: givenBoulderingRound({
+          type: CompetitionRoundType.QUALIFIER,
+          rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        }),
       },
       boulders,
+      [firstClimber, secondClimber, thirdClimber],
       results,
     );
 
-    const { groups } = boulderingUnlimitedContestRankingService.getRankings(
-      round,
-    );
+    const {
+      rankings,
+      bouldersPoints,
+      type,
+    } = boulderingUnlimitedContestRankingService.getRankings(group);
 
-    expect(groups).toHaveLength(1);
-    const { rankings, bouldersPoints } = groups[0];
-
+    expect(type).toEqual(BoulderingRoundRankingType.UNLIMITED_CONTEST);
     expect(rankings).toHaveLength(3);
     expect(bouldersPoints).toHaveLength(1);
     expect(bouldersPoints[0]).toEqual(500);
@@ -289,26 +285,28 @@ describe('Bouldering unlimited contest ranking service (unit)', () => {
       }),
     ];
 
-    const round = givenBoulderingRound(
+    const group = givenBoulderingGroup(
       {
-        rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
-        type: CompetitionRoundType.QUALIFIER,
+        round: givenBoulderingRound({
+          type: CompetitionRoundType.QUALIFIER,
+          rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        }),
       },
       boulders,
-      results,
       [firstClimber, secondClimber],
+      results,
     );
 
     const {
-      groups,
+      rankings,
+      bouldersPoints,
       type,
-    } = boulderingUnlimitedContestRankingService.getRankings(round);
+    } = boulderingUnlimitedContestRankingService.getRankings(group);
 
     expect(type).toEqual(BoulderingRoundRankingType.UNLIMITED_CONTEST);
-    expect(groups).toHaveLength(1);
-
-    const rankings = groups[0].rankings;
     expect(rankings).toHaveLength(1);
+    expect(bouldersPoints).toHaveLength(1);
+    expect(bouldersPoints[0]).toEqual(1000);
 
     const firstClimberRanking = rankings.find(
       (c) => c.climber.id === firstClimber.id,

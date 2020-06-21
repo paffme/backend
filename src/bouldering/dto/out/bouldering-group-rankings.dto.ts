@@ -1,16 +1,42 @@
 import { BoulderingRoundRankingType } from '../../round/bouldering-round.entity';
 import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
-import {
-  CircuitGroupDto,
-  GroupDto,
-  LimitedContestGroupDto,
-  UnlimitedContestGroupDto,
-} from './bouldering-round-rankings.dto';
+import { BoulderingUnlimitedContestRankingDto } from './bouldering-unlimited-contest-ranking.dto';
+import { BoulderingLimitedContestRankingDto } from './bouldering-limited-contest-ranking.dto';
+import { BoulderingCircuitRankingDto } from './bouldering-circuit-ranking.dto';
+import { Boulder } from '../../boulder/boulder.entity';
+
+class BaseRankingsDto {
+  @ApiProperty({ type: Number, isArray: true })
+  boulders!: typeof Boulder.prototype.id[];
+}
+
+export class UnlimitedContestGroupRankingsDto extends BaseRankingsDto {
+  @ApiProperty({ isArray: true, type: Number })
+  bouldersPoints!: number[];
+
+  @ApiProperty({ isArray: true, type: BoulderingUnlimitedContestRankingDto })
+  rankings!: BoulderingUnlimitedContestRankingDto[];
+}
+
+export class LimitedContestGroupRankingsDto extends BaseRankingsDto {
+  @ApiProperty({ isArray: true, type: BoulderingLimitedContestRankingDto })
+  rankings!: BoulderingLimitedContestRankingDto[];
+}
+
+export class CircuitGroupRankingsDto extends BaseRankingsDto {
+  @ApiProperty({ isArray: true, type: BoulderingCircuitRankingDto })
+  rankings!: BoulderingCircuitRankingDto[];
+}
+
+export type RankingsDataDto =
+  | UnlimitedContestGroupRankingsDto
+  | LimitedContestGroupRankingsDto
+  | CircuitGroupRankingsDto;
 
 @ApiExtraModels(
-  UnlimitedContestGroupDto,
-  LimitedContestGroupDto,
-  CircuitGroupDto,
+  UnlimitedContestGroupRankingsDto,
+  LimitedContestGroupRankingsDto,
+  CircuitGroupRankingsDto,
 )
 export class BoulderingGroupRankingsDto {
   @ApiProperty({ enum: BoulderingRoundRankingType })
@@ -19,15 +45,15 @@ export class BoulderingGroupRankingsDto {
   @ApiProperty({
     oneOf: [
       {
-        $ref: getSchemaPath(UnlimitedContestGroupDto),
+        $ref: getSchemaPath(UnlimitedContestGroupRankingsDto),
       },
       {
-        $ref: getSchemaPath(LimitedContestGroupDto),
+        $ref: getSchemaPath(LimitedContestGroupRankingsDto),
       },
       {
-        $ref: getSchemaPath(CircuitGroupDto),
+        $ref: getSchemaPath(CircuitGroupRankingsDto),
       },
     ],
   })
-  readonly group!: GroupDto;
+  readonly data!: RankingsDataDto;
 }

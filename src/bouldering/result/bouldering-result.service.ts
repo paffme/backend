@@ -93,7 +93,7 @@ export class BoulderingResultService {
 
       if (
         typeof group.round.maxTries === 'number' &&
-        result.tries + dto.try >= group.round.maxTries
+        result.tries + dto.try > group.round.maxTries
       ) {
         throw new MaxTriesReachedError();
       }

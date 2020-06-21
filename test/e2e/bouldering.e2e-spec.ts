@@ -22,17 +22,23 @@ import { CompetitionType } from '../../src/competition/types/competition-type.en
 import { Sex } from '../../src/shared/types/sex.enum';
 import { CategoryName } from '../../src/shared/types/category-name.enum';
 import { CreateBoulderDto } from '../../src/competition/dto/in/body/create-boulder.dto';
-import {
-  BoulderingRoundRankingsDto,
-  CountedRankingDto,
-} from '../../src/bouldering/dto/out/bouldering-round-rankings.dto';
+import { BoulderingRoundRankingsDto } from '../../src/bouldering/dto/out/bouldering-round-rankings.dto';
 import { CreateBoulderingGroupDto } from '../../src/competition/dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from '../../src/competition/competition-round-type.enum';
 import { UpdateBoulderingRoundDto } from '../../src/competition/dto/in/body/update-bouldering-round.dto';
 import * as uuid from 'uuid';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
-import { BoulderingGroupState } from '../../src/bouldering/group/bouldering-group.entity';
+import {
+  BoulderingGroupRankings,
+  BoulderingGroupState,
+} from '../../src/bouldering/group/bouldering-group.entity';
 import { BulkBoulderingResultsDto } from '../../src/competition/dto/in/body/bulk-bouldering-results.dto';
+import { MaxTriesReachedError } from '../../src/bouldering/errors/max-tries-reached.error';
+import { BoulderingCircuitRankingDto } from '../../src/bouldering/dto/out/bouldering-circuit-ranking.dto';
+import {
+  BoulderingGroupRankingsDto,
+  CircuitGroupRankingsDto,
+} from '../../src/bouldering/dto/out/bouldering-group-rankings.dto';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -333,6 +339,38 @@ describe('Bouldering (e2e)', () => {
       expect(body.zone).toEqual(true);
       expect(body.zoneInTries).toEqual(1);
       expect(body.tries).toEqual(1);
+    });
+
+    it('throws MAX_TRIES_REACHED when adding a bouldering result for a limited contest and exceed the maxTries limit', async function () {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+        judgeAuth,
+      } = await givenReadyCompetition(
+        BoulderingRoundRankingType.LIMITED_CONTEST,
+        {
+          maxTries: 5,
+        },
+      );
+
+      const dto: CreateBoulderingResultDto = {
+        top: true,
+        zone: true,
+        try: 6,
+        climberId: climber.id,
+      };
+
+      const { body } = await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .send(dto)
+        .expect(422);
+
+      expect(body.code).toEqual(new MaxTriesReachedError().code);
     });
 
     it('adds a bouldering result for a circuit', async function () {
@@ -665,13 +703,59 @@ describe('Bouldering (e2e)', () => {
       const body: BoulderingRoundRankingsDto = res.body;
 
       expect(body.type).toEqual(BoulderingRoundRankingType.CIRCUIT);
-      expect(body.groups).toHaveLength(1);
+      expect(body.data).toHaveLength(1);
+      const ranking = body.data[0] as BoulderingCircuitRankingDto;
 
-      const [group] = body.groups;
+      expect(ranking.ranking).toEqual(1);
+      expect(ranking.climber.id).toEqual(climber.id);
+      expect(ranking.climber.club).toEqual(climber.club);
+      expect(ranking.climber.firstName).toEqual(climber.firstName);
+      expect(ranking.climber.lastName).toEqual(climber.lastName);
+      expect(ranking.tops[0]).toEqual(true);
+      expect(ranking.topsInTries[0]).toEqual(1);
+      expect(ranking.zones[0]).toEqual(true);
+      expect(ranking.zonesInTries[0]).toEqual(1);
+    });
+  });
 
-      expect(group.id).toEqual(round.groups[0].id);
-      expect(group.rankings).toHaveLength(1);
-      const ranking = group.rankings[0] as CountedRankingDto;
+  describe('GET /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/rankings', () => {
+    it('gets group rankings', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      await utils.addBoulderingResult(
+        competition,
+        round,
+        round.groups[0],
+        boulder,
+        climber,
+        {
+          climberId: climber.id,
+          try: 1,
+          zone: true,
+          top: true,
+        },
+      );
+
+      const res = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/rankings`,
+        )
+        .expect(200);
+
+      const body: BoulderingGroupRankingsDto = res.body;
+
+      expect(body.type).toEqual(BoulderingRoundRankingType.CIRCUIT);
+      expect(body.data.boulders).toHaveLength(1);
+      expect(body.data.boulders[0]).toEqual(boulder.id);
+
+      const rankings = body.data.rankings as BoulderingCircuitRankingDto[];
+      expect(rankings).toHaveLength(1);
+      const ranking = rankings[0];
 
       expect(ranking.ranking).toEqual(1);
       expect(ranking.climber.id).toEqual(climber.id);
@@ -1221,7 +1305,7 @@ describe('Bouldering (e2e)', () => {
         ],
       };
 
-      const { body } = await api
+      const res = await api
         .post(
           `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/bulk-results`,
         )
@@ -1229,14 +1313,16 @@ describe('Bouldering (e2e)', () => {
         .send(dto)
         .expect(201);
 
+      const body = res.body as BoulderingGroupRankingsDto;
       expect(body.type).toEqual(BoulderingRoundRankingType.CIRCUIT);
-      expect(body.group.id).toEqual(round.groups[0].id);
-      expect(body.group.rankings[0].climber.id).toEqual(climber.id);
-      expect(body.group.rankings[0].ranking).toEqual(1);
-      expect(body.group.rankings[0].tops).toEqual([true]);
-      expect(body.group.rankings[0].topsInTries).toEqual([1]);
-      expect(body.group.rankings[0].zones).toEqual([true]);
-      expect(body.group.rankings[0].zonesInTries).toEqual([1]);
+
+      const circuitRankings = body.data as CircuitGroupRankingsDto;
+      expect(circuitRankings.rankings[0].climber.id).toEqual(climber.id);
+      expect(circuitRankings.rankings[0].ranking).toEqual(1);
+      expect(circuitRankings.rankings[0].tops).toEqual([true]);
+      expect(circuitRankings.rankings[0].topsInTries).toEqual([1]);
+      expect(circuitRankings.rankings[0].zones).toEqual([true]);
+      expect(circuitRankings.rankings[0].zonesInTries).toEqual([1]);
     });
 
     it('validates bulk results with an empty array', async () => {

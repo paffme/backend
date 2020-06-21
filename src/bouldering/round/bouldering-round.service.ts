@@ -2,24 +2,23 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository, wrap } from 'mikro-orm';
 import {
-  BoulderingGroupRankings,
   BoulderingRound,
+  BoulderingRoundRankings,
   BoulderingRoundRankingType,
   BoulderingRoundRelation,
 } from './bouldering-round.entity';
 import { BoulderingResult } from '../result/bouldering-result.entity';
 import { Competition } from '../../competition/competition.entity';
 import { CreateBoulderingResultDto } from '../../competition/dto/in/body/create-bouldering-result.dto';
-import { BoulderingResultService } from '../result/bouldering-result.service';
 import { CreateBoulderingRoundDto } from '../../competition/dto/in/body/create-bouldering-round.dto';
 import { User } from '../../user/user.entity';
 import { Boulder } from '../boulder/boulder.entity';
 import { BoulderService } from '../boulder/boulder.service';
-import { BoulderingRoundUnlimitedContestRankingService } from './ranking/bouldering-round-unlimited-contest-ranking.service';
-import { BoulderingRoundRankingService } from './ranking/bouldering-round-ranking.service';
-import { BoulderingRoundCountedRankingService } from './ranking/bouldering-round-counted-ranking.service';
 import { BoulderingGroupService } from '../group/bouldering-group.service';
-import { BoulderingGroup } from '../group/bouldering-group.entity';
+import {
+  BoulderingGroup,
+  BoulderingGroupRankings,
+} from '../group/bouldering-group.entity';
 import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.dto';
 import { CreateBoulderingGroupDto } from '../../competition/dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from '../../competition/competition-round-type.enum';
@@ -29,35 +28,22 @@ import { InvalidRoundError } from '../errors/invalid-round.error';
 import { RoundTypeConflictError } from '../errors/round-type-conflict.error';
 import { GroupNotFoundError } from '../errors/group-not-found.error';
 import { MaxClimbersReachedError } from '../errors/max-climbers-reached.error';
+import { BulkBoulderingResultsDto } from '../../competition/dto/in/body/bulk-bouldering-results.dto';
+
 import {
   RoundQuotaConfig,
   RoundQuotaConfigValue,
 } from '../../../config/round-quota';
-import { BulkBoulderingResultsDto } from '../../competition/dto/in/body/bulk-bouldering-results.dto';
-import { BoulderingGroupRankingsDto } from '../dto/out/bouldering-group-rankings.dto';
+import { RankingsNotFoundError } from '../../competition/errors/rankings-not-found.error';
 
 @Injectable()
 export class BoulderingRoundService {
-  private readonly rankingServices: {
-    [key in BoulderingRoundRankingType]: BoulderingRoundRankingService;
-  } = {
-    [BoulderingRoundRankingType.UNLIMITED_CONTEST]: this
-      .boulderingUnlimitedContestRankingService,
-    [BoulderingRoundRankingType.LIMITED_CONTEST]: this
-      .boulderingRoundCountedTriesRankingService,
-    [BoulderingRoundRankingType.CIRCUIT]: this
-      .boulderingRoundCountedTriesRankingService,
-  };
-
   constructor(
     @InjectRepository(BoulderingRound)
     private readonly boulderingRoundRepository: EntityRepository<
       BoulderingRound
     >,
-    private readonly boulderingResultService: BoulderingResultService,
     private readonly boulderService: BoulderService,
-    private readonly boulderingUnlimitedContestRankingService: BoulderingRoundUnlimitedContestRankingService,
-    private readonly boulderingRoundCountedTriesRankingService: BoulderingRoundCountedRankingService,
     private readonly boulderingGroupService: BoulderingGroupService,
   ) {}
 
@@ -164,13 +150,28 @@ export class BoulderingRoundService {
     }
 
     await this.boulderingRoundRepository.persistAndFlush(round);
-
     return round;
   }
 
-  async updateRankings(round: BoulderingRound): Promise<void> {
-    await Promise.all(round.groups.getItems().map((g) => g.results.init()));
-    round.rankings = this.rankingServices[round.rankingType].getRankings(round);
+  private mergeGroupRankings(round: BoulderingRound): BoulderingRoundRankings {
+    const mergedRankings: BoulderingRoundRankings = {
+      type: round.rankingType,
+      rankings: [],
+    };
+
+    for (const group of round.groups.getItems()) {
+      if (group.rankings) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        mergedRankings.rankings.push(...group.rankings.rankings);
+      }
+    }
+
+    return mergedRankings;
+  }
+
+  async updateRoundRankings(round: BoulderingRound): Promise<void> {
+    round.rankings = this.mergeGroupRankings(round);
     await this.boulderingRoundRepository.persistAndFlush(round);
   }
 
@@ -192,15 +193,14 @@ export class BoulderingRoundService {
       throw new GroupNotFoundError();
     }
 
-    const result = await this.boulderingResultService.addResult(
+    const result = await this.boulderingGroupService.addResult(
       group,
       boulder,
       climber,
       dto,
     );
 
-    await this.updateRankings(round);
-
+    await this.updateRoundRankings(round);
     return result;
   }
 
@@ -396,13 +396,31 @@ export class BoulderingRoundService {
     return this.boulderingGroupService.getBoulders(group);
   }
 
-  async bulkResults(
+  async bulkGroupResults(
     round: BoulderingRound,
     groupId: typeof BoulderingGroup.prototype.id,
     dto: BulkBoulderingResultsDto,
-  ): Promise<void> {
+  ): Promise<BoulderingGroupRankings> {
     const group = await this.getGroupOrFail(round, groupId);
-    await this.boulderingResultService.bulkResults(group, dto);
-    await this.updateRankings(round);
+    const groupRankings = await this.boulderingGroupService.bulkResults(
+      group,
+      dto,
+    );
+
+    await this.updateRoundRankings(round);
+    return groupRankings;
+  }
+
+  async getGroupRankings(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<BoulderingGroupRankings> {
+    const group = await this.getGroupOrFail(round, groupId);
+
+    if (typeof group.rankings === 'undefined') {
+      throw new RankingsNotFoundError();
+    }
+
+    return group.rankings;
   }
 }

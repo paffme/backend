@@ -36,17 +36,18 @@ export class BoulderingRankingService {
     return exAequosClimbers.length;
   }
 
-  private mergeGroupsRankings(round: BoulderingRound): RankingsMap {
-    const groupRankings: RankingsMap = new Map();
+  private getRoundRankingsMap(round: BoulderingRound): RankingsMap {
+    const roundRankingsMap: RankingsMap = new Map();
 
-    for (const group of round.rankings!.groups) {
-      for (const climberRanking of group.rankings) {
-        const ranking = climberRanking.ranking;
-        groupRankings.set(climberRanking.climber.id, ranking);
-      }
+    if (typeof round.rankings === 'undefined') {
+      return roundRankingsMap;
     }
 
-    const entries = Array.from(groupRankings).sort((a, b) => a[1] - b[1]);
+    for (const ranking of round.rankings.rankings) {
+      roundRankingsMap.set(ranking.climber.id, ranking.ranking);
+    }
+
+    const entries = Array.from(roundRankingsMap).sort((a, b) => a[1] - b[1]);
 
     return handleExAequosRankings(
       entries,
@@ -78,13 +79,13 @@ export class BoulderingRankingService {
         continue;
       }
 
-      const mergedGroupsRankings = this.mergeGroupsRankings(round);
+      const roundRankingsMap = this.getRoundRankingsMap(round);
 
       // Handle ex-aequos from the previous round thanks to the current round rankings
       if (round.groups.count() === 1) {
         const computedExAequos = this.handleExAequos(
           rankings,
-          mergedGroupsRankings,
+          roundRankingsMap,
         );
 
         if (computedExAequos === 0 && rankings.size === climbers) {
@@ -94,7 +95,7 @@ export class BoulderingRankingService {
       }
 
       // Add climber ranking if not yet inserted
-      for (const [climberId, ranking] of mergedGroupsRankings) {
+      for (const [climberId, ranking] of roundRankingsMap) {
         if (rankings.has(climberId)) {
           continue;
         }

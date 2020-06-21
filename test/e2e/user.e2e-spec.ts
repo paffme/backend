@@ -13,7 +13,6 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { CompetitionService } from '../../src/competition/competition.service';
 import { Sex } from '../../src/shared/types/sex.enum';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
-import { BoulderingRoundState } from '../../src/bouldering/round/bouldering-round.entity';
 import { CompetitionType } from '../../src/competition/types/competition-type.enum';
 import { BoulderingGroupState } from '../../src/bouldering/group/bouldering-group.entity';
 

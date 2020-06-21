@@ -16,17 +16,11 @@ import { CategoryName } from '../shared/types/category-name.enum';
 import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
 import { CompetitionRoundType } from './competition-round-type.enum';
-
-interface ClimberRankingInfo {
-  id: typeof User.prototype.id;
-  firstName: typeof User.prototype.firstName;
-  lastName: typeof User.prototype.lastName;
-  club: typeof User.prototype.club;
-}
+import { ClimberRankingInfos } from './types/climber-ranking-infos.interface';
 
 interface ClimberRanking {
   ranking: number;
-  climber: ClimberRankingInfo;
+  climber: ClimberRankingInfos;
 }
 
 export type Rankings = {
