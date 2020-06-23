@@ -51,7 +51,7 @@ jobs:
         POSTGRESQL_DATABASE: paffme
     - run: npm test
       env:
-        REDIS_HOST: redis
+        REDIS_HOST: localhost
         REDIS_PORT: 6379
         REDIS_PREFIX: paffme
         REDIS_PASSWORD: ''
