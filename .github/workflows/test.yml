@@ -28,6 +28,15 @@ jobs:
           --health-timeout 5s
           --health-retries 5
           --label postgres=postgres
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
     - uses: actions/checkout@v2
@@ -44,6 +53,10 @@ jobs:
         POSTGRESQL_DATABASE: paffme
     - run: npm test
       env:
+        REDIS_HOST: localhost
+        REDIS_PORT: 6379
+        REDIS_PREFIX: paffme
+        REDIS_PASSWORD: ''
         POSTGRESQL_USER: paffme
         POSTGRESQL_PASSWORD: paffme
         POSTGRESQL_DATABASE: paffme

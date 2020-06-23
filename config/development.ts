@@ -12,6 +12,10 @@ const config: Config = {
   POSTGRESQL_USER: 'paffme',
   POSTGRESQL_PASSWORD: 'paffme',
   POSTGRESQL_DATABASE: 'paffme',
+  REDIS_HOST: 'localhost',
+  REDIS_PORT: '6379',
+  REDIS_PREFIX: 'apaffme',
+  REDIS_PASSWORD: '',
 };
 
 export default config;

@@ -1,6 +1,7 @@
 import { Injectable, NotImplementedException } from '@nestjs/common';
 
 import {
+  ClimberRanking,
   Competition,
   CompetitionRelation,
   Rankings,
@@ -23,6 +24,12 @@ import {
   BoulderingGroupRankings,
   BoulderingGroupState,
 } from '../bouldering/group/bouldering-group.entity';
+
+import {
+  getRankingDiff,
+  RankingDiffInput,
+  RankingsDiff,
+} from '../bouldering/ranking/ranking.utils';
 
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
@@ -59,9 +66,21 @@ import { RankingsNotFoundError } from './errors/rankings-not-found.error';
 import { RoundByCategoryByType } from './types/round-by-category-by-type.type';
 import { NoPreviousRoundRankingsError } from './errors/no-previous-round-rankings.error';
 import { BulkBoulderingResultsDto } from './dto/in/body/bulk-bouldering-results.dto';
+import { EventEmitter as EE } from 'ee-ts';
+
+export interface CompetitionRankingsUpdateEventPayload {
+  competitionId: typeof Competition.prototype.id;
+  category: Category;
+  rankings: ClimberRanking[];
+  diff: RankingsDiff[];
+}
+
+export interface CompetitionServiceEvents {
+  rankingsUpdate(payload: CompetitionRankingsUpdateEventPayload): void;
+}
 
 @Injectable()
-export class CompetitionService {
+export class CompetitionService extends EE<CompetitionServiceEvents> {
   constructor(
     @InjectRepository(Competition)
     private readonly competitionRepository: EntityRepository<Competition>,
@@ -73,7 +92,9 @@ export class CompetitionService {
     private readonly userService: UserService,
     private readonly boulderingRoundService: BoulderingRoundService,
     private readonly boulderingRankingService: BoulderingRankingService,
-  ) {}
+  ) {
+    super();
+  }
 
   async getOrFail(
     competitionId: typeof Competition.prototype.id,
@@ -463,6 +484,13 @@ export class CompetitionService {
     return result;
   }
 
+  private mapRankingsForDiff(rankings: ClimberRanking[]): RankingDiffInput[] {
+    return rankings.map((r) => ({
+      climberId: r.climber.id,
+      ranking: r.ranking,
+    }));
+  }
+
   private async updateMainRankingsForCategory(
     competition: Competition,
     category: Category,
@@ -495,10 +523,10 @@ export class CompetitionService {
       })
       .map((r) => r.climber);
 
-    competition.rankings = competition.rankings || {};
-
     const rankingsByCategory = (competition.rankings[category.name] =
       competition.rankings[category.name] ?? {});
+
+    const oldRankings = rankingsByCategory[category.sex];
 
     rankingsByCategory[category.sex] = Array.from(
       rankings,
@@ -517,6 +545,18 @@ export class CompetitionService {
         };
       },
     );
+
+    this.emit('rankingsUpdate', {
+      competitionId: competition.id,
+      rankings: competition.rankings[category.name]![category.sex]!,
+      category,
+      diff: getRankingDiff(
+        oldRankings ? this.mapRankingsForDiff(oldRankings) : [],
+        this.mapRankingsForDiff(
+          competition.rankings[category.name]![category.sex]!,
+        ),
+      ),
+    });
 
     await this.competitionRepository.persistAndFlush(competition);
   }

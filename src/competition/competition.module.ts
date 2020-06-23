@@ -45,5 +45,6 @@ import { BoulderingController } from './bouldering.controller';
     ChiefRouteSetterAuthorizationService,
     BoulderJudgeAuthorizationService,
   ],
+  exports: [CompetitionService],
 })
 export class CompetitionModule {}

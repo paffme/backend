@@ -11,4 +11,8 @@ export interface Config {
   POSTGRESQL_USER: string;
   POSTGRESQL_PASSWORD: string;
   POSTGRESQL_DATABASE: string;
+  REDIS_HOST: string;
+  REDIS_PORT: string;
+  REDIS_PREFIX: string;
+  REDIS_PASSWORD: string;
 }

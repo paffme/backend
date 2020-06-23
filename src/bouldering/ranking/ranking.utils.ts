@@ -82,3 +82,57 @@ export function getPodium(rankings: RankingsMap): RankingsMap {
     Array.from(rankings).filter(([, ranking]) => ranking >= 1 && ranking <= 3),
   );
 }
+
+export interface RankingsDiff {
+  climberId: typeof User.prototype.id;
+  delta?: number;
+  added?: boolean;
+  removed?: boolean;
+}
+
+export interface RankingDiffInput {
+  climberId: typeof User.prototype.id;
+  ranking: number;
+}
+
+export function getRankingDiff(
+  oldRankings: RankingDiffInput[],
+  newRankings: RankingDiffInput[],
+): RankingsDiff[] {
+  const diff = [];
+  const climbers = [
+    ...new Set([...oldRankings, ...newRankings].map((r) => r.climberId)),
+  ];
+
+  for (const climberId of climbers) {
+    const oldRanking = oldRankings.find((r) => r.climberId === climberId);
+    const newRanking = newRankings.find((r) => r.climberId === climberId);
+
+    if (typeof oldRanking === 'undefined') {
+      diff.push({
+        climberId,
+        added: true,
+      });
+
+      continue;
+    }
+
+    if (typeof newRanking === 'undefined') {
+      diff.push({
+        climberId,
+        removed: true,
+      });
+
+      continue;
+    }
+
+    const delta = oldRanking.ranking - newRanking.ranking;
+
+    diff.push({
+      climberId,
+      delta,
+    });
+  }
+
+  return diff;
+}

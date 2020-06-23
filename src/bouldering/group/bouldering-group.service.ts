@@ -1,14 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
-import {
-  BoulderingGroup,
-  BoulderingGroupRankings,
-} from './bouldering-group.entity';
-import {
-  BoulderingRound,
-  BoulderingRoundRankingType,
-} from '../round/bouldering-round.entity';
 import { GroupNameConflictError } from '../errors/group-name-conflict.error';
 import { Boulder } from '../boulder/boulder.entity';
 import { User } from '../../user/user.entity';
@@ -21,9 +13,37 @@ import { CreateBoulderingResultDto } from '../../competition/dto/in/body/create-
 import { BoulderingResultService } from '../result/bouldering-result.service';
 import { BoulderingResult } from '../result/bouldering-result.entity';
 import { BulkBoulderingResultsDto } from '../../competition/dto/in/body/bulk-bouldering-results.dto';
+import { EventEmitter as EE } from 'ee-ts';
+
+import {
+  BoulderingGroup,
+  BoulderingGroupRankings,
+  BoulderingGroupRankingsStandalone,
+} from './bouldering-group.entity';
+
+import {
+  BoulderingRound,
+  BoulderingRoundRankingType,
+} from '../round/bouldering-round.entity';
+
+import {
+  getRankingDiff,
+  RankingDiffInput,
+  RankingsDiff,
+} from '../ranking/ranking.utils';
+
+export interface BoulderingGroupRankingsUpdateEventPayload {
+  groupId: typeof BoulderingGroup.prototype.id;
+  rankings: BoulderingGroupRankings;
+  diff: RankingsDiff[];
+}
+
+export interface BoulderingGroupServiceEvents {
+  rankingsUpdate(payload: BoulderingGroupRankingsUpdateEventPayload): void;
+}
 
 @Injectable()
-export class BoulderingGroupService {
+export class BoulderingGroupService extends EE<BoulderingGroupServiceEvents> {
   private readonly rankingServices: {
     [key in BoulderingRoundRankingType]: BoulderingGroupRankingService;
   } = {
@@ -44,7 +64,9 @@ export class BoulderingGroupService {
     private readonly boulderingUnlimitedContestRankingService: BoulderingGroupUnlimitedContestRankingService,
     private readonly boulderingRoundCountedTriesRankingService: BoulderingGroupCircuitRankingService,
     private readonly boulderingResultService: BoulderingResultService,
-  ) {}
+  ) {
+    super();
+  }
 
   private async getBoulderInGroupOrFail(
     group: BoulderingGroup,
@@ -65,12 +87,31 @@ export class BoulderingGroupService {
     return boulder;
   }
 
+  private mapRankingsForDiff(
+    rankings: BoulderingGroupRankingsStandalone,
+  ): RankingDiffInput[] {
+    return rankings.map((r) => ({
+      climberId: r.climber.id,
+      ranking: r.ranking,
+    }));
+  }
+
   private async updateRankings(group: BoulderingGroup): Promise<void> {
     await group.results.init();
+    const oldRankings = group.rankings;
 
     group.rankings = this.rankingServices[group.round.rankingType].getRankings(
       group,
     );
+
+    this.emit('rankingsUpdate', {
+      groupId: group.id,
+      rankings: group.rankings,
+      diff: getRankingDiff(
+        oldRankings ? this.mapRankingsForDiff(oldRankings.rankings) : [],
+        this.mapRankingsForDiff(group.rankings.rankings),
+      ),
+    });
 
     await this.boulderingGroupRepository.persistAndFlush(group);
   }

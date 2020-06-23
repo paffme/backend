@@ -1,33 +1,26 @@
-import {
-  OnGatewayConnection,
-  OnGatewayDisconnect,
-  OnGatewayInit,
-  WebSocketGateway,
-  WebSocketServer,
-} from '@nestjs/websockets';
+import { WebSocketGateway } from '@nestjs/websockets';
 
-import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { BoulderingGroupService } from '../bouldering/group/bouldering-group.service';
+import { BaseWebsocket } from './base.websocket';
+import { GroupRankingsUpdateEventDto } from './dto/out/group-rankings-update-event.dto';
+
+enum GroupRankingsEvents {
+  RANKINGS_UPDATE = 'rankingsUpdate',
+}
 
 @WebSocketGateway({ namespace: 'group-rankings' })
-export class GroupRankingsWebsocket
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
-  private readonly logger = new Logger(GroupRankingsWebsocket.name);
+export class GroupRankingsWebsocket extends BaseWebsocket {
+  constructor(private readonly boulderingGroupService: BoulderingGroupService) {
+    super(new Logger(GroupRankingsWebsocket.name));
 
-  @WebSocketServer()
-  private readonly server!: Server;
-
-  afterInit(): void {
-    this.logger.log('Rankings websocket ready');
-  }
-
-  handleConnection(socket: Socket): void {
-    this.logger.log(
-      `New connection ${socket.id} (${socket.conn.remoteAddress})`,
-    );
-  }
-
-  handleDisconnect(socket: Socket): void {
-    this.logger.log(`${socket.id} disconnected (${socket.conn.remoteAddress})`);
+    boulderingGroupService.on('rankingsUpdate', (eventPayload) => {
+      this.server
+        .to(this.getRoom(eventPayload.groupId))
+        .emit(
+          GroupRankingsEvents.RANKINGS_UPDATE,
+          new GroupRankingsUpdateEventDto(eventPayload),
+        );
+    });
   }
 }

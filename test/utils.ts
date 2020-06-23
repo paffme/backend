@@ -25,6 +25,7 @@ import {
 } from '../src/bouldering/group/bouldering-group.entity';
 import { CompetitionRoundType } from '../src/competition/competition-round-type.enum';
 import { BoulderService } from '../src/bouldering/boulder/boulder.service';
+import { CompetitionType } from '../src/competition/types/competition-type.enum';
 
 // FIXME, cut this utils in multiple parts to remove ! assertions
 
@@ -289,5 +290,81 @@ export default class TestUtils {
 
   async startSemiFinals(competition: Competition): Promise<void> {
     await this.competitionService!.startSemiFinals(competition.id);
+  }
+
+  async givenReadyCompetition(
+    rankingType: BoulderingRoundRankingType,
+    roundData?: Partial<BoulderingRound>,
+  ): Promise<{
+    competition: Competition;
+    organizer: User;
+    climber: User;
+    judge: User;
+    judgeAuth: TokenResponseDto;
+    boulder: Boulder;
+    round: BoulderingRound;
+    juryPresident: User;
+    juryPresidentAuth: TokenResponseDto;
+  }> {
+    const { user: organizer } = await this.givenUser();
+    const { user: climber } = await this.givenUser({
+      sex: Sex.Female,
+      birthYear: 2000,
+    });
+
+    const {
+      user: judge,
+      credentials: judgeCredentials,
+    } = await this.givenUser();
+
+    const judgeAuth = await this.login(judgeCredentials);
+
+    const {
+      user: juryPresident,
+      credentials: juryPresidentCredentials,
+    } = await this.givenUser();
+
+    const juryPresidentAuth = await this.login(juryPresidentCredentials);
+
+    const competition = await this.givenCompetition(organizer, {
+      type: CompetitionType.Bouldering,
+      startDate: new Date(2014, 10, 1),
+    });
+
+    await this.registerUserInCompetition(climber, competition);
+    await this.addJudgeInCompetition(judge, competition);
+    await this.addJuryPresidentInCompetition(juryPresident, competition);
+
+    const round = await this.addBoulderingRound(competition, {
+      rankingType,
+      type: CompetitionRoundType.QUALIFIER,
+      boulders: 1,
+      sex: Sex.Female,
+      category: CategoryName.Minime,
+      maxTries: roundData?.maxTries,
+    });
+
+    await this.updateBoulderingGroupState(
+      round.groups.getItems()[0],
+      BoulderingGroupState.ONGOING,
+    );
+
+    const boulder = round.groups.getItems()[0].boulders.getItems()[0];
+
+    await this.assignJudgeToBoulder(judge, boulder);
+
+    this.clearORM();
+
+    return {
+      competition,
+      organizer,
+      climber,
+      judge,
+      judgeAuth,
+      boulder,
+      round,
+      juryPresident,
+      juryPresidentAuth,
+    };
   }
 }

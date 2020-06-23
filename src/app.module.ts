@@ -8,6 +8,7 @@ import { ConfigurationService } from './shared/configuration/configuration.servi
 import { SharedModule } from './shared/shared.module';
 import { AppService } from './app.service';
 import { CompetitionModule } from './competition/competition.module';
+import { WebsocketModule } from './websocket/websocket.module';
 
 @Module({
   controllers: [AppController],
@@ -16,6 +17,7 @@ import { CompetitionModule } from './competition/competition.module';
     SharedModule,
     UserModule,
     CompetitionModule,
+    WebsocketModule,
   ],
   providers: [AppService],
 })

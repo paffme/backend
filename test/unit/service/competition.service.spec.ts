@@ -2,7 +2,10 @@ import TestUtils from '../../utils';
 import { UserService } from '../../../src/user/user.service';
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
-import { CompetitionService } from '../../../src/competition/competition.service';
+import {
+  CompetitionRankingsUpdateEventPayload,
+  CompetitionService,
+} from '../../../src/competition/competition.service';
 import {
   BadRequestException,
   ForbiddenException,
@@ -10,7 +13,10 @@ import {
 } from '@nestjs/common';
 import { Competition } from '../../../src/competition/competition.entity';
 import { CompetitionRegistration } from '../../../src/shared/entity/competition-registration.entity';
-import { BoulderingRoundService } from '../../../src/bouldering/round/bouldering-round.service';
+import {
+  BoulderingRoundRankingsUpdateEventPayload,
+  BoulderingRoundService,
+} from '../../../src/bouldering/round/bouldering-round.service';
 import { CompetitionMapper } from '../../../src/shared/mappers/competition.mapper';
 import { RepositoryMock, ServiceMock } from '../mocks/types';
 import { CreateBoulderingRoundDto } from '../../../src/competition/dto/in/body/create-bouldering-round.dto';
@@ -40,6 +46,7 @@ import { CompetitionNotFoundError } from '../../../src/competition/errors/compet
 import { RoundNotFoundError } from '../../../src/bouldering/errors/round-not-found.error';
 import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
 import { BulkBoulderingResultsDto } from '../../../src/competition/dto/in/body/bulk-bouldering-results.dto';
+import pEvent from 'p-event';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -336,6 +343,67 @@ describe('Competition service (unit)', () => {
     expect(competitionRepositoryMock.findOne).toHaveBeenCalledWith(1, [
       'registrations',
     ]);
+  });
+
+  it('emits rankingsUpdate when adding a bouldering result', async () => {
+    const user = {
+      id: utils.getRandomId(),
+      getCategory: (): Category => femaleMinime,
+    };
+
+    const boulderingResult = {};
+    const boulderingRounds: unknown[] = [];
+    const rankings = new Map();
+
+    const competition = {
+      id: utils.getRandomId(),
+      type: CompetitionType.Bouldering,
+      rankings: {},
+      registrations: {
+        init: jest.fn().mockImplementation(async () => undefined),
+        getItems: jest.fn().mockImplementation(() => [{ climber: user }]),
+      },
+      boulderingRounds: {
+        loadItems: jest.fn().mockImplementation(async () => boulderingRounds),
+      },
+      getSeason(): undefined {
+        return undefined;
+      },
+    };
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    userServiceMock.getOrFail.mockImplementation(async () => user);
+
+    boulderingRoundServiceMock.addResult.mockImplementation(
+      async () => boulderingResult,
+    );
+
+    boulderingRankingServiceMock.getRankings.mockImplementation(() => rankings);
+
+    const dto = {
+      climberId: utils.getRandomId(),
+    } as CreateBoulderingResultDto;
+
+    const [result, payload] = await Promise.all([
+      competitionService.addBoulderingResult(1, 2, 3, 4, dto),
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      pEvent(competitionService, 'rankingsUpdate'),
+    ]);
+
+    const p = (payload as unknown) as CompetitionRankingsUpdateEventPayload;
+
+    expect(result).toBe(boulderingResult);
+    expect(p.competitionId).toEqual(competition.id);
+    expect(p.rankings).toEqual([]);
+    expect(p.category).toEqual({
+      sex: Sex.Female,
+      name: CategoryName.Minime,
+    });
+    expect(p.diff).toEqual([]);
   });
 
   it('does not take a registration if the registrations are closed', () => {

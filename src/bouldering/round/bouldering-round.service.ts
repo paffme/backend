@@ -1,12 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository, wrap } from 'mikro-orm';
-import {
-  BoulderingRound,
-  BoulderingRoundRankings,
-  BoulderingRoundRankingType,
-  BoulderingRoundRelation,
-} from './bouldering-round.entity';
 import { BoulderingResult } from '../result/bouldering-result.entity';
 import { Competition } from '../../competition/competition.entity';
 import { CreateBoulderingResultDto } from '../../competition/dto/in/body/create-bouldering-result.dto';
@@ -15,10 +9,6 @@ import { User } from '../../user/user.entity';
 import { Boulder } from '../boulder/boulder.entity';
 import { BoulderService } from '../boulder/boulder.service';
 import { BoulderingGroupService } from '../group/bouldering-group.service';
-import {
-  BoulderingGroup,
-  BoulderingGroupRankings,
-} from '../group/bouldering-group.entity';
 import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.dto';
 import { CreateBoulderingGroupDto } from '../../competition/dto/in/body/create-bouldering-group.dto';
 import { CompetitionRoundType } from '../../competition/competition-round-type.enum';
@@ -29,15 +19,45 @@ import { RoundTypeConflictError } from '../errors/round-type-conflict.error';
 import { GroupNotFoundError } from '../errors/group-not-found.error';
 import { MaxClimbersReachedError } from '../errors/max-climbers-reached.error';
 import { BulkBoulderingResultsDto } from '../../competition/dto/in/body/bulk-bouldering-results.dto';
+import { RankingsNotFoundError } from '../../competition/errors/rankings-not-found.error';
+import { EventEmitter as EE } from 'ee-ts';
+
+import {
+  getRankingDiff,
+  RankingDiffInput,
+  RankingsDiff,
+} from '../ranking/ranking.utils';
 
 import {
   RoundQuotaConfig,
   RoundQuotaConfigValue,
 } from '../../../config/round-quota';
-import { RankingsNotFoundError } from '../../competition/errors/rankings-not-found.error';
+
+import {
+  BoulderingRound,
+  BoulderingRoundRankings,
+  BoulderingRoundRankingsStandalone,
+  BoulderingRoundRankingType,
+  BoulderingRoundRelation,
+} from './bouldering-round.entity';
+
+import {
+  BoulderingGroup,
+  BoulderingGroupRankings,
+} from '../group/bouldering-group.entity';
+
+export interface BoulderingRoundRankingsUpdateEventPayload {
+  roundId: typeof BoulderingRound.prototype.id;
+  rankings: BoulderingRoundRankings;
+  diff: RankingsDiff[];
+}
+
+export interface BoulderingRoundServiceEvents {
+  rankingsUpdate(payload: BoulderingRoundRankingsUpdateEventPayload): void;
+}
 
 @Injectable()
-export class BoulderingRoundService {
+export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
   constructor(
     @InjectRepository(BoulderingRound)
     private readonly boulderingRoundRepository: EntityRepository<
@@ -45,7 +65,9 @@ export class BoulderingRoundService {
     >,
     private readonly boulderService: BoulderService,
     private readonly boulderingGroupService: BoulderingGroupService,
-  ) {}
+  ) {
+    super();
+  }
 
   async getOrFail(
     roundId: typeof BoulderingRound.prototype.id,
@@ -170,8 +192,28 @@ export class BoulderingRoundService {
     return mergedRankings;
   }
 
+  private mapRankingsForDiff(
+    rankings: BoulderingRoundRankingsStandalone,
+  ): RankingDiffInput[] {
+    return rankings.map((r) => ({
+      climberId: r.climber.id,
+      ranking: r.ranking,
+    }));
+  }
+
   async updateRoundRankings(round: BoulderingRound): Promise<void> {
+    const oldRankings = round.rankings;
     round.rankings = this.mergeGroupRankings(round);
+
+    this.emit('rankingsUpdate', {
+      roundId: round.id,
+      rankings: round.rankings,
+      diff: getRankingDiff(
+        oldRankings ? this.mapRankingsForDiff(oldRankings.rankings) : [],
+        this.mapRankingsForDiff(round.rankings.rankings),
+      ),
+    });
+
     await this.boulderingRoundRepository.persistAndFlush(round);
   }
 

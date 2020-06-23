@@ -6,6 +6,7 @@ import { HttpExceptionFilter } from './shared/filters/http-exception.filter';
 import * as packageJson from '../package.json';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
+import { RedisIoAdapter } from './shared/adapters/redis-io.adapter';
 
 export function configure(app: NestExpressApplication): void {
   const swaggerOptions = new DocumentBuilder()
@@ -43,6 +44,7 @@ export function configure(app: NestExpressApplication): void {
   );
 
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.useWebSocketAdapter(new RedisIoAdapter(app));
 
   app.enableCors({
     credentials: true,
