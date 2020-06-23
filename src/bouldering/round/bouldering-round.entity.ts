@@ -44,6 +44,12 @@ export interface BoulderingRoundUnlimitedContestRankings {
   rankings: BoulderingUnlimitedContestRanking[];
 }
 
+export type BoulderingRoundRankingsStandalone = (
+  | BoulderingUnlimitedContestRanking
+  | BoulderingLimitedContestRanking
+  | BoulderingCircuitRanking
+)[];
+
 export type BoulderingRoundRankings =
   | BoulderingRoundCircuitRankings
   | BoulderingRoundLimitedContestRankings

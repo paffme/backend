@@ -1,9 +1,15 @@
 import { Test } from '@nestjs/testing';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
-import { BoulderingGroupService } from '../../../src/bouldering/group/bouldering-group.service';
+import {
+  BoulderingGroupRankingsUpdateEventPayload,
+  BoulderingGroupService,
+} from '../../../src/bouldering/group/bouldering-group.service';
 import { BoulderingGroup } from '../../../src/bouldering/group/bouldering-group.entity';
 import { RepositoryMock, ServiceMock } from '../mocks/types';
-import { BoulderingRound } from '../../../src/bouldering/round/bouldering-round.entity';
+import {
+  BoulderingRound,
+  BoulderingRoundRankingType,
+} from '../../../src/bouldering/round/bouldering-round.entity';
 import { ConflictException } from '@nestjs/common';
 import { BoulderService } from '../../../src/bouldering/boulder/boulder.service';
 import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
@@ -12,6 +18,10 @@ import { BoulderingGroupUnlimitedContestRankingService } from '../../../src/boul
 import { BoulderingGroupCircuitRankingService } from '../../../src/bouldering/group/ranking/bouldering-group-circuit-ranking.service';
 import { BoulderingGroupLimitedContestRankingService } from '../../../src/bouldering/group/ranking/bouldering-group-limited-contest-ranking.service';
 import { BoulderingResultService } from '../../../src/bouldering/result/bouldering-result.service';
+import { User } from '../../../src/user/user.entity';
+import { CreateBoulderingResultDto } from '../../../src/competition/dto/in/body/create-bouldering-result.dto';
+import pEvent from 'p-event';
+import TestUtils from '../../utils';
 
 const boulderingGroupRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -26,8 +36,13 @@ const boulderServiceMock: ServiceMock = {
 
 const boulderingGroupUnlimitedContestRankingServiceMock: ServiceMock = {};
 const boulderingGroupLimitedContestRankingServiceMock: ServiceMock = {};
-const boulderingGroupCircuitRankingServiceMock: ServiceMock = {};
-const boulderingResultServiceMock: ServiceMock = {};
+const boulderingGroupCircuitRankingServiceMock: ServiceMock = {
+  getRankings: jest.fn(),
+};
+
+const boulderingResultServiceMock: ServiceMock = {
+  addResult: jest.fn(),
+};
 
 const boulderInitFn = jest.fn();
 
@@ -51,6 +66,7 @@ function givenBoulderingGroupWithBoulders(
 
 describe('Bouldering group service (unit)', () => {
   let boulderingGroupService: BoulderingGroupService;
+  let utils: TestUtils;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -85,6 +101,7 @@ describe('Bouldering group service (unit)', () => {
     }).compile();
 
     boulderingGroupService = module.get(BoulderingGroupService);
+    utils = new TestUtils();
   });
 
   it('creates a group', async () => {
@@ -220,5 +237,108 @@ describe('Bouldering group service (unit)', () => {
     expect(boulders[0]).toBe(boulder);
     expect(boulderInitFn).toHaveBeenCalledTimes(1);
     expect(boulderInitFn).toHaveBeenCalledWith(['judges']);
+  });
+
+  it('adds a result', async () => {
+    const group = ({
+      round: {
+        rankingType: BoulderingRoundRankingType.CIRCUIT,
+      },
+      results: {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        async init() {},
+      },
+      rankings: {
+        rankings: [],
+      },
+    } as unknown) as BoulderingGroup;
+    const boulder = {} as Boulder;
+    const climber = {} as User;
+    const dto = {} as CreateBoulderingResultDto;
+    const fakeResult = {};
+    const fakeRankings = {
+      rankings: [],
+    };
+
+    boulderingGroupCircuitRankingServiceMock.getRankings.mockImplementation(
+      () => fakeRankings,
+    );
+
+    boulderingResultServiceMock.addResult.mockImplementation(
+      async () => fakeResult,
+    );
+
+    const res = await boulderingGroupService.addResult(
+      group,
+      boulder,
+      climber,
+      dto,
+    );
+
+    expect(res).toBe(fakeResult);
+    expect(boulderingResultServiceMock.addResult).toHaveBeenCalledTimes(1);
+    expect(boulderingResultServiceMock.addResult).toHaveBeenCalledWith(
+      group,
+      boulder,
+      climber,
+      dto,
+    );
+    expect(
+      boulderingGroupCircuitRankingServiceMock.getRankings,
+    ).toHaveBeenCalledTimes(1);
+    expect(
+      boulderingGroupCircuitRankingServiceMock.getRankings,
+    ).toHaveBeenCalledWith(group);
+    expect(boulderingGroupRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(boulderingGroupRepositoryMock.persistAndFlush).toHaveBeenCalledWith(
+      group,
+    );
+  });
+
+  it('emits rankingsUpdate when adding a result', async () => {
+    const group = ({
+      id: utils.getRandomId(),
+      round: {
+        rankingType: BoulderingRoundRankingType.CIRCUIT,
+      },
+      results: {
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        async init() {},
+      },
+      rankings: {
+        rankings: [],
+      },
+    } as unknown) as BoulderingGroup;
+    const boulder = {} as Boulder;
+    const climber = {} as User;
+    const dto = {} as CreateBoulderingResultDto;
+    const fakeResult = {};
+    const fakeRankings = {
+      rankings: [],
+    };
+
+    boulderingGroupCircuitRankingServiceMock.getRankings.mockImplementation(
+      () => fakeRankings,
+    );
+
+    boulderingResultServiceMock.addResult.mockImplementation(
+      async () => fakeResult,
+    );
+
+    const [res, eventPayload] = await Promise.all([
+      boulderingGroupService.addResult(group, boulder, climber, dto),
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      pEvent(boulderingGroupService, 'rankingsUpdate'),
+    ]);
+
+    const p = (eventPayload as unknown) as BoulderingGroupRankingsUpdateEventPayload;
+
+    expect(res).toBe(fakeResult);
+    expect(p.groupId).toEqual(group.id);
+    expect(p.rankings).toBe(fakeRankings);
+    expect(p).toHaveProperty('diff');
   });
 });

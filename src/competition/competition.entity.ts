@@ -18,7 +18,7 @@ import { Category } from '../shared/types/category.interface';
 import { CompetitionRoundType } from './competition-round-type.enum';
 import { ClimberRankingInfos } from './types/climber-ranking-infos.interface';
 
-interface ClimberRanking {
+export interface ClimberRanking {
   ranking: number;
   climber: ClimberRankingInfos;
 }

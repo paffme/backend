@@ -75,6 +75,12 @@ export interface BoulderingUnlimitedContestRankings
   bouldersPoints: number[];
 }
 
+export type BoulderingGroupRankingsStandalone = (
+  | BoulderingUnlimitedContestRanking
+  | BoulderingLimitedContestRanking
+  | BoulderingCircuitRanking
+)[];
+
 export type BoulderingGroupRankings =
   | BoulderingCircuitRankings
   | BoulderingLimitedContestRankings

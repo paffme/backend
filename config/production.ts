@@ -12,6 +12,10 @@ const config: Config = {
   POSTGRESQL_USER: env.POSTGRESQL_USER as string,
   POSTGRESQL_PASSWORD: env.POSTGRESQL_PASSWORD as string,
   POSTGRESQL_DATABASE: env.POSTGRESQL_DATABASE as string,
+  REDIS_HOST: process.env.REDIS_HOST as string,
+  REDIS_PORT: process.env.REDIS_PORT as string,
+  REDIS_PREFIX: process.env.REDIS_PREFIX as string,
+  REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
 };
 
 export default config;

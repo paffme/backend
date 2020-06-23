@@ -34,6 +34,7 @@ import { BoulderingGroupCircuitRankingService } from './group/ranking/bouldering
   ],
   exports: [
     BoulderingRoundService,
+    BoulderingGroupService,
     BoulderingResultService,
     BoulderService,
     BoulderingRankingService,
