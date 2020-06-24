@@ -61,6 +61,7 @@ const boulderingGroupServiceMock: ServiceMock = {
   getBoulders: jest.fn(),
   bulkResults: jest.fn(),
   addResult: jest.fn(),
+  getBoulderingResult: jest.fn(),
 };
 
 const boulderServiceMock: ServiceMock = {
@@ -869,5 +870,50 @@ describe('Bouldering round service (unit)', () => {
     expect(boulderingRoundRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(
       1,
     );
+  });
+
+  it('gets bouldering result', async () => {
+    const climber = {} as User;
+    const { round, group } = givenRoundWithOneGroup({
+      rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+    });
+
+    const fakeResult = {};
+
+    boulderingGroupServiceMock.getBoulderingResult.mockImplementation(
+      async () => fakeResult,
+    );
+
+    const result = await boulderingRoundService.getBoulderingResult(
+      round,
+      group.id,
+      2,
+      climber,
+    );
+
+    expect(result).toBe(fakeResult);
+    expect(
+      boulderingGroupServiceMock.getBoulderingResult,
+    ).toHaveBeenCalledTimes(1);
+    expect(boulderingGroupServiceMock.getBoulderingResult).toHaveBeenCalledWith(
+      group,
+      2,
+      climber,
+    );
+  });
+
+  it('throws group not found when getting a bouldering result of an unknown group', () => {
+    const climber = {} as User;
+    const round = givenRoundWithNoGroups();
+
+    const fakeResult = {};
+
+    boulderingGroupServiceMock.getBoulderingResult.mockImplementation(
+      async () => fakeResult,
+    );
+
+    return expect(
+      boulderingRoundService.getBoulderingResult(round, 1, 2, climber),
+    ).rejects.toBeInstanceOf(GroupNotFoundError);
   });
 });

@@ -71,6 +71,7 @@ import { BulkBoulderingResultsDto } from './dto/in/body/bulk-bouldering-results.
 import { BoulderingGroupRankingsDto } from '../bouldering/dto/out/bouldering-group-rankings.dto';
 import { GetBoulderingGroupRankingsParamsDto } from './dto/in/params/get-bouldering-group-rankings-params.dto';
 import { BoulderingGroupRankingsMapper } from '../shared/mappers/bouldering-group-rankings.mapper';
+import { GetBoulderingResultParamsDto } from './dto/in/params/get-bouldering-result-params.dto';
 
 @Controller('competitions')
 @ApiTags('Bouldering')
@@ -211,6 +212,34 @@ export class BoulderingController {
       params.groupId,
       params.boulderId,
       dto,
+    );
+
+    return this.boulderingResultMapper.map(result);
+  }
+
+  @Get(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/results/:climberId',
+  )
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    OrGuard(BoulderJudgeAuthorizationGuard, JuryPresidentAuthorizationGuard),
+  )
+  @ApiOkResponse({
+    type: BoulderingResultDto,
+  })
+  @ApiOperation(GetOperationId(Competition.name, 'GetBoulderingResult'))
+  async getResult(
+    @Param() params: GetBoulderingResultParamsDto,
+  ): Promise<BoulderingResultDto> {
+    const result = await this.competitionService.getBoulderingResult(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      params.boulderId,
+      params.climberId,
     );
 
     return this.boulderingResultMapper.map(result);

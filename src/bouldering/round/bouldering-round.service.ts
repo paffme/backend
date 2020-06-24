@@ -100,12 +100,15 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
       );
     }
 
-    if (
-      dto.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST &&
-      typeof dto.maxTries !== 'number'
-    ) {
+    if (dto.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST) {
+      if (typeof dto.maxTries !== 'number') {
+        throw new InvalidRoundError(
+          'maxTries is mandatory for a limited contest',
+        );
+      }
+    } else if (typeof dto.maxTries === 'number') {
       throw new InvalidRoundError(
-        'maxTries is mandatory for a limited contest',
+        'maxTries should not be defined for an non limited contest',
       );
     }
 
@@ -464,5 +467,20 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
     }
 
     return group.rankings;
+  }
+
+  async getBoulderingResult(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    climber: User,
+  ): Promise<BoulderingResult> {
+    const group = await this.getGroupOrFail(round, groupId);
+
+    return this.boulderingGroupService.getBoulderingResult(
+      group,
+      boulderId,
+      climber,
+    );
   }
 }

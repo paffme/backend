@@ -184,4 +184,13 @@ export class BoulderingGroupService extends EE<BoulderingGroupServiceEvents> {
     const collection = await group.boulders.init(['judges']);
     return collection.getItems();
   }
+
+  async getBoulderingResult(
+    group: BoulderingGroup,
+    boulderId: typeof Boulder.prototype.id,
+    climber: User,
+  ): Promise<BoulderingResult> {
+    const boulder = await this.getBoulderInGroupOrFail(group, boulderId);
+    return this.boulderingResultService.getOrFail(group, boulder, climber);
+  }
 }

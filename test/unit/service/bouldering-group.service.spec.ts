@@ -22,6 +22,8 @@ import { User } from '../../../src/user/user.entity';
 import { CreateBoulderingResultDto } from '../../../src/competition/dto/in/body/create-bouldering-result.dto';
 import pEvent from 'p-event';
 import TestUtils from '../../utils';
+import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
+import { givenBoulder } from '../../fixture/boulder.fixture';
 
 const boulderingGroupRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -42,6 +44,7 @@ const boulderingGroupCircuitRankingServiceMock: ServiceMock = {
 
 const boulderingResultServiceMock: ServiceMock = {
   addResult: jest.fn(),
+  getOrFail: jest.fn(),
 };
 
 const boulderInitFn = jest.fn();
@@ -340,5 +343,44 @@ describe('Bouldering group service (unit)', () => {
     expect(p.groupId).toEqual(group.id);
     expect(p.rankings).toBe(fakeRankings);
     expect(p).toHaveProperty('diff');
+  });
+
+  it('gets bouldering result', async () => {
+    const boulder = givenBoulder(0);
+    const group = givenBoulderingGroupWithBoulders(boulder);
+    const climber = {} as User;
+    const fakeResult = {};
+
+    boulderingResultServiceMock.getOrFail.mockImplementation(
+      async () => fakeResult,
+    );
+
+    const res = await boulderingGroupService.getBoulderingResult(
+      group,
+      boulder.id,
+      climber,
+    );
+
+    expect(res).toBe(fakeResult);
+    expect(boulderingResultServiceMock.getOrFail).toHaveBeenCalledTimes(1);
+    expect(boulderingResultServiceMock.getOrFail).toHaveBeenCalledWith(
+      group,
+      boulder,
+      climber,
+    );
+  });
+
+  it('throws boulder not found when getting a bouldering result with an unknown boulder', () => {
+    const group = givenBoulderingGroupWithBoulders();
+    const climber = {} as User;
+    const fakeResult = {};
+
+    boulderingResultServiceMock.getOrFail.mockImplementation(
+      async () => fakeResult,
+    );
+
+    return expect(
+      boulderingGroupService.getBoulderingResult(group, 0, climber),
+    ).rejects.toBeInstanceOf(BoulderNotFoundError);
   });
 });

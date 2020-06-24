@@ -78,7 +78,13 @@ describe('Bouldering result service (unit)', () => {
   });
 
   it('getOrCreateNewInstance gets a new instance', async () => {
-    const group = {} as BoulderingGroup;
+    const group = ({
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      climbers: { contains: () => true, async init() {} },
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      boulders: { contains: () => true, async init() {} },
+    } as unknown) as BoulderingGroup;
+
     const boulder = {} as Boulder;
     const user = {} as User;
 
@@ -113,7 +119,13 @@ describe('Bouldering result service (unit)', () => {
   });
 
   it('getOrCreateNewInstance gets a already existing instance', async () => {
-    const group = {} as BoulderingGroup;
+    const group = ({
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      climbers: { contains: () => true, async init() {} },
+      // eslint-disable-next-line @typescript-eslint/no-empty-function
+      boulders: { contains: () => true, async init() {} },
+    } as unknown) as BoulderingGroup;
+
     const boulder = {} as Boulder;
     const user = {} as User;
 
@@ -1216,5 +1228,80 @@ describe('Bouldering result service (unit)', () => {
     return expect(
       boulderingResultService.bulkResults(group, dto),
     ).rejects.toBeInstanceOf(IncoherentZoneInTriesError);
+  });
+
+  it('gets a bouldering result', async () => {
+    const boulder = {} as Boulder;
+    const climber = {} as User;
+    const fakeResult = {};
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound({
+          rankingType: BoulderingRoundRankingType.CIRCUIT,
+        }),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [climber],
+    );
+
+    boulderingResultRepositoryMock.findOne.mockImplementation(
+      async () => fakeResult,
+    );
+
+    const res = await boulderingResultService.getOrFail(
+      group,
+      boulder,
+      climber,
+    );
+
+    expect(res).toBe(fakeResult);
+    expect(boulderingResultRepositoryMock.findOne).toHaveBeenCalledTimes(1);
+    expect(boulderingResultRepositoryMock.findOne).toHaveBeenCalledWith({
+      climber,
+      boulder,
+      group,
+    });
+  });
+
+  it('throws climber not in group when getting a bouldering result', () => {
+    const boulder = {} as Boulder;
+    const climber = {} as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound({
+          rankingType: BoulderingRoundRankingType.CIRCUIT,
+        }),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [boulder],
+      [],
+    );
+
+    return expect(
+      boulderingResultService.getOrFail(group, boulder, climber),
+    ).rejects.toBeInstanceOf(ClimberNotInGroupError);
+  });
+
+  it('throws boulder not in group when getting a bouldering result', () => {
+    const boulder = {} as Boulder;
+    const climber = {} as User;
+
+    const group = givenBoulderingGroup(
+      {
+        round: givenBoulderingRound({
+          rankingType: BoulderingRoundRankingType.CIRCUIT,
+        }),
+        state: BoulderingGroupState.ONGOING,
+      },
+      [],
+      [climber],
+    );
+
+    return expect(
+      boulderingResultService.getOrFail(group, boulder, climber),
+    ).rejects.toBeInstanceOf(BoulderNotInGroupError);
   });
 });

@@ -484,6 +484,26 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     return result;
   }
 
+  async getBoulderingResult(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    climberId: typeof User.prototype.id,
+  ): Promise<BoulderingResult> {
+    const [{ round }, climber] = await Promise.all([
+      this.getBoulderingRoundOrFail(competitionId, roundId),
+      this.userService.getOrFail(climberId),
+    ]);
+
+    return this.boulderingRoundService.getBoulderingResult(
+      round,
+      groupId,
+      boulderId,
+      climber,
+    );
+  }
+
   private mapRankingsForDiff(rankings: ClimberRanking[]): RankingDiffInput[] {
     return rankings.map((r) => ({
       climberId: r.climber.id,

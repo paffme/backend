@@ -231,9 +231,9 @@ export default class TestUtils {
   ): Promise<unknown> {
     const dto: CreateBoulderingResultDto = {
       climberId: climber.id,
-      top: partialDto?.top ?? false,
-      zone: partialDto?.zone ?? false,
-      try: partialDto?.try ?? 1,
+      top: partialDto?.top,
+      zone: partialDto?.zone,
+      try: partialDto?.try,
     };
 
     return this.competitionService!.addBoulderingResult(

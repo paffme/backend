@@ -23,6 +23,7 @@ import {
 import { BoulderingRoundRankingType } from '../round/bouldering-round.entity';
 import { IncoherentZoneInTriesError } from '../errors/incoherent-zone-in-tries.error';
 import { IncoherentTopInTriesError } from '../errors/incoherent-top-in-tries.error';
+import { BoulderingResultNotFoundError } from '../errors/bouldering-result-not-found.error';
 
 @Injectable()
 export class BoulderingResultService {
@@ -43,16 +44,48 @@ export class BoulderingResultService {
     return result;
   }
 
+  private async get(
+    group: BoulderingGroup,
+    boulder: Boulder,
+    climber: User,
+  ): Promise<BoulderingResult | null> {
+    await Promise.all([group.climbers.init(), group.boulders.init()]);
+
+    if (!group.climbers.contains(climber)) {
+      throw new ClimberNotInGroupError();
+    }
+
+    if (!group.boulders.contains(boulder)) {
+      throw new BoulderNotInGroupError();
+    }
+
+    return this.boulderingResultRepository.findOne({
+      climber,
+      boulder,
+      group,
+    });
+  }
+
+  async getOrFail(
+    group: BoulderingGroup,
+    boulder: Boulder,
+    climber: User,
+  ): Promise<BoulderingResult> {
+    const result = await this.get(group, boulder, climber);
+
+    if (!result) {
+      throw new BoulderingResultNotFoundError();
+    }
+
+    return result;
+  }
+
   async getOrCreateNewInstance(
     group: BoulderingGroup,
     boulder: Boulder,
     climber: User,
   ): Promise<BoulderingResult> {
-    const result = await this.boulderingResultRepository.findOne({
-      climber,
-      boulder,
-      group,
-    });
+    const result = await this.get(group, boulder, climber);
 
     if (!result) {
       return this.createNewInstance(group, boulder, climber);
@@ -70,16 +103,6 @@ export class BoulderingResultService {
   ): Promise<BoulderingResult> {
     if (group.state !== BoulderingGroupState.ONGOING) {
       throw new AddResultWithoutOngoingGroupError();
-    }
-
-    await Promise.all([group.climbers.init(), group.boulders.init()]);
-
-    if (!group.climbers.contains(climber)) {
-      throw new ClimberNotInGroupError();
-    }
-
-    if (!group.boulders.contains(boulder)) {
-      throw new BoulderNotInGroupError();
     }
 
     const result = await this.getOrCreateNewInstance(group, boulder, climber);

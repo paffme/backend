@@ -79,7 +79,6 @@ describe('Bouldering (e2e)', () => {
         type: CompetitionRoundType.QUALIFIER,
         sex: Sex.Female,
         category: CategoryName.Minime,
-        maxTries: 5,
       };
 
       const { body } = await api
@@ -92,7 +91,7 @@ describe('Bouldering (e2e)', () => {
       expect(body.name).toEqual(dto.name);
       expect(body.type).toEqual(dto.type);
       expect(body.quota).toEqual(3);
-      expect(body.maxTries).toEqual(dto.maxTries);
+      expect(body.maxTries).toBeUndefined();
       expect(body.competitionId).toEqual(competition.id);
       expect(body.sex).toEqual(Sex.Female);
       expect(body.category).toEqual(CategoryName.Minime);
@@ -131,7 +130,6 @@ describe('Bouldering (e2e)', () => {
         sex: Sex.Male,
         category: CategoryName.Veteran,
         groups: 1,
-        maxTries: 2,
       };
 
       const { body } = await api
@@ -423,6 +421,109 @@ describe('Bouldering (e2e)', () => {
           `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
         )
         .send(dto)
+        .expect(401);
+    });
+  });
+
+  describe('GET /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders/{boulderId}/results/{climberId}', () => {
+    it('gets a bouldering result', async function () {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+        judgeAuth,
+      } = await utils.givenReadyCompetition(
+        BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      );
+
+      await utils.addBoulderingResult(
+        competition,
+        round,
+        round.groups[0],
+        boulder,
+        climber,
+        {
+          top: true,
+        },
+      );
+
+      const { body } = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results/${climber.id}`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .expect(200);
+
+      expect(body).toHaveProperty('id');
+      expect(body.climberId).toEqual(climber.id);
+      expect(body.competitionId).toEqual(competition.id);
+      expect(body.roundId).toEqual(round.id);
+      expect(body.boulderId).toEqual(boulder.id);
+      expect(body.top).toEqual(true);
+      expect(body.topInTries).toBeUndefined();
+      expect(body.zone).toBeUndefined();
+      expect(body.zoneInTries).toBeUndefined();
+      expect(body.tries).toBeUndefined();
+    });
+
+    it('does not get a result if the judge is not assigned to the boulder', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await utils.givenReadyCompetition(
+        BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      );
+
+      const {
+        user: judge,
+        credentials: judgeCredentials,
+      } = await utils.givenUser();
+
+      const judgeAuth = await utils.login(judgeCredentials);
+      await utils.addJudgeInCompetition(judge, competition);
+
+      await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results/${climber.id}`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .expect(403);
+    });
+
+    it('does not allow a non jury user to get a result', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const { credentials } = await utils.givenUser();
+      const auth = await utils.login(credentials);
+
+      return api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results/${climber.id}`,
+        )
+        .set('Authorization', `Bearer ${auth.token}`)
+        .expect(403);
+    });
+
+    it('does not allow a non authenticated user to get a result', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      return api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results/${climber.id}`,
+        )
         .expect(401);
     });
   });
