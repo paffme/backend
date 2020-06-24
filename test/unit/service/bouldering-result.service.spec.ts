@@ -18,8 +18,6 @@ import { givenBoulderingGroup } from '../../fixture/bouldering-group.fixture';
 import { ClimberNotInGroupError } from '../../../src/bouldering/errors/climber-not-in-group.error';
 import { BoulderNotInGroupError } from '../../../src/bouldering/errors/boulder-not-in-group.error';
 import { BulkBoulderingResultsDto } from '../../../src/competition/dto/in/body/bulk-bouldering-results.dto';
-import { IncoherentTopInTriesError } from '../../../src/bouldering/errors/incoherent-top-in-tries.error';
-import { IncoherentZoneInTriesError } from '../../../src/bouldering/errors/incoherent-zone-in-tries.error';
 
 const boulderingResultRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -687,9 +685,7 @@ describe('Bouldering result service (unit)', () => {
         {
           climberId: 0,
           boulderId: 0,
-          top: true,
           topInTries: 1,
-          zone: true,
           zoneInTries: 1,
           type: BoulderingRoundRankingType.CIRCUIT,
         },
@@ -751,9 +747,7 @@ describe('Bouldering result service (unit)', () => {
         {
           climberId: 0,
           boulderId: 0,
-          top: true,
           topInTries: 1,
-          zone: true,
           zoneInTries: 1,
           type: BoulderingRoundRankingType.CIRCUIT,
         },
@@ -804,18 +798,14 @@ describe('Bouldering result service (unit)', () => {
         {
           climberId: 0,
           boulderId: 0,
-          top: true,
           topInTries: 1,
-          zone: true,
           zoneInTries: 1,
           type: BoulderingRoundRankingType.CIRCUIT,
         },
         {
           climberId: 0,
           boulderId: 1,
-          top: true,
           topInTries: 1,
-          zone: true,
           zoneInTries: 1,
           type: BoulderingRoundRankingType.CIRCUIT,
         },
@@ -892,18 +882,14 @@ describe('Bouldering result service (unit)', () => {
         {
           climberId: 0,
           boulderId: 0,
-          top: true,
           topInTries: 1,
-          zone: true,
           zoneInTries: 1,
           type: BoulderingRoundRankingType.LIMITED_CONTEST,
         },
         {
           climberId: 0,
           boulderId: 1,
-          top: true,
           topInTries: 1,
-          zone: true,
           zoneInTries: 1,
           type: BoulderingRoundRankingType.LIMITED_CONTEST,
         },
@@ -1109,8 +1095,6 @@ describe('Bouldering result service (unit)', () => {
         {
           boulderId: 0,
           climberId: 0,
-          top: true,
-          zone: true,
           topInTries: 1,
           zoneInTries: 1,
           type: BoulderingRoundRankingType.CIRCUIT,
@@ -1142,8 +1126,6 @@ describe('Bouldering result service (unit)', () => {
         {
           boulderId: 0,
           climberId: 0,
-          top: true,
-          zone: true,
           topInTries: 1,
           zoneInTries: 1,
           type: BoulderingRoundRankingType.CIRCUIT,
@@ -1154,80 +1136,6 @@ describe('Bouldering result service (unit)', () => {
     return expect(
       boulderingResultService.bulkResults(group, dto),
     ).rejects.toBeInstanceOf(ClimberNotInGroupError);
-  });
-
-  it('throws IncoherentTopInTriesError when adding bulk results with a top and no topInTries', () => {
-    const boulder = {
-      id: 0,
-    } as Boulder;
-
-    const climber = {
-      id: 0,
-    } as User;
-
-    const group = givenBoulderingGroup(
-      {
-        round: givenBoulderingRound(),
-        state: BoulderingGroupState.ONGOING,
-      },
-      [boulder],
-      [climber],
-    );
-
-    const dto: BulkBoulderingResultsDto = {
-      results: [
-        {
-          boulderId: 0,
-          climberId: 0,
-          top: true,
-          zone: true,
-          topInTries: 0,
-          zoneInTries: 1,
-          type: BoulderingRoundRankingType.CIRCUIT,
-        },
-      ],
-    };
-
-    return expect(
-      boulderingResultService.bulkResults(group, dto),
-    ).rejects.toBeInstanceOf(IncoherentTopInTriesError);
-  });
-
-  it('throws IncoherentZoneInTriesError when adding bulk results with a top and no topInTries', () => {
-    const boulder = {
-      id: 0,
-    } as Boulder;
-
-    const climber = {
-      id: 0,
-    } as User;
-
-    const group = givenBoulderingGroup(
-      {
-        round: givenBoulderingRound(),
-        state: BoulderingGroupState.ONGOING,
-      },
-      [boulder],
-      [climber],
-    );
-
-    const dto: BulkBoulderingResultsDto = {
-      results: [
-        {
-          boulderId: 0,
-          climberId: 0,
-          top: true,
-          zone: true,
-          topInTries: 1,
-          zoneInTries: 0,
-          type: BoulderingRoundRankingType.CIRCUIT,
-        },
-      ],
-    };
-
-    return expect(
-      boulderingResultService.bulkResults(group, dto),
-    ).rejects.toBeInstanceOf(IncoherentZoneInTriesError);
   });
 
   it('gets a bouldering result', async () => {

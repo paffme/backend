@@ -65,16 +65,6 @@ export class CircuitResult extends BaseResult {
   @IsInt()
   @Min(0)
   readonly zoneInTries?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  readonly top?: boolean;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  readonly zone?: boolean;
 }
 
 export class LimitedContestResult extends BaseResult {
@@ -94,16 +84,6 @@ export class LimitedContestResult extends BaseResult {
   @IsInt()
   @Min(0)
   readonly zoneInTries?: number;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  readonly top?: boolean;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsBoolean()
-  readonly zone?: boolean;
 }
 
 export type BulkResult =

@@ -21,8 +21,6 @@ import {
   UnlimitedContestResult,
 } from '../../competition/dto/in/body/bulk-bouldering-results.dto';
 import { BoulderingRoundRankingType } from '../round/bouldering-round.entity';
-import { IncoherentZoneInTriesError } from '../errors/incoherent-zone-in-tries.error';
-import { IncoherentTopInTriesError } from '../errors/incoherent-top-in-tries.error';
 import { BoulderingResultNotFoundError } from '../errors/bouldering-result-not-found.error';
 
 @Injectable()
@@ -159,7 +157,6 @@ export class BoulderingResultService {
     return result;
   }
 
-  // eslint-disable-next-line sonarjs/cognitive-complexity
   private async processBulkResult(
     group: BoulderingGroup,
     climber: User,
@@ -173,24 +170,12 @@ export class BoulderingResultService {
       group.round.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST
     ) {
       const countedTriesResult = result as CircuitResult;
-      const top = countedTriesResult.top ?? instance.top;
       const topInTries = countedTriesResult.topInTries ?? instance.topInTries;
+      const top = topInTries > 0;
 
-      if (top && topInTries === 0) {
-        throw new IncoherentTopInTriesError(
-          'topInTries cannot be 0 if there is a top',
-        );
-      }
-
-      const zone = countedTriesResult.zone ?? instance.zone;
       const zoneInTries =
         countedTriesResult.zoneInTries ?? instance.zoneInTries;
-
-      if (zone && zoneInTries === 0) {
-        throw new IncoherentZoneInTriesError(
-          'zoneInTries cannot be 0 if there is a zone',
-        );
-      }
+      const zone = zoneInTries > 0;
 
       const tries = instance.tries > zoneInTries ? instance.tries : zoneInTries;
 

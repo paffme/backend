@@ -1321,8 +1321,6 @@ describe('Bouldering (e2e)', () => {
             type: BoulderingRoundRankingType.CIRCUIT,
             climberId: climber.id,
             boulderId: boulder.id,
-            top: true,
-            zone: true,
             topInTries: 1,
             zoneInTries: 1,
           },
@@ -1389,9 +1387,7 @@ describe('Bouldering (e2e)', () => {
             boulderId: boulder.id,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-            top: 123,
-            zone: true,
-            topInTries: 1,
+            topInTries: '123',
             zoneInTries: 1,
           },
         ],
@@ -1407,9 +1403,11 @@ describe('Bouldering (e2e)', () => {
 
       expect(body.errors[0].property).toEqual('results');
       expect(body.errors[0].children[0].property).toEqual('0');
-      expect(body.errors[0].children[0].children[0].property).toEqual('top');
+      expect(body.errors[0].children[0].children[0].property).toEqual(
+        'topInTries',
+      );
       expect(body.errors[0].children[0].children[0].constraints).toHaveProperty(
-        'isBoolean',
+        'isInt',
       );
     });
 
@@ -1433,12 +1431,10 @@ describe('Bouldering (e2e)', () => {
             type: BoulderingRoundRankingType.LIMITED_CONTEST,
             climberId: climber.id,
             boulderId: boulder.id,
-            top: true,
+            topInTries: 1,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-expect-error
-            zone: 123,
-            topInTries: 1,
-            zoneInTries: 1,
+            zoneInTries: '123',
           },
         ],
       };
@@ -1453,9 +1449,11 @@ describe('Bouldering (e2e)', () => {
 
       expect(body.errors[0].property).toEqual('results');
       expect(body.errors[0].children[0].property).toEqual('0');
-      expect(body.errors[0].children[0].children[0].property).toEqual('zone');
+      expect(body.errors[0].children[0].children[0].property).toEqual(
+        'zoneInTries',
+      );
       expect(body.errors[0].children[0].children[0].constraints).toHaveProperty(
-        'isBoolean',
+        'isInt',
       );
     });
 
