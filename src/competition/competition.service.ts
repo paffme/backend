@@ -518,7 +518,12 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     let rankings: Map<typeof User.prototype.id, number>;
 
     if (competition.type === CompetitionType.Bouldering) {
-      const rounds = await competition.boulderingRounds.loadItems();
+      const rounds = (
+        await competition.boulderingRounds.init({
+          populate: ['groups'],
+        })
+      ).getItems();
+
       const categoryRounds = rounds.filter(
         (r) => r.category === category.name && r.sex === category.sex,
       );

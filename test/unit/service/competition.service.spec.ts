@@ -13,10 +13,7 @@ import {
 } from '@nestjs/common';
 import { Competition } from '../../../src/competition/competition.entity';
 import { CompetitionRegistration } from '../../../src/shared/entity/competition-registration.entity';
-import {
-  BoulderingRoundRankingsUpdateEventPayload,
-  BoulderingRoundService,
-} from '../../../src/bouldering/round/bouldering-round.service';
+import { BoulderingRoundService } from '../../../src/bouldering/round/bouldering-round.service';
 import { CompetitionMapper } from '../../../src/shared/mappers/competition.mapper';
 import { RepositoryMock, ServiceMock } from '../mocks/types';
 import { CreateBoulderingRoundDto } from '../../../src/competition/dto/in/body/create-bouldering-round.dto';
@@ -293,7 +290,11 @@ describe('Competition service (unit)', () => {
         getItems: jest.fn().mockImplementation(() => [{ climber: user }]),
       },
       boulderingRounds: {
-        loadItems: jest.fn().mockImplementation(async () => boulderingRounds),
+        init: jest.fn().mockImplementation(async () => ({
+          getItems() {
+            return boulderingRounds;
+          },
+        })),
       },
       getSeason(): undefined {
         return undefined;
@@ -366,7 +367,12 @@ describe('Competition service (unit)', () => {
         getItems: jest.fn().mockImplementation(() => [{ climber: user }]),
       },
       boulderingRounds: {
-        loadItems: jest.fn().mockImplementation(async () => boulderingRounds),
+        // eslint-disable-next-line sonarjs/no-identical-functions
+        init: jest.fn().mockImplementation(async () => ({
+          getItems() {
+            return boulderingRounds;
+          },
+        })),
       },
       getSeason(): undefined {
         return undefined;
