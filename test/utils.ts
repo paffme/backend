@@ -292,6 +292,10 @@ export default class TestUtils {
     await this.competitionService!.startSemiFinals(competition.id);
   }
 
+  async startFinals(competition: Competition): Promise<void> {
+    await this.competitionService!.startFinals(competition.id);
+  }
+
   async givenReadyCompetition(
     rankingType: BoulderingRoundRankingType,
     roundData?: Partial<BoulderingRound>,

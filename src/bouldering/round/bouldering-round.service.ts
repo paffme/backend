@@ -166,11 +166,19 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
 
     // Add registrations if this is the qualifiers
     if (round.type === CompetitionRoundType.QUALIFIER) {
+      const season = competition.getSeason();
       const registrations = await competition.registrations.init({
         populate: ['climber'],
       });
 
-      const climbersRegistered = registrations.getItems().map((r) => r.climber);
+      const climbersRegistered = registrations
+        .getItems()
+        .map((r) => r.climber)
+        .filter((c) => {
+          const category = c.getCategory(season);
+          return category.name === round.category && category.sex === round.sex;
+        });
+
       await this.addClimbers(round, ...climbersRegistered);
     }
 

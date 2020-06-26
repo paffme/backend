@@ -154,6 +154,27 @@ export class Competition extends BaseEntity {
     );
   }
 
+  getCategoryRounds(category: Category): BoulderingRound[] {
+    const qRound = this.getQualifierRound(category);
+    const sRound = this.getSemiFinalRound(category);
+    const fRound = this.getFinalRound(category);
+    const rounds = [];
+
+    if (qRound) {
+      rounds.push(qRound);
+    }
+
+    if (sRound) {
+      rounds.push(sRound);
+    }
+
+    if (fRound) {
+      rounds.push(fRound);
+    }
+
+    return rounds;
+  }
+
   getQualifierRound(category: Category): BoulderingRound | undefined {
     return this.boulderingRounds
       .getItems()
@@ -171,6 +192,17 @@ export class Competition extends BaseEntity {
       .find(
         (r) =>
           r.type === CompetitionRoundType.SEMI_FINAL &&
+          r.category === category.name &&
+          r.sex === category.sex,
+      );
+  }
+
+  getFinalRound(category: Category): BoulderingRound | undefined {
+    return this.boulderingRounds
+      .getItems()
+      .find(
+        (r) =>
+          r.type === CompetitionRoundType.FINAL &&
           r.category === category.name &&
           r.sex === category.sex,
       );

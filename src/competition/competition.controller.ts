@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Req,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 
@@ -24,6 +25,7 @@ import {
   PaginationService,
 } from '../shared/pagination/pagination.service';
 
+import { Response } from 'express';
 import { CompetitionDto } from './dto/out/competition.dto';
 import { AllowedSystemRoles } from '../shared/decorators/allowed-system-roles.decorator';
 import { SystemRole } from '../user/user-role.enum';
@@ -513,6 +515,21 @@ export class CompetitionController {
     );
 
     return this.rankingMapper.map(rankings);
+  }
+
+  @Get('/:competitionId/rankings/pdf')
+  @ApiOkResponse()
+  @ApiOperation(GetOperationId(Competition.name, 'GetCompetitionRankingsPdf'))
+  async getRankingsPdf(
+    @Param() params: GetRankingsParamsDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const pdf = await this.competitionService.getRankingsPdf(
+      params.competitionId,
+    );
+
+    res.setHeader('Content-Type', 'application/pdf');
+    pdf.pipe(res);
   }
 
   @Patch('/:competitionId/start-qualifiers')

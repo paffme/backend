@@ -67,6 +67,8 @@ import { RoundByCategoryByType } from './types/round-by-category-by-type.type';
 import { NoPreviousRoundRankingsError } from './errors/no-previous-round-rankings.error';
 import { BulkBoulderingResultsDto } from './dto/in/body/bulk-bouldering-results.dto';
 import { EventEmitter as EE } from 'ee-ts';
+import ReadableStream = NodeJS.ReadableStream;
+import { PdfService } from '../pdf/pdf.service';
 
 export interface CompetitionRankingsUpdateEventPayload {
   competitionId: typeof Competition.prototype.id;
@@ -92,6 +94,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     private readonly userService: UserService,
     private readonly boulderingRoundService: BoulderingRoundService,
     private readonly boulderingRankingService: BoulderingRankingService,
+    private readonly pdfService: PdfService,
   ) {
     super();
   }
@@ -937,5 +940,15 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     });
 
     return groupRankings;
+  }
+
+  async getRankingsPdf(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<ReadableStream> {
+    const competition = await this.getOrFail(competitionId, [
+      'boulderingRounds.groups',
+    ]);
+
+    return this.pdfService.generateCompetitionPdf(competition);
   }
 }

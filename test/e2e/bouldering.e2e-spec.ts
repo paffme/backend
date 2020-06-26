@@ -254,6 +254,65 @@ describe('Bouldering (e2e)', () => {
       expect(body.tries).toEqual(1);
     });
 
+    it('adds a bouldering result for a limited contest (2)', async function () {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+        judgeAuth,
+      } = await utils.givenReadyCompetition(
+        BoulderingRoundRankingType.LIMITED_CONTEST,
+        {
+          maxTries: 3,
+        },
+      );
+
+      const { user: anotherClimber } = await utils.givenUser();
+      await utils.registerUserInCompetition(anotherClimber, competition);
+
+      const dto1: CreateBoulderingResultDto = {
+        top: true,
+        zone: true,
+        try: 1,
+        climberId: anotherClimber.id,
+      };
+
+      await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .send(dto1)
+        .expect(201);
+
+      const dto2: CreateBoulderingResultDto = {
+        top: true,
+        zone: true,
+        try: 1,
+        climberId: climber.id,
+      };
+
+      const { body } = await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .send(dto2)
+        .expect(201);
+
+      expect(body).toHaveProperty('id');
+      expect(body.climberId).toEqual(climber.id);
+      expect(body.competitionId).toEqual(competition.id);
+      expect(body.roundId).toEqual(round.id);
+      expect(body.boulderId).toEqual(boulder.id);
+      expect(body.top).toEqual(true);
+      expect(body.topInTries).toEqual(1);
+      expect(body.zone).toEqual(true);
+      expect(body.zoneInTries).toEqual(1);
+      expect(body.tries).toEqual(1);
+    });
+
     it('throws MAX_TRIES_REACHED when adding a bouldering result for a limited contest and exceed the maxTries limit', async function () {
       const {
         climber,

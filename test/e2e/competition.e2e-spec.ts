@@ -18,7 +18,9 @@ import { CompetitionRoundType } from '../../src/competition/competition-round-ty
 import { CompetitionState } from '../../src/competition/competition.entity';
 import { CompetitionType } from '../../src/competition/types/competition-type.enum';
 import { BoulderingGroupState } from '../../src/bouldering/group/bouldering-group.entity';
-
+import { BoulderingRoundRankingType } from '../../src/bouldering/round/bouldering-round.entity';
+import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
+import { promises as fs } from 'fs';
 /* eslint-disable sonarjs/no-duplicate-string */
 
 describe('Competition (e2e)', () => {
@@ -41,7 +43,7 @@ describe('Competition (e2e)', () => {
     utils = new TestUtils(
       moduleFixture.get(UserService),
       moduleFixture.get(CompetitionService),
-      undefined,
+      moduleFixture.get(BoulderService),
       moduleFixture.get('MikroORM'),
     );
   });
@@ -1499,6 +1501,113 @@ describe('Competition (e2e)', () => {
         .patch(`/competitions/${competition.id}/start-finals`)
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(403);
+    });
+  });
+
+  describe('GET /competitions/{competitionId}/rankings/pdf', () => {
+    it('gets the competition ranking in PDF', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      await utils.addBoulderingResult(
+        competition,
+        round,
+        round.groups[0],
+        boulder,
+        climber,
+        {
+          top: true,
+          zone: true,
+          try: 1,
+        },
+      );
+
+      // const sRound = await utils.addBoulderingRound(competition, {
+      //   type: CompetitionRoundType.SEMI_FINAL,
+      //   rankingType: BoulderingRoundRankingType.CIRCUIT,
+      //   boulders: 1,
+      // });
+      //
+      // await utils.startSemiFinals(competition);
+      //
+      // await utils.addBoulderingResult(
+      //   competition,
+      //   sRound,
+      //   sRound.groups[0],
+      //   sRound.groups[0].boulders[0],
+      //   climber,
+      //   {
+      //     top: true,
+      //     zone: true,
+      //     try: 1,
+      //   },
+      // );
+
+      // const fRound = await utils.addBoulderingRound(competition, {
+      //   type: CompetitionRoundType.FINAL,
+      //   rankingType: BoulderingRoundRankingType.CIRCUIT,
+      //   boulders: 1,
+      // });
+      //
+      // await utils.startFinals(competition);
+      //
+      // await utils.addBoulderingResult(
+      //   competition,
+      //   fRound,
+      //   fRound.groups[0],
+      //   fRound.groups[0].boulders[0],
+      //   climber,
+      //   {
+      //     top: true,
+      //     zone: true,
+      //     try: 1,
+      //   },
+      // );
+
+      const { user: anotherClimber } = await utils.givenUser({
+        sex: Sex.Male,
+        birthYear: 1970,
+      });
+
+      await utils.registerUserInCompetition(anotherClimber, competition);
+
+      const vetQRound = await utils.addBoulderingRound(competition, {
+        type: CompetitionRoundType.QUALIFIER,
+        rankingType: BoulderingRoundRankingType.CIRCUIT,
+        category: CategoryName.Veteran,
+        sex: Sex.Male,
+      });
+
+      await utils.startQualifiers(competition);
+
+      await utils.addBoulderingResult(
+        competition,
+        vetQRound,
+        vetQRound.groups[0],
+        vetQRound.groups[0].boulders[0],
+        anotherClimber,
+        {
+          top: true,
+          zone: true,
+          try: 1,
+        },
+      );
+
+      // FIXME: go from the final to the qualifier round to build
+      // FIXME: the ranking tables
+      // TODO: test unlimited contest
+      // TODO: test mixing unlimited with circuit
+
+      const res = await api
+        .get(`/competitions/${competition.id}/rankings/pdf`)
+        .expect(200);
+
+      expect(res.header['content-type']).toEqual('application/pdf');
+      await fs.writeFile('out.pdf', res.body);
     });
   });
 });
