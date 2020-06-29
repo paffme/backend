@@ -18,6 +18,7 @@ import {
 import {
   BoulderingRound,
   BoulderingRoundRankingType,
+  BoulderingRoundUnlimitedContestRankings,
 } from '../bouldering/round/bouldering-round.entity';
 
 @Injectable()
@@ -178,7 +179,7 @@ export class PdfService {
 
   private getBoulderingUnlimitedContestTable(
     round: BoulderingRound,
-    rankings: BoulderingUnlimitedContestRankings,
+    rankings: BoulderingRoundUnlimitedContestRankings,
     style: string,
   ): Column {
     const boulders = round.groups[0].boulders
@@ -187,6 +188,9 @@ export class PdfService {
 
     const bouldersCount = boulders.length;
     const totalColumns = bouldersCount + 3;
+
+    const bouldersPoints = (round.groups[0]
+      .rankings as BoulderingUnlimitedContestRankings).bouldersPoints;
 
     return {
       style,
@@ -199,9 +203,9 @@ export class PdfService {
               text: round.type,
               fillColor: 'silver',
               bold: true,
-              colSpan: bouldersCount,
+              colSpan: totalColumns,
             },
-            ...new Array(totalColumns).fill({
+            ...new Array(totalColumns - 1).fill({
               text: '',
             }),
           ],
@@ -209,14 +213,14 @@ export class PdfService {
             {
               text: `Quota ${round.quota}`,
               bold: true,
-              colSpan: bouldersCount,
+              colSpan: totalColumns,
             },
-            ...new Array(totalColumns).fill({
+            ...new Array(totalColumns - 1).fill({
               text: '',
             }),
           ],
           [
-            ...rankings.bouldersPoints.map((points) => ({
+            ...bouldersPoints.map((points) => ({
               text: `${points}`,
               alignment: 'right',
             })),
@@ -497,8 +501,6 @@ export class PdfService {
 
             return this.getBoulderingUnlimitedContestTable(
               round,
-              // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-              // @ts-ignore
               rankings,
               style,
             );

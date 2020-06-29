@@ -123,13 +123,13 @@ export class BoulderingResultService {
     }
 
     if (typeof dto.top === 'boolean') {
-      if (result.tries === 0) {
-        throw new WrongResultForRoundError("Can't add a top with 0 tries");
-      }
-
       result.top = dto.top;
 
       if (group.round.isRankingWithCountedTries()) {
+        if (result.tries === 0) {
+          throw new WrongResultForRoundError("Can't add a top with 0 tries");
+        }
+
         result.topInTries = result.top ? result.tries : 0;
       }
 

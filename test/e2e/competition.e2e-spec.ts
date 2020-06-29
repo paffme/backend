@@ -1511,7 +1511,9 @@ describe('Competition (e2e)', () => {
         competition,
         round,
         boulder,
-      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+      } = await utils.givenReadyCompetition(
+        BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      );
 
       await utils.addBoulderingResult(
         competition,
@@ -1521,8 +1523,6 @@ describe('Competition (e2e)', () => {
         climber,
         {
           top: true,
-          zone: true,
-          try: 1,
         },
       );
 
@@ -1567,35 +1567,35 @@ describe('Competition (e2e)', () => {
       //     try: 1,
       //   },
       // );
-
-      const { user: anotherClimber } = await utils.givenUser({
-        sex: Sex.Male,
-        birthYear: 1970,
-      });
-
-      await utils.registerUserInCompetition(anotherClimber, competition);
-
-      const vetQRound = await utils.addBoulderingRound(competition, {
-        type: CompetitionRoundType.QUALIFIER,
-        rankingType: BoulderingRoundRankingType.CIRCUIT,
-        category: CategoryName.Veteran,
-        sex: Sex.Male,
-      });
-
-      await utils.startQualifiers(competition);
-
-      await utils.addBoulderingResult(
-        competition,
-        vetQRound,
-        vetQRound.groups[0],
-        vetQRound.groups[0].boulders[0],
-        anotherClimber,
-        {
-          top: true,
-          zone: true,
-          try: 1,
-        },
-      );
+      //
+      // const { user: anotherClimber } = await utils.givenUser({
+      //   sex: Sex.Male,
+      //   birthYear: 1970,
+      // });
+      //
+      // await utils.registerUserInCompetition(anotherClimber, competition);
+      //
+      // const vetQRound = await utils.addBoulderingRound(competition, {
+      //   type: CompetitionRoundType.QUALIFIER,
+      //   rankingType: BoulderingRoundRankingType.CIRCUIT,
+      //   category: CategoryName.Veteran,
+      //   sex: Sex.Male,
+      // });
+      //
+      // await utils.startQualifiers(competition);
+      //
+      // await utils.addBoulderingResult(
+      //   competition,
+      //   vetQRound,
+      //   vetQRound.groups[0],
+      //   vetQRound.groups[0].boulders[0],
+      //   anotherClimber,
+      //   {
+      //     top: true,
+      //     zone: true,
+      //     try: 1,
+      //   },
+      // );
 
       // FIXME: go from the final to the qualifier round to build
       // FIXME: the ranking tables

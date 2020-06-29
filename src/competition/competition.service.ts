@@ -183,6 +183,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     userId: typeof User.prototype.id,
   ): Promise<void> {
     const competition = await this.getOrFail(competitionId, [
+      // eslint-disable-next-line sonarjs/no-duplicate-string
       'boulderingRounds.groups.climbers',
     ]);
 
@@ -946,7 +947,8 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     competitionId: typeof Competition.prototype.id,
   ): Promise<ReadableStream> {
     const competition = await this.getOrFail(competitionId, [
-      'boulderingRounds.groups',
+      'boulderingRounds.groups.climbers',
+      'boulderingRounds.groups.boulders',
     ]);
 
     return this.pdfService.generateCompetitionPdf(competition);
