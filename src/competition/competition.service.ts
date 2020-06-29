@@ -520,7 +520,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     if (competition.type === CompetitionType.Bouldering) {
       const rounds = (
         await competition.boulderingRounds.init({
-          populate: ['groups'],
+          populate: ['groups.climbers', 'groups.boulders'],
         })
       ).getItems();
 
