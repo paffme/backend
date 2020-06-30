@@ -6,7 +6,7 @@ import { Category } from '../shared/types/category.interface';
 import { Sex } from '../shared/types/sex.enum';
 import { CategoryName } from '../shared/types/category-name.enum';
 import PdfPrinter from 'pdfmake';
-import { Column, Content, TableCell } from 'pdfmake/interfaces';
+import { Column, Content, ContentTable, TableCell } from 'pdfmake/interfaces';
 import { ClimberRankingInfos } from '../competition/types/climber-ranking-infos.interface';
 import { name, version } from '../../package.json';
 import {
@@ -114,48 +114,75 @@ export class PdfService {
     return `logo.${this.getCategoryStyleKey(category)}`;
   }
 
-  private getFontSizeForColumns(columns: number, isLandscape: boolean): number {
-    if (isLandscape) {
-      if (columns > 30) {
-        return 6.25;
-      } else if (columns > 15) {
-        return 8.25;
-      } else {
-        return 11.5;
-      }
-    }
-
-    if (columns > 3) {
-      return 6.25;
-    } else if (columns > 2) {
-      return 8.25;
-    } else {
-      return 11.5;
-    }
-  }
-
-  private getColumnGapForColumns(
+  // eslint-disable-next-line sonarjs/cognitive-complexity
+  private getFontSizeAndColumnGap(
     columns: number,
+    columnsSize: number[],
     isLandscape: boolean,
-  ): number {
+  ): [number, number] {
+    // unlimited contest
     if (isLandscape) {
-      if (columns > 30) {
-        return 5;
-      } else if (columns > 15) {
-        return 15;
-      } else if (columns > 10) {
-        return 25;
+      if (columns === 2) {
+        if (columnsSize[1] > 30) {
+          return [5, 5];
+        } else if (columnsSize[1] > 25) {
+          return [6, 5];
+        } else if (columnsSize[1] > 20) {
+          return [7, 5];
+        } else if (columnsSize[1] > 15) {
+          return [8, 10];
+        } else if (columnsSize[1] > 10) {
+          return [11.5, 20];
+        } else if (columnsSize[1] > 5) {
+          return [14, 30];
+        } else {
+          return [15, 35];
+        }
+      } else if (columns === 3) {
+        if (columnsSize[1] > 30) {
+          return [4, 5];
+        } else if (columnsSize[1] > 25) {
+          return [4.7, 5];
+        } else if (columnsSize[1] > 20) {
+          return [6, 5];
+        } else if (columnsSize[1] > 15) {
+          return [7.25, 10];
+        } else if (columnsSize[1] > 10) {
+          return [9, 15];
+        } else if (columnsSize[1] > 5) {
+          return [11, 20];
+        } else {
+          return [14, 25];
+        }
+      } else if (columns === 4) {
+        if (columnsSize[1] > 30) {
+          return [3.25, 5];
+        } else if (columnsSize[1] > 25) {
+          return [3.9, 5];
+        } else if (columnsSize[1] > 20) {
+          return [4.8, 5];
+        } else if (columnsSize[1] > 15) {
+          return [5.75, 5];
+        } else if (columnsSize[1] > 10) {
+          return [7, 10];
+        } else if (columnsSize[1] > 5) {
+          return [8.5, 15];
+        } else {
+          return [10, 20];
+        }
       } else {
-        return 30;
+        throw new NotImplementedException('Unhandled columns length');
       }
     }
 
-    if (columns > 3) {
-      return 10;
-    } else if (columns > 2) {
-      return 20;
+    if (columns === 4) {
+      return [6.25, 10];
+    } else if (columns === 3) {
+      return [8.25, 20];
+    } else if (columns === 2) {
+      return [11.5, 30];
     } else {
-      return 30;
+      throw new NotImplementedException('Unhandled columns length');
     }
   }
 
@@ -217,6 +244,7 @@ export class PdfService {
       width: 'auto',
       table: {
         widths: new Array(totalColumns).fill('auto'),
+        headerRows: 4,
         body: [
           [
             {
@@ -225,9 +253,7 @@ export class PdfService {
               bold: true,
               colSpan: totalColumns,
             },
-            ...new Array(totalColumns - 1).fill({
-              text: '',
-            }),
+            ...new Array(totalColumns - 1).fill(''),
           ],
           [
             {
@@ -235,9 +261,7 @@ export class PdfService {
               bold: true,
               colSpan: totalColumns,
             },
-            ...new Array(totalColumns - 1).fill({
-              text: '',
-            }),
+            ...new Array(totalColumns - 1).fill(''),
           ],
           [
             ...bouldersPoints.map((points) => ({
@@ -250,9 +274,7 @@ export class PdfService {
               bold: true,
               colSpan: totalColumns - bouldersCount,
             },
-            ...new Array(totalColumns - bouldersCount - 1).fill({
-              text: '',
-            }),
+            ...new Array(totalColumns - bouldersCount - 1).fill(''),
           ],
           [
             ...boulders.map((boulder) => ({
@@ -315,6 +337,7 @@ export class PdfService {
       width: 'auto',
       table: {
         widths: ['auto', 'auto', 'auto', 'auto', 'auto'],
+        headerRows: 4,
         body: [
           [
             {
@@ -323,9 +346,7 @@ export class PdfService {
               colSpan: 5,
               bold: true,
             },
-            ...new Array(4).fill({
-              text: '',
-            }),
+            ...new Array(4).fill(''),
           ],
           [
             {
@@ -333,9 +354,7 @@ export class PdfService {
               colSpan: 5,
               bold: true,
             },
-            ...new Array(4).fill({
-              text: '',
-            }),
+            ...new Array(4).fill(''),
           ],
           [
             {
@@ -435,9 +454,7 @@ export class PdfService {
         colSpan: 3,
         border: [false, false, false, false],
       },
-      ...new Array(2).fill({
-        text: '',
-      }),
+      ...new Array(2).fill(''),
     ];
 
     const mainColumn: Column = {
@@ -445,7 +462,7 @@ export class PdfService {
       width: 'auto',
       margin: [10, 0, 0, 0],
       table: {
-        widths: new Array(4 + sortedRankings.length).fill('auto'),
+        widths: new Array(3).fill('auto'),
         body: [
           getBlankLine(),
           getBlankLine(),
@@ -528,11 +545,20 @@ export class PdfService {
     );
 
     const columns: Column[] = [mainColumn, ...roundsColumns];
+    const columnsSize = columns.map(
+      (c) => (c as ContentTable).table.widths!.length,
+    );
+
+    const [fontSize, columnGap] = this.getFontSizeAndColumnGap(
+      columns.length,
+      columnsSize,
+      isLandscape,
+    );
 
     content.push({
       columns,
-      columnGap: this.getColumnGapForColumns(columns.length, isLandscape),
-      fontSize: this.getFontSizeForColumns(columns.length, isLandscape),
+      columnGap,
+      fontSize,
       font: 'arial_narrow',
       bold: false,
       alignment: 'center',

@@ -1510,97 +1510,21 @@ describe('Competition (e2e)', () => {
         climber,
         competition,
         round,
-        judge,
-      } = await utils.givenReadyCompetition(
-        BoulderingRoundRankingType.UNLIMITED_CONTEST,
+        boulder,
+      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      await utils.addBoulderingResult(
+        competition,
+        round,
+        round.groups[0],
+        boulder,
+        climber,
+        {
+          top: true,
+          zone: true,
+          try: 1,
+        },
       );
-
-      for (let i = 0; i < 10; i++) {
-        const boulder = await utils.addBoulder(round.groups[0]);
-        await utils.assignJudgeToBoulder(judge, boulder);
-
-        await utils.addBoulderingResult(
-          competition,
-          round,
-          round.groups[0],
-          boulder,
-          climber,
-          {
-            top: true,
-          },
-        );
-      }
-
-      // const sRound = await utils.addBoulderingRound(competition, {
-      //   type: CompetitionRoundType.SEMI_FINAL,
-      //   rankingType: BoulderingRoundRankingType.CIRCUIT,
-      //   boulders: 1,
-      // });
-      //
-      // await utils.startSemiFinals(competition);
-      //
-      // await utils.addBoulderingResult(
-      //   competition,
-      //   sRound,
-      //   sRound.groups[0],
-      //   sRound.groups[0].boulders[0],
-      //   climber,
-      //   {
-      //     top: true,
-      //     zone: true,
-      //     try: 1,
-      //   },
-      // );
-
-      // const fRound = await utils.addBoulderingRound(competition, {
-      //   type: CompetitionRoundType.FINAL,
-      //   rankingType: BoulderingRoundRankingType.CIRCUIT,
-      //   boulders: 1,
-      // });
-      //
-      // await utils.startFinals(competition);
-      //
-      // await utils.addBoulderingResult(
-      //   competition,
-      //   fRound,
-      //   fRound.groups[0],
-      //   fRound.groups[0].boulders[0],
-      //   climber,
-      //   {
-      //     top: true,
-      //     zone: true,
-      //     try: 1,
-      //   },
-      // );
-      //
-      // const { user: anotherClimber } = await utils.givenUser({
-      //   sex: Sex.Male,
-      //   birthYear: 1970,
-      // });
-      //
-      // await utils.registerUserInCompetition(anotherClimber, competition);
-      //
-      // const vetQRound = await utils.addBoulderingRound(competition, {
-      //   type: CompetitionRoundType.QUALIFIER,
-      //   rankingType: BoulderingRoundRankingType.CIRCUIT,
-      //   category: CategoryName.Veteran,
-      //   sex: Sex.Male,
-      // });
-      //
-      // await utils.startQualifiers(competition);
-      //
-      // await utils.addBoulderingResult(
-      //   competition,
-      //   vetQRound,
-      //   vetQRound.groups[0],
-      //   vetQRound.groups[0].boulders[0],
-      //   anotherClimber,
-      //   {
-      //     top: true,
-      //     zone: true,
-      //     try: 1,
-      //   },
-      // );
 
       // FIXME: go from the final to the qualifier round to build
       // FIXME: the ranking tables
