@@ -16,6 +16,7 @@ export class BoulderingRoundMapper extends BaseMapper<
       name: 'name',
       quota: 'quota',
       type: 'type',
+      rankingType: 'rankingType',
       competitionId: 'competition.id',
       category: 'category',
       sex: 'sex',

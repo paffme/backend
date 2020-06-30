@@ -90,6 +90,7 @@ describe('Bouldering (e2e)', () => {
       expect(body).toHaveProperty('id');
       expect(body.name).toEqual(dto.name);
       expect(body.type).toEqual(dto.type);
+      expect(body.rankingType).toEqual(dto.rankingType);
       expect(body.quota).toEqual(3);
       expect(body.maxTries).toBeUndefined();
       expect(body.competitionId).toEqual(competition.id);
