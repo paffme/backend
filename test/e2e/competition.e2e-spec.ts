@@ -1510,21 +1510,26 @@ describe('Competition (e2e)', () => {
         climber,
         competition,
         round,
-        boulder,
+        judge,
       } = await utils.givenReadyCompetition(
         BoulderingRoundRankingType.UNLIMITED_CONTEST,
       );
 
-      await utils.addBoulderingResult(
-        competition,
-        round,
-        round.groups[0],
-        boulder,
-        climber,
-        {
-          top: true,
-        },
-      );
+      for (let i = 0; i < 10; i++) {
+        const boulder = await utils.addBoulder(round.groups[0]);
+        await utils.assignJudgeToBoulder(judge, boulder);
+
+        await utils.addBoulderingResult(
+          competition,
+          round,
+          round.groups[0],
+          boulder,
+          climber,
+          {
+            top: true,
+          },
+        );
+      }
 
       // const sRound = await utils.addBoulderingRound(competition, {
       //   type: CompetitionRoundType.SEMI_FINAL,

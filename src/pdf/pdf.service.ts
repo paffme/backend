@@ -12,7 +12,6 @@ import { name, version } from '../../package.json';
 import {
   BoulderingCircuitRanking,
   BoulderingLimitedContestRanking,
-  BoulderingUnlimitedContestRanking,
   BoulderingUnlimitedContestRankings,
 } from '../bouldering/group/bouldering-group.entity';
 import {
@@ -20,6 +19,7 @@ import {
   BoulderingRoundRankingType,
   BoulderingRoundUnlimitedContestRankings,
 } from '../bouldering/round/bouldering-round.entity';
+import { RankingsNotFoundError } from '../competition/errors/rankings-not-found.error';
 
 @Injectable()
 export class PdfService {
@@ -114,7 +114,17 @@ export class PdfService {
     return `logo.${this.getCategoryStyleKey(category)}`;
   }
 
-  private getFontSizeForColumns(columns: number): number {
+  private getFontSizeForColumns(columns: number, isLandscape: boolean): number {
+    if (isLandscape) {
+      if (columns > 30) {
+        return 6.25;
+      } else if (columns > 15) {
+        return 8.25;
+      } else {
+        return 11.5;
+      }
+    }
+
     if (columns > 3) {
       return 6.25;
     } else if (columns > 2) {
@@ -124,7 +134,22 @@ export class PdfService {
     }
   }
 
-  private getColumnGapForColumns(columns: number): number {
+  private getColumnGapForColumns(
+    columns: number,
+    isLandscape: boolean,
+  ): number {
+    if (isLandscape) {
+      if (columns > 30) {
+        return 5;
+      } else if (columns > 15) {
+        return 15;
+      } else if (columns > 10) {
+        return 25;
+      } else {
+        return 30;
+      }
+    }
+
     if (columns > 3) {
       return 10;
     } else if (columns > 2) {
@@ -148,11 +173,6 @@ export class PdfService {
           y: 20,
         },
         width: 85,
-        pageOrientation:
-          competition.getQualifierRound(category)?.rankingType ===
-          BoulderingRoundRankingType.UNLIMITED_CONTEST
-            ? 'landscape'
-            : 'portrait',
       },
       {
         style: 'header',
@@ -228,9 +248,9 @@ export class PdfService {
               text: 'Total',
               fillColor: 'silver',
               bold: true,
-              colSpan: 3,
+              colSpan: totalColumns - bouldersCount,
             },
-            ...new Array(3).fill({
+            ...new Array(totalColumns - bouldersCount - 1).fill({
               text: '',
             }),
           ],
@@ -259,7 +279,7 @@ export class PdfService {
           ...rankings.rankings.map((ranking): Column[] => [
             ...ranking.tops.map(
               (top): Column => ({
-                text: top ? 'O' : '',
+                text: top ? 'O' : ' ',
               }),
             ),
             {
@@ -303,18 +323,9 @@ export class PdfService {
               colSpan: 5,
               bold: true,
             },
-            {
+            ...new Array(4).fill({
               text: '',
-            },
-            {
-              text: '',
-            },
-            {
-              text: '',
-            },
-            {
-              text: '',
-            },
+            }),
           ],
           [
             {
@@ -322,18 +333,9 @@ export class PdfService {
               colSpan: 5,
               bold: true,
             },
-            {
+            ...new Array(4).fill({
               text: '',
-            },
-            {
-              text: '',
-            },
-            {
-              text: '',
-            },
-            {
-              text: '',
-            },
+            }),
           ],
           [
             {
@@ -420,6 +422,7 @@ export class PdfService {
     content: Content[],
     category: Category,
     competition: Competition,
+    isLandscape: boolean,
   ) {
     const style = this.getCategoryStyleKey(category);
     const sortedRankings = this.sortRankings(
@@ -432,12 +435,9 @@ export class PdfService {
         colSpan: 3,
         border: [false, false, false, false],
       },
-      {
+      ...new Array(2).fill({
         text: '',
-      },
-      {
-        text: '',
-      },
+      }),
     ];
 
     const mainColumn: Column = {
@@ -445,7 +445,7 @@ export class PdfService {
       width: 'auto',
       margin: [10, 0, 0, 0],
       table: {
-        widths: ['auto', 'auto', 'auto'],
+        widths: new Array(4 + sortedRankings.length).fill('auto'),
         body: [
           getBlankLine(),
           getBlankLine(),
@@ -489,49 +489,50 @@ export class PdfService {
       },
     };
 
-    const roundsColumns = competition
+    const categoryRounds = competition
       .getCategoryRounds(category)
-      .filter((round) => typeof round.rankings !== 'undefined')
-      .map(
-        (round): Column => {
-          const rankings = round.rankings!;
+      .filter((round) => typeof round.rankings !== 'undefined');
 
-          if (rankings.type === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
-            rankings.rankings = this.sortRankings(rankings.rankings);
+    const roundsColumns = categoryRounds.map(
+      (round): Column => {
+        const rankings = round.rankings!;
 
-            return this.getBoulderingUnlimitedContestTable(
-              round,
-              rankings,
-              style,
-            );
-          }
+        if (rankings.type === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+          rankings.rankings = this.sortRankings(rankings.rankings);
 
-          if (rankings.type === BoulderingRoundRankingType.LIMITED_CONTEST) {
-            return this.getBoulderingLimitedContestTable(
-              round,
-              this.sortRankings(rankings.rankings),
-              style,
-            );
-          }
+          return this.getBoulderingUnlimitedContestTable(
+            round,
+            rankings,
+            style,
+          );
+        }
 
-          if (rankings.type === BoulderingRoundRankingType.CIRCUIT) {
-            return this.getBoulderingCircuitTable(
-              round,
-              this.sortRankings(rankings.rankings),
-              style,
-            );
-          }
+        if (rankings.type === BoulderingRoundRankingType.LIMITED_CONTEST) {
+          return this.getBoulderingLimitedContestTable(
+            round,
+            this.sortRankings(rankings.rankings),
+            style,
+          );
+        }
 
-          throw new NotImplementedException('Unhandled ranking type');
-        },
-      );
+        if (rankings.type === BoulderingRoundRankingType.CIRCUIT) {
+          return this.getBoulderingCircuitTable(
+            round,
+            this.sortRankings(rankings.rankings),
+            style,
+          );
+        }
+
+        throw new NotImplementedException('Unhandled ranking type');
+      },
+    );
 
     const columns: Column[] = [mainColumn, ...roundsColumns];
 
     content.push({
       columns,
-      columnGap: this.getColumnGapForColumns(columns.length),
-      fontSize: this.getFontSizeForColumns(columns.length),
+      columnGap: this.getColumnGapForColumns(columns.length, isLandscape),
+      fontSize: this.getFontSizeForColumns(columns.length, isLandscape),
       font: 'arial_narrow',
       bold: false,
       alignment: 'center',
@@ -542,14 +543,20 @@ export class PdfService {
     content: Content[],
     competition: Competition,
     category: Category,
-  ) {
+    isLandscape: boolean,
+  ): void {
     this.printHeader(content, category, competition);
-    this.printTable(content, category, competition);
+    this.printTable(content, category, competition, isLandscape);
   }
 
   generateCompetitionPdf(competition: Competition): NodeJS.ReadableStream {
     const content: Content[] = [];
     const creationDate = new Date();
+    const isLandscape = competition.boulderingRounds
+      .getItems()
+      .some(
+        (r) => r.rankingType === BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      );
 
     for (const [categoryName, sexes] of Object.entries(competition.rankings)) {
       if (!sexes) {
@@ -566,37 +573,39 @@ export class PdfService {
           name: categoryName as CategoryName,
         };
 
-        this.printCategoryRankings(content, competition, category);
+        this.printCategoryRankings(content, competition, category, isLandscape);
       }
+    }
+
+    if (content.length === 0) {
+      throw new RankingsNotFoundError();
     }
 
     const tag = `${name} v${version}`;
 
     const doc = this.printer.createPdfKitDocument({
       content,
-      pageBreakBefore(currentNode, a, b, previousNodesOnPage): boolean {
-        const previousLogo = previousNodesOnPage.find((n) =>
-          n.id?.startsWith('logo'),
-        );
-
-        return !!(
-          currentNode.id &&
-          currentNode.id.startsWith('logo') &&
-          previousLogo
-        );
-      },
       footer: (currentPage, pageCount): Content[] => {
         return [
           {
             canvas: [
-              {
-                type: 'line',
-                x1: 30,
-                y1: -10,
-                x2: 565,
-                y2: -10,
-                lineWidth: 0.5,
-              },
+              isLandscape
+                ? {
+                    type: 'line',
+                    x1: 30,
+                    y1: -10,
+                    x2: 815,
+                    y2: -10,
+                    lineWidth: 0.5,
+                  }
+                : {
+                    type: 'line',
+                    x1: 30,
+                    y1: -10,
+                    x2: 565,
+                    y2: -10,
+                    lineWidth: 0.5,
+                  },
             ],
           },
           {
@@ -643,7 +652,7 @@ export class PdfService {
         bold: true,
       },
       pageSize: 'A4',
-      pageOrientation: 'portrait',
+      pageOrientation: isLandscape ? 'landscape' : 'portrait',
       pageMargins: [15, 30, 15, 20],
       info: {
         author: tag,

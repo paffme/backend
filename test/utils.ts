@@ -357,8 +357,6 @@ export default class TestUtils {
 
     await this.assignJudgeToBoulder(judge, boulder);
 
-    this.clearORM();
-
     return {
       competition,
       organizer,
@@ -370,5 +368,9 @@ export default class TestUtils {
       juryPresident,
       juryPresidentAuth,
     };
+  }
+
+  addBoulder(group: BoulderingGroup): Promise<Boulder> {
+    return this.boulderService!.create(group, {});
   }
 }

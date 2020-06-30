@@ -138,7 +138,7 @@ export class BoulderingController {
     JuryPresidentAuthorizationGuard,
   )
   @ApiOkResponse({ type: BoulderingLimitedRoundDto })
-  @ApiOperation(GetOperationId(Competition.name, 'AddRound'))
+  @ApiOperation(GetOperationId(Competition.name, 'UpdateRound'))
   async updateBoulderingRound(
     @Param() params: UpdateBoulderingRoundParamsDto,
     @Body() dto: UpdateBoulderingRoundDto,
