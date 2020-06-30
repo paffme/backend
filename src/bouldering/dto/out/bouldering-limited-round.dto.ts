@@ -7,6 +7,7 @@ import {
 import { Competition } from '../../../competition/competition.entity';
 import { Sex } from '../../../shared/types/sex.enum';
 import { CategoryName } from '../../../shared/types/category-name.enum';
+import { CompetitionType } from '../../../competition/types/competition-type.enum';
 
 export class BoulderingLimitedRoundDto {
   @ApiProperty({
@@ -29,8 +30,11 @@ export class BoulderingLimitedRoundDto {
   })
   readonly quota!: typeof BoulderingRound.prototype.quota;
 
-  @ApiProperty({ enum: BoulderingRoundRankingType })
+  @ApiProperty({ enum: CompetitionType })
   readonly type!: typeof BoulderingRound.prototype.type;
+
+  @ApiProperty({ enum: BoulderingRoundRankingType })
+  readonly rankingType!: typeof BoulderingRound.prototype.rankingType;
 
   @ApiProperty({ enum: Sex })
   readonly sex!: Sex;
