@@ -20,7 +20,6 @@ import { CompetitionType } from '../../src/competition/types/competition-type.en
 import { BoulderingGroupState } from '../../src/bouldering/group/bouldering-group.entity';
 import { BoulderingRoundRankingType } from '../../src/bouldering/round/bouldering-round.entity';
 import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
-import { promises as fs } from 'fs';
 /* eslint-disable sonarjs/no-duplicate-string */
 
 describe('Competition (e2e)', () => {
@@ -1526,17 +1525,11 @@ describe('Competition (e2e)', () => {
         },
       );
 
-      // FIXME: go from the final to the qualifier round to build
-      // FIXME: the ranking tables
-      // TODO: test unlimited contest
-      // TODO: test mixing unlimited with circuit
-
       const res = await api
         .get(`/competitions/${competition.id}/rankings/pdf`)
         .expect(200);
 
       expect(res.header['content-type']).toEqual('application/pdf');
-      await fs.writeFile('out.pdf', res.body);
     });
   });
 });

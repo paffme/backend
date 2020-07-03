@@ -752,8 +752,6 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
           const getClimberJobs: Promise<User>[] = [];
 
           for (let i = 1; i <= previousRound.quota; i++) {
-            let addedClimbers = 0;
-
             for (const ranking of previousRound.rankings.rankings) {
               const rank = ranking;
 
@@ -761,13 +759,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
                 getClimberJobs.push(
                   this.userService.getOrFail(rank.climber.id),
                 );
-
-                addedClimbers++;
               }
-            }
-
-            if (addedClimbers === 0) {
-              break;
             }
           }
 

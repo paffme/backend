@@ -16,10 +16,12 @@ import {
 } from '../bouldering/group/bouldering-group.entity';
 import {
   BoulderingRound,
+  BoulderingRoundRankingsStandalone,
   BoulderingRoundRankingType,
   BoulderingRoundUnlimitedContestRankings,
 } from '../bouldering/round/bouldering-round.entity';
 import { RankingsNotFoundError } from '../competition/errors/rankings-not-found.error';
+import { RankingsMap } from '../bouldering/types/rankings-map';
 
 @Injectable()
 export class PdfService {
@@ -69,12 +71,6 @@ export class PdfService {
     )}/${date.getFullYear()}`;
   }
 
-  private getPrintableSchedule(date: Date) {
-    return `${this.addForwardZero(date.getHours())}h${this.addForwardZero(
-      date.getMinutes(),
-    )}`;
-  }
-
   private getPrintableCategoryName(categoryName: CategoryName): string {
     return this.categoryNamePrintMapping[categoryName].toUpperCase();
   }
@@ -102,8 +98,31 @@ export class PdfService {
     return array.reduce((acc, el) => acc + el, 0);
   }
 
-  private sortRankings<T extends { ranking: number }>(rankings: T[]): T[] {
-    return rankings.sort((a, b) => a.ranking - b.ranking);
+  private sortRankings<
+    T extends { ranking: number; climber: ClimberRankingInfos }
+  >(rankings: T[], nextRoundRankings?: RankingsMap): T[] {
+    const [
+      climbersRankingsInNextRound,
+      remainingClimbersRankings,
+    ] = rankings.reduce<[T[], T[]]>(
+      (pair, r) => {
+        const [inNextRound, remaining] = pair;
+
+        if (nextRoundRankings?.has(r.climber.id)) {
+          inNextRound.push(r);
+        } else {
+          remaining.push(r);
+        }
+
+        return pair;
+      },
+      [[], []],
+    );
+
+    return [
+      ...climbersRankingsInNextRound.sort((a, b) => a.ranking - b.ranking),
+      ...remainingClimbersRankings.sort((a, b) => a.ranking - b.ranking),
+    ];
   }
 
   private getCategoryStyleKey(category: Category): string {
@@ -186,6 +205,21 @@ export class PdfService {
     }
   }
 
+  private getRoundRankingsMap(
+    round?: BoulderingRound,
+  ): RankingsMap | undefined {
+    if (round && round.rankings) {
+      return (round.rankings
+        .rankings as BoulderingRoundRankingsStandalone).reduce(
+        (map, ranking) => {
+          map.set(ranking.climber.id, ranking.ranking);
+          return map;
+        },
+        new Map(),
+      );
+    }
+  }
+
   private printHeader(
     content: Content[],
     category: Category,
@@ -265,7 +299,7 @@ export class PdfService {
           ],
           [
             ...bouldersPoints.map((points) => ({
-              text: `${points}`,
+              text: points.toFixed(2),
               alignment: 'right',
             })),
             {
@@ -308,7 +342,7 @@ export class PdfService {
               text: `${ranking.nbTops}`,
             },
             {
-              text: `${ranking.points}`,
+              text: ranking.points.toFixed(2),
             },
             {
               text: `${ranking.ranking}`,
@@ -444,7 +478,7 @@ export class PdfService {
     isLandscape: boolean,
   ) {
     const style = this.getCategoryStyleKey(category);
-    const sortedRankings = this.sortRankings(
+    const sortedMainRankings = this.sortRankings(
       competition.rankings[category.name]![category.sex]!,
     );
 
@@ -487,7 +521,7 @@ export class PdfService {
               bold: true,
             },
           ],
-          ...sortedRankings.map((r) => [
+          ...sortedMainRankings.map((r) => [
             {
               text: r.ranking,
               alignment: 'center',
@@ -513,9 +547,14 @@ export class PdfService {
     const roundsColumns = categoryRounds.map(
       (round): Column => {
         const rankings = round.rankings!;
+        const nextRound = competition.getNextRound(round);
+        const nextRoundRankingsMap = this.getRoundRankingsMap(nextRound);
 
         if (rankings.type === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
-          rankings.rankings = this.sortRankings(rankings.rankings);
+          rankings.rankings = this.sortRankings(
+            rankings.rankings,
+            nextRoundRankingsMap,
+          );
 
           return this.getBoulderingUnlimitedContestTable(
             round,
@@ -527,7 +566,7 @@ export class PdfService {
         if (rankings.type === BoulderingRoundRankingType.LIMITED_CONTEST) {
           return this.getBoulderingLimitedContestTable(
             round,
-            this.sortRankings(rankings.rankings),
+            this.sortRankings(rankings.rankings, nextRoundRankingsMap),
             style,
           );
         }
@@ -535,7 +574,7 @@ export class PdfService {
         if (rankings.type === BoulderingRoundRankingType.CIRCUIT) {
           return this.getBoulderingCircuitTable(
             round,
-            this.sortRankings(rankings.rankings),
+            this.sortRankings(rankings.rankings, nextRoundRankingsMap),
             style,
           );
         }
@@ -611,6 +650,13 @@ export class PdfService {
 
     const doc = this.printer.createPdfKitDocument({
       content,
+      pageBreakBefore(currentNode, a, b, previousNodes): boolean {
+        const hasPreviousLogo = previousNodes.find((n) =>
+          n.id?.startsWith('logo'),
+        );
+
+        return !!(currentNode.id?.startsWith('logo') && hasPreviousLogo);
+      },
       footer: (currentPage, pageCount): Content[] => {
         return [
           {
@@ -619,32 +665,24 @@ export class PdfService {
                 ? {
                     type: 'line',
                     x1: 30,
-                    y1: -10,
+                    y1: -5,
                     x2: 815,
-                    y2: -10,
+                    y2: -5,
                     lineWidth: 0.5,
                   }
                 : {
                     type: 'line',
                     x1: 30,
-                    y1: -10,
+                    y1: -5,
                     x2: 565,
-                    y2: -10,
+                    y2: -5,
                     lineWidth: 0.5,
                   },
             ],
           },
           {
             style: 'footer',
-            text: tag,
-            alignment: 'left',
-            margin: [30, -6.5, 0, 0],
-          },
-          {
-            style: 'footer',
-            text: `Edité le ${this.getPrintableDate(
-              creationDate,
-            )} à ${this.getPrintableSchedule(creationDate)}`,
+            text: name,
             alignment: 'left',
             margin: [30, 0, 0, 0],
           },
@@ -653,7 +691,7 @@ export class PdfService {
             text: `Page n°${currentPage}/${pageCount}`,
             alignment: 'right',
             bold: true,
-            margin: [0, -20, 30, 0],
+            margin: [0, -10, 30, 0],
           },
         ];
       },

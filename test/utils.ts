@@ -299,6 +299,8 @@ export default class TestUtils {
   async givenReadyCompetition(
     rankingType: BoulderingRoundRankingType,
     roundData?: Partial<BoulderingRound>,
+    competitionData?: Partial<Competition>,
+    climberData?: Partial<User>,
   ): Promise<{
     competition: Competition;
     organizer: User;
@@ -314,6 +316,7 @@ export default class TestUtils {
     const { user: climber } = await this.givenUser({
       sex: Sex.Female,
       birthYear: 2000,
+      ...climberData,
     });
 
     const {
@@ -333,6 +336,7 @@ export default class TestUtils {
     const competition = await this.givenCompetition(organizer, {
       type: CompetitionType.Bouldering,
       startDate: new Date(2014, 10, 1),
+      ...competitionData,
     });
 
     await this.registerUserInCompetition(climber, competition);

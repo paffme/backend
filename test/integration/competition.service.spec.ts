@@ -22,6 +22,7 @@ import { BoulderingGroup } from '../../src/bouldering/group/bouldering-group.ent
 import { BoulderingGroupUnlimitedContestRankingService } from '../../src/bouldering/group/ranking/bouldering-group-unlimited-contest-ranking.service';
 import { BoulderingGroupCircuitRankingService } from '../../src/bouldering/group/ranking/bouldering-group-circuit-ranking.service';
 import { BoulderingGroupLimitedContestRankingService } from '../../src/bouldering/group/ranking/bouldering-group-limited-contest-ranking.service';
+import { PdfService } from '../../src/pdf/pdf.service';
 
 describe('Competition service (integration)', () => {
   let competitionService: CompetitionService;
@@ -41,6 +42,7 @@ describe('Competition service (integration)', () => {
         BoulderingGroupCircuitRankingService,
         BoulderingRankingService,
         BoulderingGroupService,
+        PdfService,
       ],
       imports: [
         MikroOrmModule.forRoot(config),

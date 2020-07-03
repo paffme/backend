@@ -1787,5 +1787,58 @@ describe.each([
       expect(secondClimberRanking).toBeTruthy();
       expect(secondClimberRanking!.ranking).toEqual(2);
     });
+
+    it('regression #1', () => {
+      const firstClimber = givenUser();
+      const secondClimber = givenUser();
+
+      const boulders = [givenBoulder(0)];
+
+      const results = [
+        givenResult(firstClimber, boulders[0], {
+          top: true,
+          topInTries: 2,
+          zone: true,
+          zoneInTries: 2,
+        }),
+        givenResult(secondClimber, boulders[0], {
+          top: false,
+          topInTries: 0,
+          zone: true,
+          zoneInTries: 1,
+        }),
+      ];
+
+      const group = givenBoulderingGroup(
+        {
+          round: givenBoulderingRound({
+            rankingType,
+            type: CompetitionRoundType.FINAL,
+          }),
+        },
+        boulders,
+        [firstClimber, secondClimber],
+        results,
+      );
+
+      const { rankings, type } = rankingService.getRankings(group);
+
+      expect(type).toEqual(rankingType);
+      expect(rankings).toHaveLength(2);
+
+      const firstClimberRanking = rankings.find(
+        (c) => c.climber.id === firstClimber.id,
+      );
+
+      expect(firstClimberRanking).toBeTruthy();
+      expect(firstClimberRanking!.ranking).toEqual(1);
+
+      const secondClimberRanking = rankings.find(
+        (c) => c.climber.id === secondClimber.id,
+      );
+
+      expect(secondClimberRanking).toBeTruthy();
+      expect(secondClimberRanking!.ranking).toEqual(2);
+    });
   },
 );

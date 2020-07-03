@@ -209,18 +209,34 @@ export class Competition extends BaseEntity {
   }
 
   getPreviousRound(round: BoulderingRound): BoulderingRound | undefined {
+    const category = {
+      sex: round.sex,
+      name: round.category,
+    };
+
     if (round.type === CompetitionRoundType.FINAL) {
-      return this.getSemiFinalRound({
-        sex: round.sex,
-        name: round.category,
-      });
+      return (
+        this.getSemiFinalRound(category) || this.getQualifierRound(category)
+      );
     }
 
     if (round.type === CompetitionRoundType.SEMI_FINAL) {
-      return this.getQualifierRound({
-        sex: round.sex,
-        name: round.category,
-      });
+      return this.getQualifierRound(category);
+    }
+  }
+
+  getNextRound(round: BoulderingRound): BoulderingRound | undefined {
+    const category = {
+      sex: round.sex,
+      name: round.category,
+    };
+
+    if (round.type === CompetitionRoundType.QUALIFIER) {
+      return this.getSemiFinalRound(category) || this.getFinalRound(category);
+    }
+
+    if (round.type === CompetitionRoundType.SEMI_FINAL) {
+      return this.getFinalRound(category);
     }
   }
 

@@ -399,6 +399,7 @@ describe('Bouldering (e2e)', () => {
 
       const dto: CreateBoulderingResultDto = {
         top: true,
+        try: 1,
         climberId: climber.id,
       };
 
@@ -625,9 +626,11 @@ describe('Bouldering (e2e)', () => {
 
   describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders', () => {
     it('adds a boulder', async () => {
-      const { competition, round, boulder } = await utils.givenReadyCompetition(
+      const { competition, round } = await utils.givenReadyCompetition(
         BoulderingRoundRankingType.CIRCUIT,
       );
+
+      utils.clearORM();
 
       const {
         user: juryPresident,
@@ -695,6 +698,8 @@ describe('Bouldering (e2e)', () => {
       const { competition, round, boulder } = await utils.givenReadyCompetition(
         BoulderingRoundRankingType.CIRCUIT,
       );
+
+      utils.clearORM();
 
       const {
         user: juryPresident,
@@ -937,6 +942,8 @@ describe('Bouldering (e2e)', () => {
         .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
         .expect(204);
 
+      utils.clearORM();
+
       return expect(
         utils.getBoulderingGroup(round.groups[0].id),
       ).rejects.toBeInstanceOf(Error);
@@ -971,7 +978,7 @@ describe('Bouldering (e2e)', () => {
   });
 
   describe('DELETE /competitions/{competitionId}/bouldering-rounds/{roundId}', () => {
-    it('deletes a bouldering group', async () => {
+    it('deletes a bouldering round', async () => {
       const { competition, round } = await utils.givenReadyCompetition(
         BoulderingRoundRankingType.CIRCUIT,
       );
@@ -988,6 +995,8 @@ describe('Bouldering (e2e)', () => {
         .delete(`/competitions/${competition.id}/bouldering-rounds/${round.id}`)
         .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
         .expect(204);
+
+      utils.clearORM();
 
       expect(await utils.getBoulderingRound(round.id)).toBeNull();
     });
@@ -1225,6 +1234,8 @@ describe('Bouldering (e2e)', () => {
         boulder,
       } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
 
+      utils.clearORM();
+
       const { user: judge } = await utils.givenUser();
       await utils.addJudgeInCompetition(judge, competition);
 
@@ -1282,6 +1293,8 @@ describe('Bouldering (e2e)', () => {
         )
         .set('Authorization', `Bearer ${juryPresidentAuth.token}`)
         .expect(204);
+
+      utils.clearORM();
 
       const judges = await utils.getBoulderJudges(boulder.id);
       expect(judges).toHaveLength(0);
