@@ -945,4 +945,17 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
 
     return this.pdfService.generateCompetitionPdf(competition);
   }
+
+  async getBoulderingRoundRankingsPdf(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+  ): Promise<ReadableStream> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+      ['groups.climbers', 'groups.boulders'],
+    );
+
+    return this.pdfService.generateBoulderingRoundPdf(round);
+  }
 }

@@ -1532,4 +1532,36 @@ describe('Competition (e2e)', () => {
       expect(res.header['content-type']).toEqual('application/pdf');
     });
   });
+
+  describe('GET /competitions/{competitionId}/bouldering-rounds/{roundId}/rankings/pdf', () => {
+    it('gets the round ranking in PDF', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      await utils.addBoulderingResult(
+        competition,
+        round,
+        round.groups[0],
+        boulder,
+        climber,
+        {
+          top: true,
+          zone: true,
+          try: 1,
+        },
+      );
+
+      const res = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/rankings/pdf`,
+        )
+        .expect(200);
+
+      expect(res.header['content-type']).toEqual('application/pdf');
+    });
+  });
 });

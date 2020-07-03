@@ -117,7 +117,7 @@ describe('PDF (e2e)', () => {
 
   it.each([
     [
-      'One circuit round',
+      'One circuit round (competition)',
       [
         {
           firstName: 'Gautier',
@@ -146,7 +146,7 @@ describe('PDF (e2e)', () => {
       ],
     ],
     [
-      'One limited contest round',
+      'One limited contest round (competition)',
       [
         {
           firstName: 'Gautier',
@@ -176,7 +176,7 @@ describe('PDF (e2e)', () => {
       ],
     ],
     [
-      'One unlimited contest round',
+      'One unlimited contest round (competition)',
       [
         {
           firstName: 'Gautier',
@@ -205,7 +205,7 @@ describe('PDF (e2e)', () => {
       ],
     ],
     [
-      'Two categories',
+      'Two categories (competition)',
       [
         {
           firstName: 'Gautier',
@@ -256,7 +256,7 @@ describe('PDF (e2e)', () => {
       ],
     ],
     [
-      'One contest then one circuit',
+      'One contest then one circuit (competition)',
       [
         {
           firstName: 'Gautier',
@@ -338,7 +338,7 @@ describe('PDF (e2e)', () => {
       ],
     ],
     [
-      'One contest then two circuits',
+      'One contest then two circuits (competition)',
       [
         {
           firstName: 'Gautier',
@@ -439,7 +439,7 @@ describe('PDF (e2e)', () => {
       ],
     ],
     [
-      'Three circuits',
+      'Three circuits (competition)',
       [
         {
           firstName: 'Gautier',
@@ -530,7 +530,11 @@ describe('PDF (e2e)', () => {
         },
       ],
     ],
-  ])('%s', async function (testName, climbers, roundsData) {
+  ])('Competition rankings: %s', async function (
+    testName,
+    climbers,
+    roundsData,
+  ) {
     const competition = await givenReadyCompetition();
     const registeredClimbers: User[] = [];
 
@@ -587,6 +591,148 @@ describe('PDF (e2e)', () => {
 
     const res = await api
       .get(`/competitions/${competition.id}/rankings/pdf`)
+      .expect(200);
+
+    await snapshot(res.body, testName);
+  });
+
+  it.each([
+    [
+      'One circuit round (round)',
+      [
+        {
+          firstName: 'Gautier',
+          lastName: 'Supper',
+          club: 'Supper Club',
+          birthYear: 1950,
+          sex: Sex.Male,
+        },
+      ],
+      {
+        round: {
+          category: CategoryName.Veteran,
+          sex: Sex.Male,
+          type: CompetitionRoundType.QUALIFIER,
+          rankingType: BoulderingRoundRankingType.CIRCUIT,
+          groups: 1,
+          boulders: 1,
+        },
+        groups: [
+          {
+            results: [[0, 0, { top: true, try: 1 }]],
+          },
+        ],
+      },
+    ],
+    [
+      'One limited contest round (round)',
+      [
+        {
+          firstName: 'Gautier',
+          lastName: 'Supper',
+          club: 'Supper Club',
+          birthYear: 1950,
+          sex: Sex.Male,
+        },
+      ],
+      {
+        round: {
+          category: CategoryName.Veteran,
+          sex: Sex.Male,
+          type: CompetitionRoundType.QUALIFIER,
+          rankingType: BoulderingRoundRankingType.LIMITED_CONTEST,
+          maxTries: 5,
+          groups: 1,
+          boulders: 1,
+        },
+        groups: [
+          {
+            results: [[0, 0, { top: true, try: 1 }]],
+          },
+        ],
+      },
+    ],
+    [
+      'One unlimited contest round (round)',
+      [
+        {
+          firstName: 'Gautier',
+          lastName: 'Supper',
+          club: 'Supper Club',
+          birthYear: 1950,
+          sex: Sex.Male,
+        },
+      ],
+      {
+        round: {
+          category: CategoryName.Veteran,
+          sex: Sex.Male,
+          type: CompetitionRoundType.QUALIFIER,
+          rankingType: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+          groups: 1,
+          boulders: 1,
+        },
+        groups: [
+          {
+            results: [[0, 0, { top: true }]],
+          },
+        ],
+      },
+    ],
+  ])('Round rankings: %s', async (testName, climbers, roundData) => {
+    const competition = await givenReadyCompetition();
+    const registeredClimbers: User[] = [];
+
+    for (const climberData of climbers) {
+      const { user: climber } = await utils.givenUser(climberData);
+      await utils.registerUserInCompetition(climber, competition);
+      registeredClimbers.push(climber);
+    }
+
+    const round = await utils.addBoulderingRound(competition, roundData.round);
+
+    if (round.type === CompetitionRoundType.QUALIFIER) {
+      await utils.startQualifiers(competition);
+    } else if (round.type === CompetitionRoundType.SEMI_FINAL) {
+      await utils.startSemiFinals(competition);
+    } else if (round.type === CompetitionRoundType.FINAL) {
+      await utils.startFinals(competition);
+    }
+
+    for (let i = 0; i < roundData.groups.length; i++) {
+      const group = round.groups[i];
+      const groupData = roundData.groups[i];
+
+      for (const [
+        climberIndex,
+        boulderIndex,
+        resultData,
+      ] of groupData.results) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const climber = registeredClimbers[climberIndex];
+
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const boulder = group.boulders[boulderIndex];
+
+        await utils.addBoulderingResult(
+          competition,
+          round,
+          group,
+          boulder,
+          climber,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          resultData,
+        );
+      }
+    }
+
+    const res = await api
+      .get(
+        `/competitions/${competition.id}/bouldering-rounds/${round.id}/rankings/pdf`,
+      )
       .expect(200);
 
     await snapshot(res.body, testName);

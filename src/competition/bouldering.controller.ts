@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Put,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 
@@ -72,6 +73,8 @@ import { BoulderingGroupRankingsDto } from '../bouldering/dto/out/bouldering-gro
 import { GetBoulderingGroupRankingsParamsDto } from './dto/in/params/get-bouldering-group-rankings-params.dto';
 import { BoulderingGroupRankingsMapper } from '../shared/mappers/bouldering-group-rankings.mapper';
 import { GetBoulderingResultParamsDto } from './dto/in/params/get-bouldering-result-params.dto';
+import { Response } from 'express';
+import { GetBoulderingRoundRankingsPdfParamsDto } from './dto/in/params/get-bouldering-round-rankings-pdf-params.dto';
 
 @Controller('competitions')
 @ApiTags('Bouldering')
@@ -257,6 +260,24 @@ export class BoulderingController {
     );
 
     return this.boulderingRoundRankingsMapper.map(rankings);
+  }
+
+  @Get('/:competitionId/bouldering-rounds/:roundId/rankings/pdf')
+  @ApiOkResponse()
+  @ApiOperation(
+    GetOperationId(Competition.name, 'GetBoulderingRoundRankingsPdf'),
+  )
+  async getRankingsPdf(
+    @Param() params: GetBoulderingRoundRankingsPdfParamsDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const pdf = await this.competitionService.getBoulderingRoundRankingsPdf(
+      params.competitionId,
+      params.roundId,
+    );
+
+    res.setHeader('Content-Type', 'application/pdf');
+    pdf.pipe(res);
   }
 
   @Get('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/rankings')

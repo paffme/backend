@@ -614,38 +614,16 @@ export class PdfService {
     this.printTable(content, category, competition, isLandscape);
   }
 
-  generateCompetitionPdf(competition: Competition): NodeJS.ReadableStream {
-    const content: Content[] = [];
-    const creationDate = new Date();
-    const isLandscape = competition.boulderingRounds
-      .getItems()
-      .some(
-        (r) => r.rankingType === BoulderingRoundRankingType.UNLIMITED_CONTEST,
-      );
-
-    for (const [categoryName, sexes] of Object.entries(competition.rankings)) {
-      if (!sexes) {
-        continue;
-      }
-
-      for (const [sex, rankings] of Object.entries(sexes)) {
-        if (!rankings) {
-          continue;
-        }
-
-        const category = {
-          sex: sex as Sex,
-          name: categoryName as CategoryName,
-        };
-
-        this.printCategoryRankings(content, competition, category, isLandscape);
-      }
-    }
-
+  private build(
+    content: Content[],
+    isLandscape: boolean,
+    title: string,
+  ): NodeJS.ReadableStream {
     if (content.length === 0) {
       throw new RankingsNotFoundError();
     }
 
+    const creationDate = new Date();
     const tag = `${name} v${version}`;
 
     const doc = this.printer.createPdfKitDocument({
@@ -721,12 +699,61 @@ export class PdfService {
       info: {
         author: tag,
         creator: tag,
-        title: competition.name,
+        title,
         creationDate,
       },
     });
 
     doc.end();
     return doc;
+  }
+
+  generateBoulderingRoundPdf(round: BoulderingRound): NodeJS.ReadableStream {
+    const content: Content[] = [];
+
+    const isLandscape =
+      round.rankingType === BoulderingRoundRankingType.UNLIMITED_CONTEST;
+
+    this.printCategoryRankings(
+      content,
+      round.competition,
+      {
+        name: round.category,
+        sex: round.sex,
+      },
+      isLandscape,
+    );
+
+    return this.build(content, isLandscape, round.competition.name);
+  }
+
+  generateCompetitionPdf(competition: Competition): NodeJS.ReadableStream {
+    const content: Content[] = [];
+    const isLandscape = competition.boulderingRounds
+      .getItems()
+      .some(
+        (r) => r.rankingType === BoulderingRoundRankingType.UNLIMITED_CONTEST,
+      );
+
+    for (const [categoryName, sexes] of Object.entries(competition.rankings)) {
+      if (!sexes) {
+        continue;
+      }
+
+      for (const [sex, rankings] of Object.entries(sexes)) {
+        if (!rankings) {
+          continue;
+        }
+
+        const category = {
+          sex: sex as Sex,
+          name: categoryName as CategoryName,
+        };
+
+        this.printCategoryRankings(content, competition, category, isLandscape);
+      }
+    }
+
+    return this.build(content, isLandscape, competition.name);
   }
 }
