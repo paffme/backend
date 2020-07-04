@@ -199,11 +199,31 @@ export class BoulderingGroupCircuitRankingService
   }
 
   private computeRankings(results: AggregatedClimbersResultsMap): RankingsMap {
-    const entries = Array.from(results)
-      .sort(this.compareByTops.bind(this))
-      .sort(this.compareByZones.bind(this))
-      .sort(this.compareByTopsInTries.bind(this))
-      .sort(this.compareByZonesInTries.bind(this));
+    const entries = Array.from(results).sort((a, b): number => {
+      // FIRST BY TOPS
+      const topsDelta = this.compareByTops(a, b);
+
+      if (topsDelta !== 0) {
+        return topsDelta;
+      }
+
+      // THEN BY ZONES
+      const zonesDelta = this.compareByZones(a, b);
+
+      if (zonesDelta !== 0) {
+        return zonesDelta;
+      }
+
+      // THEN BY TOPS IN TRIES
+      const topsInTriesDelta = this.compareByTopsInTries(a, b);
+
+      if (topsInTriesDelta !== 0) {
+        return topsInTriesDelta;
+      }
+
+      // THEN BY ZONES IN TRIES
+      return this.compareByZonesInTries(a, b);
+    });
 
     return handleExAequosRankings(entries, this.areExAequo);
   }

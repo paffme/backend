@@ -45,6 +45,7 @@ import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
 import { BulkBoulderingResultsDto } from '../../../src/competition/dto/in/body/bulk-bouldering-results.dto';
 import pEvent from 'p-event';
 import { User } from '../../../src/user/user.entity';
+import { PdfService } from '../../../src/pdf/pdf.service';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -90,6 +91,8 @@ const boulderingRankingServiceMock: ServiceMock = {
   getRankings: jest.fn(),
 };
 
+const pdfServiceMock: ServiceMock = {};
+
 const femaleMinime = givenCategory({
   sex: Sex.Female,
   name: CategoryName.Minime,
@@ -130,6 +133,10 @@ describe('Competition service (unit)', () => {
         {
           provide: CompetitionMapper,
           useClass: CompetitionMapper,
+        },
+        {
+          provide: PdfService,
+          useValue: pdfServiceMock,
         },
       ],
     }).compile();

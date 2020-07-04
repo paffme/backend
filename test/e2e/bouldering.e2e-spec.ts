@@ -30,6 +30,7 @@ import {
   BoulderingGroupRankingsDto,
   CircuitGroupRankingsDto,
 } from '../../src/bouldering/dto/out/bouldering-group-rankings.dto';
+import { BoulderingGroupDto } from '../../src/bouldering/dto/out/bouldering-group.dto';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -255,6 +256,65 @@ describe('Bouldering (e2e)', () => {
       expect(body.tries).toEqual(1);
     });
 
+    it('adds a bouldering result for a limited contest (2)', async function () {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+        judgeAuth,
+      } = await utils.givenReadyCompetition(
+        BoulderingRoundRankingType.LIMITED_CONTEST,
+        {
+          maxTries: 3,
+        },
+      );
+
+      const { user: anotherClimber } = await utils.givenUser();
+      await utils.registerUserInCompetition(anotherClimber, competition);
+
+      const dto1: CreateBoulderingResultDto = {
+        top: true,
+        zone: true,
+        try: 1,
+        climberId: anotherClimber.id,
+      };
+
+      await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .send(dto1)
+        .expect(201);
+
+      const dto2: CreateBoulderingResultDto = {
+        top: true,
+        zone: true,
+        try: 1,
+        climberId: climber.id,
+      };
+
+      const { body } = await api
+        .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/results`,
+        )
+        .set('Authorization', `Bearer ${judgeAuth.token}`)
+        .send(dto2)
+        .expect(201);
+
+      expect(body).toHaveProperty('id');
+      expect(body.climberId).toEqual(climber.id);
+      expect(body.competitionId).toEqual(competition.id);
+      expect(body.roundId).toEqual(round.id);
+      expect(body.boulderId).toEqual(boulder.id);
+      expect(body.top).toEqual(true);
+      expect(body.topInTries).toEqual(1);
+      expect(body.zone).toEqual(true);
+      expect(body.zoneInTries).toEqual(1);
+      expect(body.tries).toEqual(1);
+    });
+
     it('throws MAX_TRIES_REACHED when adding a bouldering result for a limited contest and exceed the maxTries limit', async function () {
       const {
         climber,
@@ -341,6 +401,7 @@ describe('Bouldering (e2e)', () => {
 
       const dto: CreateBoulderingResultDto = {
         top: true,
+        try: 1,
         climberId: climber.id,
       };
 
@@ -567,9 +628,11 @@ describe('Bouldering (e2e)', () => {
 
   describe('POST /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders', () => {
     it('adds a boulder', async () => {
-      const { competition, round, boulder } = await utils.givenReadyCompetition(
+      const { competition, round } = await utils.givenReadyCompetition(
         BoulderingRoundRankingType.CIRCUIT,
       );
+
+      utils.clearORM();
 
       const {
         user: juryPresident,
@@ -637,6 +700,8 @@ describe('Bouldering (e2e)', () => {
       const { competition, round, boulder } = await utils.givenReadyCompetition(
         BoulderingRoundRankingType.CIRCUIT,
       );
+
+      utils.clearORM();
 
       const {
         user: juryPresident,
@@ -879,6 +944,8 @@ describe('Bouldering (e2e)', () => {
         .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
         .expect(204);
 
+      utils.clearORM();
+
       return expect(
         utils.getBoulderingGroup(round.groups[0].id),
       ).rejects.toBeInstanceOf(Error);
@@ -913,7 +980,7 @@ describe('Bouldering (e2e)', () => {
   });
 
   describe('DELETE /competitions/{competitionId}/bouldering-rounds/{roundId}', () => {
-    it('deletes a bouldering group', async () => {
+    it('deletes a bouldering round', async () => {
       const { competition, round } = await utils.givenReadyCompetition(
         BoulderingRoundRankingType.CIRCUIT,
       );
@@ -930,6 +997,8 @@ describe('Bouldering (e2e)', () => {
         .delete(`/competitions/${competition.id}/bouldering-rounds/${round.id}`)
         .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
         .expect(204);
+
+      utils.clearORM();
 
       expect(await utils.getBoulderingRound(round.id)).toBeNull();
     });
@@ -1167,6 +1236,8 @@ describe('Bouldering (e2e)', () => {
         boulder,
       } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
 
+      utils.clearORM();
+
       const { user: judge } = await utils.givenUser();
       await utils.addJudgeInCompetition(judge, competition);
 
@@ -1224,6 +1295,8 @@ describe('Bouldering (e2e)', () => {
         )
         .set('Authorization', `Bearer ${juryPresidentAuth.token}`)
         .expect(204);
+
+      utils.clearORM();
 
       const judges = await utils.getBoulderJudges(boulder.id);
       expect(judges).toHaveLength(0);
@@ -1523,6 +1596,38 @@ describe('Bouldering (e2e)', () => {
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .expect(403);
+    });
+  });
+
+  describe('GET /{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}', () => {
+    it('gets a group by ID', async () => {
+      const {
+        competition,
+        round,
+        boulder,
+        judge,
+        climber,
+      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const group = round.groups[0];
+
+      const res = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${group.id}`,
+        )
+        .expect(200);
+
+      const body = res.body as BoulderingGroupDto;
+      expect(body.id).toEqual(group.id);
+      expect(body.name).toEqual(group.name);
+      expect(body.state).toEqual(group.state);
+      expect(body.roundId).toEqual(round.id);
+      expect(body.boulders).toHaveLength(1);
+      expect(body.boulders[0].id).toEqual(boulder.id);
+      expect(body.boulders[0].judges).toHaveLength(1);
+      expect(body.boulders[0].judges[0].id).toEqual(judge.id);
+      expect(body.climbers).toHaveLength(1);
+      expect(body.climbers[0].id).toEqual(climber.id);
     });
   });
 });

@@ -292,9 +292,15 @@ export default class TestUtils {
     await this.competitionService!.startSemiFinals(competition.id);
   }
 
+  async startFinals(competition: Competition): Promise<void> {
+    await this.competitionService!.startFinals(competition.id);
+  }
+
   async givenReadyCompetition(
     rankingType: BoulderingRoundRankingType,
     roundData?: Partial<BoulderingRound>,
+    competitionData?: Partial<Competition>,
+    climberData?: Partial<User>,
   ): Promise<{
     competition: Competition;
     organizer: User;
@@ -310,6 +316,7 @@ export default class TestUtils {
     const { user: climber } = await this.givenUser({
       sex: Sex.Female,
       birthYear: 2000,
+      ...climberData,
     });
 
     const {
@@ -329,6 +336,7 @@ export default class TestUtils {
     const competition = await this.givenCompetition(organizer, {
       type: CompetitionType.Bouldering,
       startDate: new Date(2014, 10, 1),
+      ...competitionData,
     });
 
     await this.registerUserInCompetition(climber, competition);
@@ -353,8 +361,6 @@ export default class TestUtils {
 
     await this.assignJudgeToBoulder(judge, boulder);
 
-    this.clearORM();
-
     return {
       competition,
       organizer,
@@ -366,5 +372,9 @@ export default class TestUtils {
       juryPresident,
       juryPresidentAuth,
     };
+  }
+
+  addBoulder(group: BoulderingGroup): Promise<Boulder> {
+    return this.boulderService!.create(group, {});
   }
 }

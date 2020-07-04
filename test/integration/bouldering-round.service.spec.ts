@@ -43,6 +43,7 @@ import { MaxClimbersReachedError } from '../../src/bouldering/errors/max-climber
 import { BoulderingGroupUnlimitedContestRankingService } from '../../src/bouldering/group/ranking/bouldering-group-unlimited-contest-ranking.service';
 import { BoulderingGroupLimitedContestRankingService } from '../../src/bouldering/group/ranking/bouldering-group-limited-contest-ranking.service';
 import { BoulderingGroupCircuitRankingService } from '../../src/bouldering/group/ranking/bouldering-group-circuit-ranking.service';
+import { PdfService } from '../../src/pdf/pdf.service';
 
 describe('Bouldering round service (integration)', () => {
   let boulderingRoundService: BoulderingRoundService;
@@ -63,6 +64,7 @@ describe('Bouldering round service (integration)', () => {
         BoulderingGroupUnlimitedContestRankingService,
         BoulderingGroupLimitedContestRankingService,
         BoulderingGroupCircuitRankingService,
+        PdfService,
       ],
       imports: [
         MikroOrmModule.forRoot(config),

@@ -18,6 +18,7 @@ import { BoulderJudgeAuthorizationService } from './authorization/boulder-judge.
 import { BoulderJudgeAuthorizationGuard } from './authorization/boulder-judge.authorization.guard';
 import { Boulder } from '../bouldering/boulder/boulder.entity';
 import { BoulderingController } from './bouldering.controller';
+import { PdfModule } from '../pdf/pdf.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { BoulderingController } from './bouldering.controller';
     }),
     UserModule,
     BoulderingModule,
+    PdfModule,
   ],
   controllers: [CompetitionController, BoulderingController],
   providers: [

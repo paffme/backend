@@ -166,11 +166,19 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
 
     // Add registrations if this is the qualifiers
     if (round.type === CompetitionRoundType.QUALIFIER) {
+      const season = competition.getSeason();
       const registrations = await competition.registrations.init({
         populate: ['climber'],
       });
 
-      const climbersRegistered = registrations.getItems().map((r) => r.climber);
+      const climbersRegistered = registrations
+        .getItems()
+        .map((r) => r.climber)
+        .filter((c) => {
+          const category = c.getCategory(season);
+          return category.name === round.category && category.sex === round.sex;
+        });
+
       await this.addClimbers(round, ...climbersRegistered);
     }
 
@@ -317,11 +325,13 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
   private async getGroupOrFail(
     round: BoulderingRound,
     groupId: typeof BoulderingGroup.prototype.id,
+    populate?: string[],
   ): Promise<BoulderingGroup> {
     const groups = await round.groups.init({
       where: {
         id: groupId,
       },
+      populate,
     });
 
     const group = groups.getItems()[0];
@@ -482,5 +492,13 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
       boulderId,
       climber,
     );
+  }
+
+  getBoulderingGroup(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    populate?: string[],
+  ): Promise<BoulderingGroup> {
+    return this.getGroupOrFail(round, groupId, populate);
   }
 }

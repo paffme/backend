@@ -18,7 +18,8 @@ import { CompetitionRoundType } from '../../src/competition/competition-round-ty
 import { CompetitionState } from '../../src/competition/competition.entity';
 import { CompetitionType } from '../../src/competition/types/competition-type.enum';
 import { BoulderingGroupState } from '../../src/bouldering/group/bouldering-group.entity';
-
+import { BoulderingRoundRankingType } from '../../src/bouldering/round/bouldering-round.entity';
+import { BoulderService } from '../../src/bouldering/boulder/boulder.service';
 /* eslint-disable sonarjs/no-duplicate-string */
 
 describe('Competition (e2e)', () => {
@@ -41,7 +42,7 @@ describe('Competition (e2e)', () => {
     utils = new TestUtils(
       moduleFixture.get(UserService),
       moduleFixture.get(CompetitionService),
-      undefined,
+      moduleFixture.get(BoulderService),
       moduleFixture.get('MikroORM'),
     );
   });
@@ -1499,6 +1500,68 @@ describe('Competition (e2e)', () => {
         .patch(`/competitions/${competition.id}/start-finals`)
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(403);
+    });
+  });
+
+  describe('GET /competitions/{competitionId}/rankings/pdf', () => {
+    it('gets the competition ranking in PDF', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      await utils.addBoulderingResult(
+        competition,
+        round,
+        round.groups[0],
+        boulder,
+        climber,
+        {
+          top: true,
+          zone: true,
+          try: 1,
+        },
+      );
+
+      const res = await api
+        .get(`/competitions/${competition.id}/rankings/pdf`)
+        .expect(200);
+
+      expect(res.header['content-type']).toEqual('application/pdf');
+    });
+  });
+
+  describe('GET /competitions/{competitionId}/bouldering-rounds/{roundId}/rankings/pdf', () => {
+    it('gets the round ranking in PDF', async () => {
+      const {
+        climber,
+        competition,
+        round,
+        boulder,
+      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      await utils.addBoulderingResult(
+        competition,
+        round,
+        round.groups[0],
+        boulder,
+        climber,
+        {
+          top: true,
+          zone: true,
+          try: 1,
+        },
+      );
+
+      const res = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/rankings/pdf`,
+        )
+        .expect(200);
+
+      expect(res.header['content-type']).toEqual('application/pdf');
     });
   });
 });

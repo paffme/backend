@@ -67,6 +67,8 @@ import { RoundByCategoryByType } from './types/round-by-category-by-type.type';
 import { NoPreviousRoundRankingsError } from './errors/no-previous-round-rankings.error';
 import { BulkBoulderingResultsDto } from './dto/in/body/bulk-bouldering-results.dto';
 import { EventEmitter as EE } from 'ee-ts';
+import ReadableStream = NodeJS.ReadableStream;
+import { PdfService } from '../pdf/pdf.service';
 
 export interface CompetitionRankingsUpdateEventPayload {
   competitionId: typeof Competition.prototype.id;
@@ -78,6 +80,8 @@ export interface CompetitionRankingsUpdateEventPayload {
 export interface CompetitionServiceEvents {
   rankingsUpdate(payload: CompetitionRankingsUpdateEventPayload): void;
 }
+
+/* eslint-disable sonarjs/no-duplicate-string */
 
 @Injectable()
 export class CompetitionService extends EE<CompetitionServiceEvents> {
@@ -92,6 +96,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     private readonly userService: UserService,
     private readonly boulderingRoundService: BoulderingRoundService,
     private readonly boulderingRankingService: BoulderingRankingService,
+    private readonly pdfService: PdfService,
   ) {
     super();
   }
@@ -748,8 +753,6 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
           const getClimberJobs: Promise<User>[] = [];
 
           for (let i = 1; i <= previousRound.quota; i++) {
-            let addedClimbers = 0;
-
             for (const ranking of previousRound.rankings.rankings) {
               const rank = ranking;
 
@@ -757,13 +760,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
                 getClimberJobs.push(
                   this.userService.getOrFail(rank.climber.id),
                 );
-
-                addedClimbers++;
               }
-            }
-
-            if (addedClimbers === 0) {
-              break;
             }
           }
 
@@ -937,5 +934,59 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     });
 
     return groupRankings;
+  }
+
+  async getRankingsPdf(
+    competitionId: typeof Competition.prototype.id,
+  ): Promise<ReadableStream> {
+    const competition = await this.getOrFail(competitionId, [
+      'boulderingRounds.groups.climbers',
+      'boulderingRounds.groups.boulders',
+    ]);
+
+    return this.pdfService.generateCompetitionPdf(competition);
+  }
+
+  async getBoulderingRoundRankingsPdf(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+  ): Promise<ReadableStream> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+      ['groups.climbers', 'groups.boulders'],
+    );
+
+    return this.pdfService.generateBoulderingRoundPdf(round);
+  }
+
+  async getBoulderingGroupRankingsPdf(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<ReadableStream> {
+    const group = await this.getBoulderingGroup(
+      competitionId,
+      roundId,
+      groupId,
+    );
+
+    return this.pdfService.generateBoulderingGroupPdf(group);
+  }
+
+  async getBoulderingGroup(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<BoulderingGroup> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return this.boulderingRoundService.getBoulderingGroup(round, groupId, [
+      'climbers',
+      'boulders.judges',
+    ]);
   }
 }

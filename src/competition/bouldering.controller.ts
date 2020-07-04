@@ -9,6 +9,7 @@ import {
   Patch,
   Post,
   Put,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 
@@ -72,6 +73,10 @@ import { BoulderingGroupRankingsDto } from '../bouldering/dto/out/bouldering-gro
 import { GetBoulderingGroupRankingsParamsDto } from './dto/in/params/get-bouldering-group-rankings-params.dto';
 import { BoulderingGroupRankingsMapper } from '../shared/mappers/bouldering-group-rankings.mapper';
 import { GetBoulderingResultParamsDto } from './dto/in/params/get-bouldering-result-params.dto';
+import { Response } from 'express';
+import { GetBoulderingRoundRankingsPdfParamsDto } from './dto/in/params/get-bouldering-round-rankings-pdf-params.dto';
+import { GetBoulderingGroupRankingsPdfParamsDto } from './dto/in/params/get-bouldering-group-rankings-pdf-params.dto';
+import { GetBoulderingGroupParamsDto } from './dto/in/params/get-bouldering-group-params.dto';
 
 @Controller('competitions')
 @ApiTags('Bouldering')
@@ -138,7 +143,7 @@ export class BoulderingController {
     JuryPresidentAuthorizationGuard,
   )
   @ApiOkResponse({ type: BoulderingLimitedRoundDto })
-  @ApiOperation(GetOperationId(Competition.name, 'AddRound'))
+  @ApiOperation(GetOperationId(Competition.name, 'UpdateRound'))
   async updateBoulderingRound(
     @Param() params: UpdateBoulderingRoundParamsDto,
     @Body() dto: UpdateBoulderingRoundDto,
@@ -150,6 +155,23 @@ export class BoulderingController {
     );
 
     return this.boulderingLimitedRoundMapper.map(updatedRound);
+  }
+
+  @Get('/:competitionId/bouldering-rounds/:roundId/groups/:groupId')
+  @ApiOkResponse({
+    type: BoulderingGroupDto,
+  })
+  @ApiOperation(GetOperationId(Competition.name, 'GetBoulderingGroup'))
+  async getBoulderingGroup(
+    @Param() params: GetBoulderingGroupParamsDto,
+  ): Promise<BoulderingGroupDto> {
+    const group = await this.competitionService.getBoulderingGroup(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+    );
+
+    return this.boulderingGroupMapper.map(group);
   }
 
   @Post(
@@ -259,6 +281,24 @@ export class BoulderingController {
     return this.boulderingRoundRankingsMapper.map(rankings);
   }
 
+  @Get('/:competitionId/bouldering-rounds/:roundId/rankings/pdf')
+  @ApiOkResponse()
+  @ApiOperation(
+    GetOperationId(Competition.name, 'GetBoulderingRoundRankingsPdf'),
+  )
+  async getBoulderingRoundRankingsPdf(
+    @Param() params: GetBoulderingRoundRankingsPdfParamsDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const pdf = await this.competitionService.getBoulderingRoundRankingsPdf(
+      params.competitionId,
+      params.roundId,
+    );
+
+    res.setHeader('Content-Type', 'application/pdf');
+    pdf.pipe(res);
+  }
+
   @Get('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/rankings')
   @ApiOkResponse({ type: BoulderingGroupRankingsDto })
   @ApiOperation(GetOperationId(Competition.name, 'GetBoulderingGroupRankings'))
@@ -272,6 +312,27 @@ export class BoulderingController {
     );
 
     return this.boulderingGroupRankingsMapper.map(rankings);
+  }
+
+  @Get(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/rankings/pdf',
+  )
+  @ApiOkResponse()
+  @ApiOperation(
+    GetOperationId(Competition.name, 'GetBoulderingGroupRankingsPdf'),
+  )
+  async getBoulderingGroupRankingsPdf(
+    @Param() params: GetBoulderingGroupRankingsPdfParamsDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const pdf = await this.competitionService.getBoulderingGroupRankingsPdf(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+    );
+
+    res.setHeader('Content-Type', 'application/pdf');
+    pdf.pipe(res);
   }
 
   @Post('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders')

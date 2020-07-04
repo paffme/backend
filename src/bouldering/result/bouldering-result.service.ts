@@ -126,6 +126,10 @@ export class BoulderingResultService {
       result.top = dto.top;
 
       if (group.round.isRankingWithCountedTries()) {
+        if (result.tries === 0) {
+          throw new WrongResultForRoundError("Can't add a top with 0 tries");
+        }
+
         result.topInTries = result.top ? result.tries : 0;
       }
 
@@ -140,6 +144,10 @@ export class BoulderingResultService {
         throw new WrongResultForRoundError(
           "Can't add a zone for this kind of round",
         );
+      }
+
+      if (result.tries === 0) {
+        throw new WrongResultForRoundError("Can't add a zone with 0 tries");
       }
 
       result.zone = dto.zone;

@@ -154,6 +154,27 @@ export class Competition extends BaseEntity {
     );
   }
 
+  getCategoryRounds(category: Category): BoulderingRound[] {
+    const qRound = this.getQualifierRound(category);
+    const sRound = this.getSemiFinalRound(category);
+    const fRound = this.getFinalRound(category);
+    const rounds = [];
+
+    if (qRound) {
+      rounds.push(qRound);
+    }
+
+    if (sRound) {
+      rounds.push(sRound);
+    }
+
+    if (fRound) {
+      rounds.push(fRound);
+    }
+
+    return rounds;
+  }
+
   getQualifierRound(category: Category): BoulderingRound | undefined {
     return this.boulderingRounds
       .getItems()
@@ -176,19 +197,46 @@ export class Competition extends BaseEntity {
       );
   }
 
+  getFinalRound(category: Category): BoulderingRound | undefined {
+    return this.boulderingRounds
+      .getItems()
+      .find(
+        (r) =>
+          r.type === CompetitionRoundType.FINAL &&
+          r.category === category.name &&
+          r.sex === category.sex,
+      );
+  }
+
   getPreviousRound(round: BoulderingRound): BoulderingRound | undefined {
+    const category = {
+      sex: round.sex,
+      name: round.category,
+    };
+
     if (round.type === CompetitionRoundType.FINAL) {
-      return this.getSemiFinalRound({
-        sex: round.sex,
-        name: round.category,
-      });
+      return (
+        this.getSemiFinalRound(category) || this.getQualifierRound(category)
+      );
     }
 
     if (round.type === CompetitionRoundType.SEMI_FINAL) {
-      return this.getQualifierRound({
-        sex: round.sex,
-        name: round.category,
-      });
+      return this.getQualifierRound(category);
+    }
+  }
+
+  getNextRound(round: BoulderingRound): BoulderingRound | undefined {
+    const category = {
+      sex: round.sex,
+      name: round.category,
+    };
+
+    if (round.type === CompetitionRoundType.QUALIFIER) {
+      return this.getSemiFinalRound(category) || this.getFinalRound(category);
+    }
+
+    if (round.type === CompetitionRoundType.SEMI_FINAL) {
+      return this.getFinalRound(category);
     }
   }
 
@@ -245,6 +293,7 @@ type Relations = UserCompetitionRelation | 'registrations' | 'boulderingRounds';
 export type CompetitionRelation =
   | Relations
   | 'boulderingRounds.groups.climbers'
+  | 'boulderingRounds.groups.boulders'
   | 'boulderingRounds.groups';
 
 // This is just for static validation

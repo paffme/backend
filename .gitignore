@@ -65,3 +65,5 @@ jspm_packages/
 migrations
 temp
 types/*.d.ts
+test/e2e/pdf/tmp/*.pdf
+test/e2e/pdf/snapshots/__diff_output__
