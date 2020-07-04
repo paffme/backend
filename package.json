@@ -6,7 +6,7 @@
   "scripts": {
     "start:dev": "ts-node src/main.ts",
     "start:watch": "nodemon",
-    "build": "rimraf dist && tsc",
+    "build": "rimraf dist && tsc && npm run copy-assets",
     "start:prod": "node .",
     "lint": "npm run prettier:check && npm run eslint",
     "lint:fix": "npm run eslint:fix && npm run prettier:fix",
@@ -16,7 +16,8 @@
     "eslint": "eslint --report-unused-disable-directives \"**/*.ts\"",
     "eslint:fix": "npm run eslint -- --fix",
     "test": "jest --forceExit --coverage",
-    "migrate": "ts-node src/migrate.ts"
+    "migrate": "ts-node src/migrate.ts",
+    "copy-assets": "cp -Rv assets/ dist/assets/"
   },
   "repository": {
     "type": "git",
