@@ -81,6 +81,8 @@ export interface CompetitionServiceEvents {
   rankingsUpdate(payload: CompetitionRankingsUpdateEventPayload): void;
 }
 
+/* eslint-disable sonarjs/no-duplicate-string */
+
 @Injectable()
 export class CompetitionService extends EE<CompetitionServiceEvents> {
   constructor(
@@ -183,7 +185,6 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     userId: typeof User.prototype.id,
   ): Promise<void> {
     const competition = await this.getOrFail(competitionId, [
-      // eslint-disable-next-line sonarjs/no-duplicate-string
       'boulderingRounds.groups.climbers',
     ]);
 
@@ -957,5 +958,35 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     );
 
     return this.pdfService.generateBoulderingRoundPdf(round);
+  }
+
+  async getBoulderingGroupRankingsPdf(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<ReadableStream> {
+    const group = await this.getBoulderingGroup(
+      competitionId,
+      roundId,
+      groupId,
+    );
+
+    return this.pdfService.generateBoulderingGroupPdf(group);
+  }
+
+  async getBoulderingGroup(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+  ): Promise<BoulderingGroup> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return this.boulderingRoundService.getBoulderingGroup(round, groupId, [
+      'climbers',
+      'boulders.judges',
+    ]);
   }
 }

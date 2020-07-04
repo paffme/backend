@@ -11,17 +11,22 @@ import { ClimberRankingInfos } from '../competition/types/climber-ranking-infos.
 import { name, version } from '../../package.json';
 import {
   BoulderingCircuitRanking,
+  BoulderingGroup,
+  BoulderingGroupRankingsStandalone,
   BoulderingLimitedContestRanking,
+  BoulderingUnlimitedContestRanking,
   BoulderingUnlimitedContestRankings,
 } from '../bouldering/group/bouldering-group.entity';
 import {
   BoulderingRound,
   BoulderingRoundRankingsStandalone,
   BoulderingRoundRankingType,
-  BoulderingRoundUnlimitedContestRankings,
 } from '../bouldering/round/bouldering-round.entity';
 import { RankingsNotFoundError } from '../competition/errors/rankings-not-found.error';
 import { RankingsMap } from '../bouldering/types/rankings-map';
+import * as uuid from 'uuid';
+
+type PdfRanking = { ranking: number; climber: ClimberRankingInfos };
 
 @Injectable()
 export class PdfService {
@@ -98,9 +103,10 @@ export class PdfService {
     return array.reduce((acc, el) => acc + el, 0);
   }
 
-  private sortRankings<
-    T extends { ranking: number; climber: ClimberRankingInfos }
-  >(rankings: T[], nextRoundRankings?: RankingsMap): T[] {
+  private sortRankings<T extends PdfRanking>(
+    rankings: T[],
+    nextRoundRankings?: RankingsMap,
+  ): T[] {
     const [
       climbersRankingsInNextRound,
       remainingClimbersRankings,
@@ -125,12 +131,8 @@ export class PdfService {
     ];
   }
 
-  private getCategoryStyleKey(category: Category): string {
-    return `${category.name}.${category.sex}`;
-  }
-
-  private getLogoId(category: Category): string {
-    return `logo.${this.getCategoryStyleKey(category)}`;
+  private getLogoId(): string {
+    return `logo.${uuid.v4()}`;
   }
 
   // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -222,12 +224,13 @@ export class PdfService {
 
   private printHeader(
     content: Content[],
+    title: string,
     category: Category,
     competition: Competition,
   ): void {
     content.push(
       {
-        id: this.getLogoId(category),
+        id: this.getLogoId(),
         svg: this.LOGO,
         absolutePosition: {
           x: 10,
@@ -238,7 +241,7 @@ export class PdfService {
       {
         style: 'header',
         margin: [0, 10, 0, 0],
-        text: competition.name,
+        text: title,
       },
       {
         style: 'header',
@@ -260,8 +263,7 @@ export class PdfService {
 
   private getBoulderingUnlimitedContestTable(
     round: BoulderingRound,
-    rankings: BoulderingRoundUnlimitedContestRankings,
-    style: string,
+    rankings: BoulderingUnlimitedContestRanking[],
   ): Column {
     const boulders = round.groups[0].boulders
       .getItems()
@@ -274,7 +276,6 @@ export class PdfService {
       .rankings as BoulderingUnlimitedContestRankings).bouldersPoints;
 
     return {
-      style,
       width: 'auto',
       table: {
         widths: new Array(totalColumns).fill('auto'),
@@ -332,7 +333,7 @@ export class PdfService {
               bold: true,
             },
           ],
-          ...rankings.rankings.map((ranking): Column[] => [
+          ...rankings.map((ranking): Column[] => [
             ...ranking.tops.map(
               (top): Column => ({
                 text: top ? 'O' : ' ',
@@ -356,18 +357,15 @@ export class PdfService {
   private getBoulderingCircuitTable(
     round: BoulderingRound,
     rankings: BoulderingCircuitRanking[],
-    style: string,
   ): Column {
-    return this.getBoulderingLimitedContestTable(round, rankings, style);
+    return this.getBoulderingLimitedContestTable(round, rankings);
   }
 
   private getBoulderingLimitedContestTable(
     round: BoulderingRound,
     rankings: BoulderingLimitedContestRanking[],
-    style: string,
   ): Column {
     return {
-      style,
       width: 'auto',
       table: {
         widths: ['auto', 'auto', 'auto', 'auto', 'auto'],
@@ -471,17 +469,7 @@ export class PdfService {
     };
   }
 
-  private printTable(
-    content: Content[],
-    category: Category,
-    competition: Competition,
-    isLandscape: boolean,
-  ) {
-    const style = this.getCategoryStyleKey(category);
-    const sortedMainRankings = this.sortRankings(
-      competition.rankings[category.name]![category.sex]!,
-    );
-
+  private getMainRankingsColumn(sortedRankings: PdfRanking[]): Column {
     const getBlankLine = () => [
       {
         text: ' ',
@@ -491,8 +479,7 @@ export class PdfService {
       ...new Array(2).fill(''),
     ];
 
-    const mainColumn: Column = {
-      style,
+    return {
       width: 'auto',
       margin: [10, 0, 0, 0],
       table: {
@@ -521,7 +508,7 @@ export class PdfService {
               bold: true,
             },
           ],
-          ...sortedMainRankings.map((r) => [
+          ...sortedRankings.map((r) => [
             {
               text: r.ranking,
               alignment: 'center',
@@ -539,51 +526,70 @@ export class PdfService {
         ],
       },
     };
+  }
 
-    const categoryRounds = competition
-      .getCategoryRounds(category)
-      .filter((round) => typeof round.rankings !== 'undefined');
+  private getGroupRankingsColumn(group: BoulderingGroup): Column {
+    const round = group.round;
+    const rankings = round.rankings!;
 
-    const roundsColumns = categoryRounds.map(
-      (round): Column => {
-        const rankings = round.rankings!;
-        const nextRound = competition.getNextRound(round);
-        const nextRoundRankingsMap = this.getRoundRankingsMap(nextRound);
+    if (rankings.type === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+      const sortedRankings = this.sortRankings(rankings.rankings);
 
-        if (rankings.type === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
-          rankings.rankings = this.sortRankings(
-            rankings.rankings,
-            nextRoundRankingsMap,
-          );
+      return this.getBoulderingUnlimitedContestTable(
+        group.round,
+        sortedRankings,
+      );
+    }
 
-          return this.getBoulderingUnlimitedContestTable(
-            round,
-            rankings,
-            style,
-          );
-        }
+    if (rankings.type === BoulderingRoundRankingType.LIMITED_CONTEST) {
+      const sortedRankings = this.sortRankings(rankings.rankings);
+      return this.getBoulderingLimitedContestTable(group.round, sortedRankings);
+    }
 
-        if (rankings.type === BoulderingRoundRankingType.LIMITED_CONTEST) {
-          return this.getBoulderingLimitedContestTable(
-            round,
-            this.sortRankings(rankings.rankings, nextRoundRankingsMap),
-            style,
-          );
-        }
+    if (rankings.type === BoulderingRoundRankingType.CIRCUIT) {
+      const sortedRankings = this.sortRankings(rankings.rankings);
+      return this.getBoulderingCircuitTable(group.round, sortedRankings);
+    }
 
-        if (rankings.type === BoulderingRoundRankingType.CIRCUIT) {
-          return this.getBoulderingCircuitTable(
-            round,
-            this.sortRankings(rankings.rankings, nextRoundRankingsMap),
-            style,
-          );
-        }
+    throw new NotImplementedException('Unhandled ranking type');
+  }
 
-        throw new NotImplementedException('Unhandled ranking type');
-      },
-    );
+  private getRoundRankingsColumn(round: BoulderingRound): Column {
+    const rankings = round.rankings!;
+    const nextRound = round.competition.getNextRound(round);
+    const nextRoundRankingsMap = this.getRoundRankingsMap(nextRound);
 
-    const columns: Column[] = [mainColumn, ...roundsColumns];
+    if (rankings.type === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+      const sortedRankings = this.sortRankings(
+        rankings.rankings,
+        nextRoundRankingsMap,
+      );
+
+      return this.getBoulderingUnlimitedContestTable(round, sortedRankings);
+    }
+
+    if (rankings.type === BoulderingRoundRankingType.LIMITED_CONTEST) {
+      return this.getBoulderingLimitedContestTable(
+        round,
+        this.sortRankings(rankings.rankings, nextRoundRankingsMap),
+      );
+    }
+
+    if (rankings.type === BoulderingRoundRankingType.CIRCUIT) {
+      return this.getBoulderingCircuitTable(
+        round,
+        this.sortRankings(rankings.rankings, nextRoundRankingsMap),
+      );
+    }
+
+    throw new NotImplementedException('Unhandled ranking type');
+  }
+
+  private printTable(
+    content: Content[],
+    columns: Column[],
+    isLandscape: boolean,
+  ) {
     const columnsSize = columns.map(
       (c) => (c as ContentTable).table.widths!.length,
     );
@@ -604,14 +610,57 @@ export class PdfService {
     });
   }
 
+  private getCategoryRoundsRankingsColumns(
+    category: Category,
+    competition: Competition,
+  ): Column[] {
+    const sortedMainRankings = this.sortRankings(
+      competition.rankings[category.name]![category.sex]!,
+    );
+
+    const mainColumn = this.getMainRankingsColumn(sortedMainRankings);
+
+    const categoryRounds = competition
+      .getCategoryRounds(category)
+      .filter((round) => typeof round.rankings !== 'undefined');
+
+    const roundsColumns = categoryRounds.map((round) =>
+      this.getRoundRankingsColumn(round),
+    );
+
+    return [mainColumn, ...roundsColumns];
+  }
+
+  private getRoundRankingsColumns(round: BoulderingRound): Column[] {
+    const sortedRankings = this.sortRankings(
+      round.rankings!.rankings as BoulderingRoundRankingsStandalone,
+    );
+
+    const mainColumn = this.getMainRankingsColumn(sortedRankings);
+    const roundColumn = this.getRoundRankingsColumn(round);
+    return [mainColumn, roundColumn];
+  }
+
+  private getGroupRankingsColumns(group: BoulderingGroup): Column[] {
+    const sortedRankings = this.sortRankings(
+      group.rankings!.rankings as BoulderingGroupRankingsStandalone,
+    );
+
+    const mainColumn = this.getMainRankingsColumn(sortedRankings);
+    const groupColumn = this.getGroupRankingsColumn(group);
+    return [mainColumn, groupColumn];
+  }
+
   private printCategoryRankings(
     content: Content[],
+    title: string,
     competition: Competition,
     category: Category,
+    columns: Column[],
     isLandscape: boolean,
   ): void {
-    this.printHeader(content, category, competition);
-    this.printTable(content, category, competition, isLandscape);
+    this.printHeader(content, title, category, competition);
+    this.printTable(content, columns, isLandscape);
   }
 
   private build(
@@ -709,22 +758,31 @@ export class PdfService {
   }
 
   generateBoulderingRoundPdf(round: BoulderingRound): NodeJS.ReadableStream {
+    if (typeof round.rankings === 'undefined') {
+      throw new RankingsNotFoundError();
+    }
+
     const content: Content[] = [];
 
     const isLandscape =
       round.rankingType === BoulderingRoundRankingType.UNLIMITED_CONTEST;
 
+    const columns = this.getRoundRankingsColumns(round);
+    const title = `${round.type} - ${round.competition.name}`;
+
     this.printCategoryRankings(
       content,
+      title,
       round.competition,
       {
         name: round.category,
         sex: round.sex,
       },
+      columns,
       isLandscape,
     );
 
-    return this.build(content, isLandscape, round.competition.name);
+    return this.build(content, isLandscape, title);
   }
 
   generateCompetitionPdf(competition: Competition): NodeJS.ReadableStream {
@@ -750,10 +808,51 @@ export class PdfService {
           name: categoryName as CategoryName,
         };
 
-        this.printCategoryRankings(content, competition, category, isLandscape);
+        const columns = this.getCategoryRoundsRankingsColumns(
+          category,
+          competition,
+        );
+
+        this.printCategoryRankings(
+          content,
+          competition.name,
+          competition,
+          category,
+          columns,
+          isLandscape,
+        );
       }
     }
 
     return this.build(content, isLandscape, competition.name);
+  }
+
+  async generateBoulderingGroupPdf(
+    group: BoulderingGroup,
+  ): Promise<NodeJS.ReadableStream> {
+    const content: Content[] = [];
+    const isLandscape =
+      group.round.rankingType === BoulderingRoundRankingType.UNLIMITED_CONTEST;
+
+    const groupIndex = group.round.groups
+      .getItems()
+      .findIndex((g) => g === group);
+
+    const columns = this.getGroupRankingsColumns(group);
+    const title = `${group.round.type} - ${group.round.competition.name} - Groupe ${groupIndex}`;
+
+    this.printCategoryRankings(
+      content,
+      title,
+      group.round.competition,
+      {
+        sex: group.round.sex,
+        name: group.round.category,
+      },
+      columns,
+      isLandscape,
+    );
+
+    return this.build(content, isLandscape, title);
   }
 }

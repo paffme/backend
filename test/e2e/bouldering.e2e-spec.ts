@@ -30,6 +30,7 @@ import {
   BoulderingGroupRankingsDto,
   CircuitGroupRankingsDto,
 } from '../../src/bouldering/dto/out/bouldering-group-rankings.dto';
+import { BoulderingGroupDto } from '../../src/bouldering/dto/out/bouldering-group.dto';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -1594,6 +1595,38 @@ describe('Bouldering (e2e)', () => {
         )
         .set('Authorization', `Bearer ${judgeAuth.token}`)
         .expect(403);
+    });
+  });
+
+  describe('GET /{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}', () => {
+    it('gets a group by ID', async () => {
+      const {
+        competition,
+        round,
+        boulder,
+        judge,
+        climber,
+      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const group = round.groups[0];
+
+      const res = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${group.id}`,
+        )
+        .expect(200);
+
+      const body = res.body as BoulderingGroupDto;
+      expect(body.id).toEqual(group.id);
+      expect(body.name).toEqual(group.name);
+      expect(body.state).toEqual(group.state);
+      expect(body.roundId).toEqual(round.id);
+      expect(body.boulders).toHaveLength(1);
+      expect(body.boulders[0].id).toEqual(boulder.id);
+      expect(body.boulders[0].judges).toHaveLength(1);
+      expect(body.boulders[0].judges[0].id).toEqual(judge.id);
+      expect(body.climbers).toHaveLength(1);
+      expect(body.climbers[0].id).toEqual(climber.id);
     });
   });
 });

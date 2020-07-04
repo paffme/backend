@@ -325,11 +325,13 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
   private async getGroupOrFail(
     round: BoulderingRound,
     groupId: typeof BoulderingGroup.prototype.id,
+    populate?: string[],
   ): Promise<BoulderingGroup> {
     const groups = await round.groups.init({
       where: {
         id: groupId,
       },
+      populate,
     });
 
     const group = groups.getItems()[0];
@@ -490,5 +492,13 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
       boulderId,
       climber,
     );
+  }
+
+  getBoulderingGroup(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    populate?: string[],
+  ): Promise<BoulderingGroup> {
+    return this.getGroupOrFail(round, groupId, populate);
   }
 }

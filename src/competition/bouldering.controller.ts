@@ -75,6 +75,8 @@ import { BoulderingGroupRankingsMapper } from '../shared/mappers/bouldering-grou
 import { GetBoulderingResultParamsDto } from './dto/in/params/get-bouldering-result-params.dto';
 import { Response } from 'express';
 import { GetBoulderingRoundRankingsPdfParamsDto } from './dto/in/params/get-bouldering-round-rankings-pdf-params.dto';
+import { GetBoulderingGroupRankingsPdfParamsDto } from './dto/in/params/get-bouldering-group-rankings-pdf-params.dto';
+import { GetBoulderingGroupParamsDto } from './dto/in/params/get-bouldering-group-params.dto';
 
 @Controller('competitions')
 @ApiTags('Bouldering')
@@ -153,6 +155,23 @@ export class BoulderingController {
     );
 
     return this.boulderingLimitedRoundMapper.map(updatedRound);
+  }
+
+  @Get('/:competitionId/bouldering-rounds/:roundId/groups/:groupId')
+  @ApiOkResponse({
+    type: BoulderingGroupDto,
+  })
+  @ApiOperation(GetOperationId(Competition.name, 'GetBoulderingGroup'))
+  async getBoulderingGroup(
+    @Param() params: GetBoulderingGroupParamsDto,
+  ): Promise<BoulderingGroupDto> {
+    const group = await this.competitionService.getBoulderingGroup(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+    );
+
+    return this.boulderingGroupMapper.map(group);
   }
 
   @Post(
@@ -267,7 +286,7 @@ export class BoulderingController {
   @ApiOperation(
     GetOperationId(Competition.name, 'GetBoulderingRoundRankingsPdf'),
   )
-  async getRankingsPdf(
+  async getBoulderingRoundRankingsPdf(
     @Param() params: GetBoulderingRoundRankingsPdfParamsDto,
     @Res() res: Response,
   ): Promise<void> {
@@ -293,6 +312,27 @@ export class BoulderingController {
     );
 
     return this.boulderingGroupRankingsMapper.map(rankings);
+  }
+
+  @Get(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/rankings/pdf',
+  )
+  @ApiOkResponse()
+  @ApiOperation(
+    GetOperationId(Competition.name, 'GetBoulderingGroupRankingsPdf'),
+  )
+  async getBoulderingGroupRankingsPdf(
+    @Param() params: GetBoulderingGroupRankingsPdfParamsDto,
+    @Res() res: Response,
+  ): Promise<void> {
+    const pdf = await this.competitionService.getBoulderingGroupRankingsPdf(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+    );
+
+    res.setHeader('Content-Type', 'application/pdf');
+    pdf.pipe(res);
   }
 
   @Post('/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders')
