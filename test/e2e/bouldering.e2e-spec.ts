@@ -851,7 +851,9 @@ describe('Bouldering (e2e)', () => {
 
       expect(
         existsSync(
-          path.resolve(__dirname, `../../assets/boulders/${boulder.id}.jpg`),
+          `${configurationService.get('BOULDER_STORAGE_PATH')}/${
+            boulder.id
+          }.jpg`,
         ),
       ).toEqual(true);
 
@@ -864,7 +866,9 @@ describe('Bouldering (e2e)', () => {
 
       expect(
         existsSync(
-          path.resolve(__dirname, `../../assets/boulders/${boulder.id}.jpg`),
+          `${configurationService.get('BOULDER_STORAGE_PATH')}/${
+            boulder.id
+          }.jpg`,
         ),
       ).toEqual(false);
     });
