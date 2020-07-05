@@ -33,11 +33,13 @@ import {
 import { BoulderingGroupDto } from '../../src/bouldering/dto/out/bouldering-group.dto';
 import * as path from 'path';
 import { existsSync, promises as fs } from 'fs';
+import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
   let utils: TestUtils;
   let api: supertest.SuperTest<supertest.Test>;
+  let configurationService: ConfigurationService;
 
   beforeAll(async () => {
     const moduleFixture = await Test.createTestingModule({
@@ -57,6 +59,8 @@ describe('Bouldering (e2e)', () => {
       moduleFixture.get(BoulderService),
       moduleFixture.get('MikroORM'),
     );
+
+    configurationService = new ConfigurationService();
   });
 
   beforeEach(() => {
@@ -913,7 +917,7 @@ describe('Bouldering (e2e)', () => {
         .expect(302);
 
       expect(res.header.location).toEqual(
-        `http://localhost:3000/storage/boulders/${boulder.id}.jpg`,
+        `${configurationService.get('BOULDER_STORAGE_URL')}/${boulder.id}.jpg`,
       );
     });
   });
