@@ -46,6 +46,8 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - name: Install external dependencies for testing purposes
       run: sudo apt install graphicsmagick imagemagick
+    - name: Create storage folder
+      run: mkdir -p ${HOME}/storage/boulders
     - run: npm ci
     - run: npm run lint
     - run: npm run migrate
