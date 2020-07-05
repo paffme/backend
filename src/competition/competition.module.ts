@@ -19,6 +19,8 @@ import { BoulderJudgeAuthorizationGuard } from './authorization/boulder-judge.au
 import { Boulder } from '../bouldering/boulder/boulder.entity';
 import { BoulderingController } from './bouldering.controller';
 import { PdfModule } from '../pdf/pdf.module';
+import { RouteSetterAuthorizationService } from './authorization/route-setter.authorization.service';
+import { RouteSetterAuthorizationGuard } from './authorization/route-setter.authorization.guard';
 
 @Module({
   imports: [
@@ -40,12 +42,14 @@ import { PdfModule } from '../pdf/pdf.module';
     ChiefRouteSetterAuthorizationGuard,
     JudgeAuthorizationGuard,
     BoulderJudgeAuthorizationGuard,
+    RouteSetterAuthorizationGuard,
     CompetitionService,
     OrganizerAuthorizationService,
     JuryPresidentAuthorizationService,
     JudgeAuthorizationService,
     ChiefRouteSetterAuthorizationService,
     BoulderJudgeAuthorizationService,
+    RouteSetterAuthorizationService,
   ],
   exports: [CompetitionService],
 })

@@ -374,7 +374,11 @@ export default class TestUtils {
     };
   }
 
-  addBoulder(group: BoulderingGroup): Promise<Boulder> {
-    return this.boulderService!.create(group, {});
+  async addBoulderPhoto(
+    boulder: Boulder,
+    photo: Buffer,
+    extension: string,
+  ): Promise<void> {
+    await this.boulderService!.uploadPhoto(boulder, photo, extension);
   }
 }

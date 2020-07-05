@@ -408,6 +408,12 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
       }
     }
 
+    if (dto.state) {
+      const groups = await round.groups.loadItems();
+      await this.boulderingGroupService.updateState(groups, dto.state);
+      delete dto.state;
+    }
+
     wrap(round).assign(dto);
     await this.boulderingRoundRepository.persistAndFlush(round);
     return round;
@@ -500,5 +506,40 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
     populate?: string[],
   ): Promise<BoulderingGroup> {
     return this.getGroupOrFail(round, groupId, populate);
+  }
+
+  async uploadBoulderPhoto(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    photo: Buffer,
+    extension: string,
+  ): Promise<void> {
+    const group = await this.getGroupOrFail(round, groupId, ['boulders']);
+
+    await this.boulderingGroupService.uploadBoulderPhoto(
+      group,
+      boulderId,
+      photo,
+      extension,
+    );
+  }
+
+  async deleteBoulderPhoto(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+  ): Promise<void> {
+    const group = await this.getGroupOrFail(round, groupId, ['boulders']);
+    await this.boulderingGroupService.deleteBoulderPhoto(group, boulderId);
+  }
+
+  async getBoulder(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+  ): Promise<Boulder> {
+    const group = await this.getGroupOrFail(round, groupId, ['boulders']);
+    return this.boulderingGroupService.getBoulder(group, boulderId);
   }
 }

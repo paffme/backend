@@ -11,6 +11,10 @@ import { User } from '../../user/user.entity';
 import { AlreadyJudgingBoulderConflictError } from '../errors/already-judging-boulder-conflict.error';
 import { UserService } from '../../user/user.service';
 import { JudgeNotAssignedError } from '../errors/judge-not-found.error';
+import path from 'path';
+import { promises as fs } from 'fs';
+import { BoulderHasNoPhotoError } from '../../competition/errors/boulder-has-no-photo.error';
+import { ConfigurationService } from '../../shared/configuration/configuration.service';
 
 @Injectable()
 export class BoulderService {
@@ -18,6 +22,7 @@ export class BoulderService {
     @InjectRepository(Boulder)
     private readonly boulderRepository: EntityRepository<Boulder>,
     private readonly userService: UserService,
+    private readonly configurationService: ConfigurationService,
   ) {}
 
   async getOrFail(boulderId: typeof Boulder.prototype.id): Promise<Boulder> {
@@ -134,5 +139,34 @@ export class BoulderService {
     } else {
       throw new JudgeNotAssignedError();
     }
+  }
+
+  async uploadPhoto(
+    boulder: Boulder,
+    photo: Buffer,
+    extension: string,
+  ): Promise<void> {
+    if (typeof boulder.photo === 'string') {
+      await this.removePhoto(boulder);
+    }
+
+    const filepath = path.resolve(
+      this.configurationService.get('BOULDER_STORAGE_PATH'),
+      `${boulder.id}.${extension}`,
+    );
+
+    await fs.writeFile(filepath, photo);
+    boulder.photo = filepath;
+    await this.boulderRepository.persistAndFlush(boulder);
+  }
+
+  async removePhoto(boulder: Boulder): Promise<void> {
+    if (typeof boulder.photo !== 'string') {
+      throw new BoulderHasNoPhotoError();
+    }
+
+    await fs.unlink(boulder.photo);
+    boulder.photo = undefined;
+    await this.boulderRepository.persistAndFlush(boulder);
   }
 }

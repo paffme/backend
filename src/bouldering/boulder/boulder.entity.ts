@@ -17,6 +17,15 @@ export class Boulder extends BaseEntity {
   @Property()
   index: number;
 
+  @Property()
+  photo?: string;
+
+  @Property()
+  boundingBox?: [];
+
+  @Property()
+  polygones?: [];
+
   constructor(group: BoulderingGroup, index: number) {
     super();
     this.group = group;
