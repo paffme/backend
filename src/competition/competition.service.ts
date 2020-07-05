@@ -69,6 +69,7 @@ import { BulkBoulderingResultsDto } from './dto/in/body/bulk-bouldering-results.
 import { EventEmitter as EE } from 'ee-ts';
 import ReadableStream = NodeJS.ReadableStream;
 import { PdfService } from '../pdf/pdf.service';
+import { CannotStartRoundNoBoulderError } from './errors/cannot-start-round-no-boulder.error';
 
 export interface CompetitionRankingsUpdateEventPayload {
   competitionId: typeof Competition.prototype.id;
@@ -733,6 +734,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
   ): Promise<BoulderingRound[]> {
     const competition = await this.getOrFail(competitionId, [
       'boulderingRounds.groups.climbers',
+      'boulderingRounds.groups.boulders',
     ]);
 
     const rounds = competition.boulderingRounds.getItems();
@@ -776,6 +778,10 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
       }
 
       for (const group of r.groups.getItems()) {
+        if (group.boulders.count() === 0) {
+          throw new CannotStartRoundNoBoulderError();
+        }
+
         group.state = BoulderingGroupState.ONGOING;
       }
 
