@@ -470,7 +470,7 @@ export class BoulderingController {
       params.boulderId,
     );
 
-    if (typeof boulder.photo === 'undefined') {
+    if (typeof boulder.photo !== 'string') {
       throw new BoulderHasNoPhotoError();
     }
 

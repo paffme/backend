@@ -34,6 +34,7 @@ import { BoulderingGroupDto } from '../../src/bouldering/dto/out/bouldering-grou
 import * as path from 'path';
 import { existsSync, promises as fs } from 'fs';
 import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
+import { BoulderHasNoPhotoError } from '../../src/competition/errors/boulder-has-no-photo.error';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -927,6 +928,20 @@ describe('Bouldering (e2e)', () => {
       expect(res.header.location).toEqual(
         `${configurationService.get('BOULDER_STORAGE_URL')}/${boulder.id}.jpg`,
       );
+    });
+
+    it('throws 404 if boulder has no photo', async () => {
+      const { competition, round, boulder } = await utils.givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const { body } = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/photo`,
+        )
+        .expect(404);
+
+      expect(body.code).toEqual(new BoulderHasNoPhotoError().code);
     });
   });
 
