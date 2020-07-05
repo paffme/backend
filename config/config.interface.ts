@@ -15,4 +15,6 @@ export interface Config {
   REDIS_PORT: string;
   REDIS_PREFIX: string;
   REDIS_PASSWORD: string;
+  BOULDER_STORAGE_PATH: string;
+  BOULDER_STORAGE_URL: string;
 }

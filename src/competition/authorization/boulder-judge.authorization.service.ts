@@ -1,7 +1,6 @@
 import { BaseAuthorizationService } from '../../shared/authorization/base.authorization.service';
 import { Injectable } from '@nestjs/common';
 import type { User } from '../../user/user.entity';
-import { Competition } from '../competition.entity';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { Boulder } from '../../bouldering/boulder/boulder.entity';

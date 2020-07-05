@@ -9,8 +9,11 @@ import {
   Patch,
   Post,
   Put,
+  Redirect,
   Res,
+  UploadedFile,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 
 import {
@@ -77,6 +80,20 @@ import { Response } from 'express';
 import { GetBoulderingRoundRankingsPdfParamsDto } from './dto/in/params/get-bouldering-round-rankings-pdf-params.dto';
 import { GetBoulderingGroupRankingsPdfParamsDto } from './dto/in/params/get-bouldering-group-rankings-pdf-params.dto';
 import { GetBoulderingGroupParamsDto } from './dto/in/params/get-bouldering-group-params.dto';
+import { JudgeAuthorizationGuard } from './authorization/judge.authorization.guard';
+import { ChiefRouteSetterAuthorizationGuard } from './authorization/chief-route-setter.authorization.guard';
+import { RouteSetterAuthorizationGuard } from './authorization/route-setter.authorization.guard';
+import { UploadBoulderPhotoParamsDto } from './dto/in/params/upload-boulder-photo-params.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { InvalidContentTypeError } from './errors/invalid-content-type.error';
+import multer from 'multer';
+import * as path from 'path';
+import { DeleteBoulderPhotoParamsDto } from './dto/in/params/delete-boulder-photo-params.dto';
+import { GetBoulderPhotoParamsDto } from './dto/in/params/get-boulder-photo-params.dto';
+import { ConfigurationService } from '../shared/configuration/configuration.service';
+import { BoulderHasNoPhotoError } from './errors/boulder-has-no-photo.error';
+
+/* eslint-disable sonarjs/no-duplicate-string */
 
 @Controller('competitions')
 @ApiTags('Bouldering')
@@ -91,6 +108,7 @@ export class BoulderingController {
     private readonly boulderMapper: BoulderMapper,
     private readonly boulderingGroupMapper: BoulderingGroupMapper,
     private readonly boulderingGroupRankingsMapper: BoulderingGroupRankingsMapper,
+    private readonly configurationService: ConfigurationService,
   ) {}
 
   @Post('/:competitionId/bouldering-rounds')
@@ -357,6 +375,111 @@ export class BoulderingController {
     );
 
     return this.boulderMapper.map(boulder);
+  }
+
+  @Put(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/photo',
+  )
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    OrGuard(
+      JuryPresidentAuthorizationGuard,
+      JudgeAuthorizationGuard,
+      ChiefRouteSetterAuthorizationGuard,
+      RouteSetterAuthorizationGuard,
+    ),
+  )
+  @ApiNoContentResponse()
+  @ApiOperation(GetOperationId(Competition.name, 'UploadBoulderPhoto'))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseInterceptors(
+    FileInterceptor('photo', {
+      limits: {
+        files: 1,
+        fileSize: 1.2e7,
+      },
+      storage: multer.memoryStorage(),
+    }),
+  )
+  async uploadBoulderPhoto(
+    @Param() params: UploadBoulderPhotoParamsDto,
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<void> {
+    if (!['image/jpg', 'image/jpeg', 'image/png'].includes(file.mimetype)) {
+      throw new InvalidContentTypeError();
+    }
+
+    await this.competitionService.uploadBoulderPhoto(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      params.boulderId,
+      file.buffer,
+      path.extname(file.originalname).substr(1),
+    );
+  }
+
+  @Delete(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/photo',
+  )
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    OrGuard(
+      JuryPresidentAuthorizationGuard,
+      JudgeAuthorizationGuard,
+      ChiefRouteSetterAuthorizationGuard,
+      RouteSetterAuthorizationGuard,
+    ),
+  )
+  @ApiNoContentResponse()
+  @ApiOperation(GetOperationId(Competition.name, 'DeleteBoulderPhoto'))
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteBoulderPhoto(
+    @Param() params: DeleteBoulderPhotoParamsDto,
+  ): Promise<void> {
+    await this.competitionService.deleteBoulderPhoto(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      params.boulderId,
+    );
+  }
+
+  @Get(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/photo',
+  )
+  @ApiOperation(GetOperationId(Competition.name, 'GetBoulderPhoto'))
+  @HttpCode(HttpStatus.FOUND)
+  @Redirect()
+  async getBoulderPhoto(
+    @Param() params: GetBoulderPhotoParamsDto,
+  ): Promise<{
+    url: string;
+    statusCode: HttpStatus;
+  }> {
+    const boulder = await this.competitionService.getBoulder(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      params.boulderId,
+    );
+
+    if (typeof boulder.photo === 'undefined') {
+      throw new BoulderHasNoPhotoError();
+    }
+
+    return {
+      url: `${this.configurationService.get(
+        'BOULDER_STORAGE_URL',
+      )}/${path.basename(boulder.photo)}`,
+      statusCode: HttpStatus.FOUND,
+    };
   }
 
   @Delete(

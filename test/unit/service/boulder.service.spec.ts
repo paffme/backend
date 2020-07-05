@@ -17,6 +17,7 @@ import { UserService } from '../../../src/user/user.service';
 import { User } from '../../../src/user/user.entity';
 import { AlreadyJudgingBoulderConflictError } from '../../../src/bouldering/errors/already-judging-boulder-conflict.error';
 import { JudgeNotAssignedError } from '../../../src/bouldering/errors/judge-not-found.error';
+import { ConfigurationService } from '../../../src/shared/configuration/configuration.service';
 
 const boulderRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -46,6 +47,10 @@ describe('Boulder service (unit)', () => {
         {
           provide: UserService,
           useValue: userServiceMock,
+        },
+        {
+          provide: ConfigurationService,
+          useClass: ConfigurationService,
         },
       ],
     }).compile();

@@ -1,7 +1,10 @@
 import { Config } from './config.interface';
+import * as path from 'path';
 
 const config: Config = {
   BASE_API_URL: 'http://localhost:3000',
+  BOULDER_STORAGE_PATH: path.resolve(__dirname, '../assets/boulders'),
+  BOULDER_STORAGE_URL: 'http://localhost:3000/storage/boulders',
   HOST: '0.0.0.0',
   PORT: 3000,
   JWT_SECRET:

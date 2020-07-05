@@ -14,11 +14,14 @@ import { BoulderingResultService } from '../result/bouldering-result.service';
 import { BoulderingResult } from '../result/bouldering-result.entity';
 import { BulkBoulderingResultsDto } from '../../competition/dto/in/body/bulk-bouldering-results.dto';
 import { EventEmitter as EE } from 'ee-ts';
+import { promises as fs } from 'fs';
+import * as path from 'path';
 
 import {
   BoulderingGroup,
   BoulderingGroupRankings,
   BoulderingGroupRankingsStandalone,
+  BoulderingGroupState,
 } from './bouldering-group.entity';
 
 import {
@@ -192,5 +195,42 @@ export class BoulderingGroupService extends EE<BoulderingGroupServiceEvents> {
   ): Promise<BoulderingResult> {
     const boulder = await this.getBoulderInGroupOrFail(group, boulderId);
     return this.boulderingResultService.getOrFail(group, boulder, climber);
+  }
+
+  async uploadBoulderPhoto(
+    group: BoulderingGroup,
+    boulderId: typeof Boulder.prototype.id,
+    photo: Buffer,
+    extension: string,
+  ): Promise<void> {
+    const boulder = await this.getBoulderInGroupOrFail(group, boulderId);
+    await this.boulderService.uploadPhoto(boulder, photo, extension);
+  }
+
+  async deleteBoulderPhoto(
+    group: BoulderingGroup,
+    boulderId: typeof Boulder.prototype.id,
+  ): Promise<void> {
+    const boulder = await this.getBoulderInGroupOrFail(group, boulderId);
+    await this.boulderService.removePhoto(boulder);
+  }
+
+  getBoulder(
+    group: BoulderingGroup,
+    boulderId: typeof Boulder.prototype.id,
+  ): Promise<Boulder> {
+    return this.getBoulderInGroupOrFail(group, boulderId);
+  }
+
+  async updateState(
+    groups: BoulderingGroup[],
+    state: BoulderingGroupState,
+  ): Promise<void> {
+    for (const group of groups) {
+      group.state = state;
+      this.boulderingGroupRepository.persistLater(group);
+    }
+
+    await this.boulderingGroupRepository.flush();
   }
 }

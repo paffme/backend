@@ -3,6 +3,8 @@ const env = process.env;
 
 const config: Config = {
   BASE_API_URL: 'https://paffme.hdaroit.fr/api/v1',
+  BOULDER_STORAGE_PATH: '~/storage/boulders',
+  BOULDER_STORAGE_URL: 'https://paffme.hdaroit.fr/storage/boulders',
   HOST: '0.0.0.0',
   PORT: 4000,
   JWT_SECRET: env.JWT_SECRET as string,

@@ -67,3 +67,7 @@ temp
 types/*.d.ts
 test/e2e/pdf/tmp/*.pdf
 test/e2e/pdf/snapshots/__diff_output__
+
+assets/boulders/*.jpg
+assets/boulders/*.jpeg
+assets/boulders/*.png

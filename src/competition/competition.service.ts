@@ -989,4 +989,58 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
       'boulders.judges',
     ]);
   }
+
+  async uploadBoulderPhoto(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    photo: Buffer,
+    extension: string,
+  ): Promise<void> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return this.boulderingRoundService.uploadBoulderPhoto(
+      round,
+      groupId,
+      boulderId,
+      photo,
+      extension,
+    );
+  }
+
+  async deleteBoulderPhoto(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+  ): Promise<void> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return this.boulderingRoundService.deleteBoulderPhoto(
+      round,
+      groupId,
+      boulderId,
+    );
+  }
+
+  async getBoulder(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+  ): Promise<Boulder> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    return this.boulderingRoundService.getBoulder(round, groupId, boulderId);
+  }
 }
