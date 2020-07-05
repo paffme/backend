@@ -46,6 +46,8 @@ import { BulkBoulderingResultsDto } from '../../../src/competition/dto/in/body/b
 import pEvent from 'p-event';
 import { User } from '../../../src/user/user.entity';
 import { PdfService } from '../../../src/pdf/pdf.service';
+import { CannotStartRoundNoBoulderError } from '../../../src/competition/errors/cannot-start-round-no-boulder.error';
+import { NoPreviousRoundRankingsError } from '../../../src/competition/errors/no-previous-round-rankings.error';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -933,7 +935,7 @@ describe('Competition service (unit)', () => {
     expect(competitionRepositoryMock.count).toHaveBeenCalledWith(search.filter);
   });
 
-  it('starts qualifiers', async () => {
+  it('does not start qualifiers if a group have no boulder', async () => {
     const competition = givenCompetition();
 
     const competitionRounds: BoulderingRound[] = [
@@ -942,6 +944,177 @@ describe('Competition service (unit)', () => {
         category: CategoryName.Senior,
         sex: Sex.Male,
       }),
+    ];
+
+    competition.boulderingRounds = {
+      getItems(): typeof competitionRounds {
+        return competitionRounds;
+      },
+    } as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(competitionService.startQualifiers(1)).rejects.toBeInstanceOf(
+      CannotStartRoundNoBoulderError,
+    );
+  });
+
+  it('does not start semi finals if a group have no boulder', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+        rankings: {
+          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+          rankings: [],
+        },
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.SEMI_FINAL,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+      }),
+    ];
+
+    competition.boulderingRounds = {
+      getItems(): typeof competitionRounds {
+        return competitionRounds;
+      },
+    } as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(competitionService.startSemiFinals(1)).rejects.toBeInstanceOf(
+      CannotStartRoundNoBoulderError,
+    );
+  });
+
+  it('does not start finals if a group have no boulder', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.SEMI_FINAL,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+        rankings: {
+          type: BoulderingRoundRankingType.UNLIMITED_CONTEST,
+          rankings: [],
+        },
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.FINAL,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+      }),
+    ];
+
+    competition.boulderingRounds = {
+      getItems(): typeof competitionRounds {
+        return competitionRounds;
+      },
+    } as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(competitionService.startFinals(1)).rejects.toBeInstanceOf(
+      CannotStartRoundNoBoulderError,
+    );
+  });
+
+  it('does not start semi finals if qualifier has no rankings', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.SEMI_FINAL,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+      }),
+    ];
+
+    competition.boulderingRounds = {
+      getItems(): typeof competitionRounds {
+        return competitionRounds;
+      },
+    } as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(competitionService.startSemiFinals(1)).rejects.toBeInstanceOf(
+      NoPreviousRoundRankingsError,
+    );
+  });
+
+  it('does not start finals if the semi final has no rankings', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound({
+        type: CompetitionRoundType.QUALIFIER,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.SEMI_FINAL,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+      }),
+      givenBoulderingRound({
+        type: CompetitionRoundType.FINAL,
+        category: CategoryName.Senior,
+        sex: Sex.Male,
+      }),
+    ];
+
+    competition.boulderingRounds = {
+      getItems(): typeof competitionRounds {
+        return competitionRounds;
+      },
+    } as Collection<BoulderingRound>;
+
+    competitionRepositoryMock.findOne.mockImplementation(
+      async () => competition,
+    );
+
+    return expect(competitionService.startFinals(1)).rejects.toBeInstanceOf(
+      NoPreviousRoundRankingsError,
+    );
+  });
+
+  it('starts qualifiers', async () => {
+    const competition = givenCompetition();
+
+    const competitionRounds: BoulderingRound[] = [
+      givenBoulderingRound(
+        {
+          type: CompetitionRoundType.QUALIFIER,
+          category: CategoryName.Senior,
+          sex: Sex.Male,
+        },
+        [{} as Boulder],
+      ),
       givenBoulderingRound({
         type: CompetitionRoundType.SEMI_FINAL,
         category: CategoryName.Senior,
@@ -992,11 +1165,14 @@ describe('Competition service (unit)', () => {
           rankings: [],
         },
       }),
-      givenBoulderingRound({
-        type: CompetitionRoundType.SEMI_FINAL,
-        category: CategoryName.Senior,
-        sex: Sex.Male,
-      }),
+      givenBoulderingRound(
+        {
+          type: CompetitionRoundType.SEMI_FINAL,
+          category: CategoryName.Senior,
+          sex: Sex.Male,
+        },
+        [{} as Boulder],
+      ),
       givenBoulderingRound({
         type: CompetitionRoundType.FINAL,
         category: CategoryName.Senior,
@@ -1055,11 +1231,14 @@ describe('Competition service (unit)', () => {
           rankings: [],
         },
       }),
-      givenBoulderingRound({
-        type: CompetitionRoundType.FINAL,
-        sex: Sex.Male,
-        category: CategoryName.Senior,
-      }),
+      givenBoulderingRound(
+        {
+          type: CompetitionRoundType.FINAL,
+          sex: Sex.Male,
+          category: CategoryName.Senior,
+        },
+        [{} as Boulder],
+      ),
     ];
 
     competition.boulderingRounds = {
