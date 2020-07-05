@@ -785,14 +785,18 @@ describe('Bouldering (e2e)', () => {
 
       expect(
         existsSync(
-          path.resolve(__dirname, `../../assets/boulders/${boulder.id}.jpg`),
+          `${configurationService.get('BOULDER_STORAGE_PATH')}/${
+            boulder.id
+          }.jpg`,
         ),
       ).toEqual(true);
 
       expect(
         (
           await fs.readFile(
-            path.resolve(__dirname, `../../assets/boulders/${boulder.id}.jpg`),
+            `${configurationService.get('BOULDER_STORAGE_PATH')}/${
+              boulder.id
+            }.jpg`,
           )
         ).toString(),
       ).toEqual((await fs.readFile(boulderPhoto)).toString());
