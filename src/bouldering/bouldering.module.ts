@@ -13,10 +13,12 @@ import { UserModule } from '../user/user.module';
 import { BoulderingGroupLimitedContestRankingService } from './group/ranking/bouldering-group-limited-contest-ranking.service';
 import { BoulderingGroupUnlimitedContestRankingService } from './group/ranking/bouldering-group-unlimited-contest-ranking.service';
 import { BoulderingGroupCircuitRankingService } from './group/ranking/bouldering-group-circuit-ranking.service';
+import { HoldsRecognitionModule } from '../holds-recognition/holds-recognition.module';
 
 @Module({
   imports: [
     UserModule,
+    HoldsRecognitionModule,
     MikroOrmModule.forFeature({
       entities: [BoulderingResult, BoulderingRound, Boulder, BoulderingGroup],
     }),

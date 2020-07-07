@@ -44,6 +44,7 @@ import { BoulderingGroupUnlimitedContestRankingService } from '../../src/boulder
 import { BoulderingGroupLimitedContestRankingService } from '../../src/bouldering/group/ranking/bouldering-group-limited-contest-ranking.service';
 import { BoulderingGroupCircuitRankingService } from '../../src/bouldering/group/ranking/bouldering-group-circuit-ranking.service';
 import { PdfService } from '../../src/pdf/pdf.service';
+import { HoldsRecognitionService } from '../../src/holds-recognition/holds-recognition.service';
 
 describe('Bouldering round service (integration)', () => {
   let boulderingRoundService: BoulderingRoundService;
@@ -65,6 +66,7 @@ describe('Bouldering round service (integration)', () => {
         BoulderingGroupLimitedContestRankingService,
         BoulderingGroupCircuitRankingService,
         PdfService,
+        HoldsRecognitionService,
       ],
       imports: [
         MikroOrmModule.forRoot(config),

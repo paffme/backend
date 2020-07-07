@@ -92,6 +92,9 @@ import { DeleteBoulderPhotoParamsDto } from './dto/in/params/delete-boulder-phot
 import { GetBoulderPhotoParamsDto } from './dto/in/params/get-boulder-photo-params.dto';
 import { ConfigurationService } from '../shared/configuration/configuration.service';
 import { BoulderHasNoPhotoError } from './errors/boulder-has-no-photo.error';
+import { HoldsDto } from './dto/out/holds.dto';
+import { GetBoulderHoldsParamsDto } from './dto/in/params/get-boulder-holds-params.dto';
+import { HoldsMapper } from '../shared/mappers/holds.mapper';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -109,6 +112,7 @@ export class BoulderingController {
     private readonly boulderingGroupMapper: BoulderingGroupMapper,
     private readonly boulderingGroupRankingsMapper: BoulderingGroupRankingsMapper,
     private readonly configurationService: ConfigurationService,
+    private readonly holdsMapper: HoldsMapper,
   ) {}
 
   @Post('/:competitionId/bouldering-rounds')
@@ -480,6 +484,24 @@ export class BoulderingController {
       )}/${path.basename(boulder.photo)}`,
       statusCode: HttpStatus.FOUND,
     };
+  }
+
+  @Get(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/holds',
+  )
+  @ApiOperation(GetOperationId(Competition.name, 'GetBoulderPhotoHolds'))
+  @ApiOkResponse()
+  async getBoulderHolds(
+    @Param() params: GetBoulderHoldsParamsDto,
+  ): Promise<HoldsDto> {
+    const boulder = await this.competitionService.getBoulder(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      params.boulderId,
+    );
+
+    return this.holdsMapper.map(boulder);
   }
 
   @Delete(

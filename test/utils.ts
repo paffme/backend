@@ -381,4 +381,8 @@ export default class TestUtils {
   ): Promise<void> {
     await this.boulderService!.uploadPhoto(boulder, photo, extension);
   }
+
+  async updateBoulder(boulder: Boulder): Promise<void> {
+    await this.orm!.em.persistAndFlush(boulder);
+  }
 }

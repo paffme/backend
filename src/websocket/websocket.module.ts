@@ -4,6 +4,7 @@ import { BoulderingModule } from '../bouldering/bouldering.module';
 import { RoundRankingsWebsocket } from './round-rankings.websocket';
 import { CompetitionRankingsWebsocket } from './competition-rankings.websocket';
 import { CompetitionModule } from '../competition/competition.module';
+import { BoulderWebsocket } from './boulder.websocket';
 
 @Module({
   imports: [BoulderingModule, CompetitionModule],
@@ -11,6 +12,7 @@ import { CompetitionModule } from '../competition/competition.module';
     GroupRankingsWebsocket,
     RoundRankingsWebsocket,
     CompetitionRankingsWebsocket,
+    BoulderWebsocket,
   ],
   exports: [],
 })
