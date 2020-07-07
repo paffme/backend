@@ -1,4 +1,7 @@
-import { BoulderService } from '../../../src/bouldering/boulder/boulder.service';
+import {
+  BoulderService,
+  HoldsRecognitionDoneEventPayload,
+} from '../../../src/bouldering/boulder/boulder.service';
 import { RepositoryMock, ServiceMock } from '../mocks/types';
 import { getRepositoryToken } from 'nestjs-mikro-orm';
 import { Boulder } from '../../../src/bouldering/boulder/boulder.entity';
@@ -18,6 +21,11 @@ import { User } from '../../../src/user/user.entity';
 import { AlreadyJudgingBoulderConflictError } from '../../../src/bouldering/errors/already-judging-boulder-conflict.error';
 import { JudgeNotAssignedError } from '../../../src/bouldering/errors/judge-not-found.error';
 import { ConfigurationService } from '../../../src/shared/configuration/configuration.service';
+import { HoldsRecognitionService } from '../../../src/holds-recognition/holds-recognition.service';
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import pEvent from 'p-event';
+import { BoulderHasNoPhotoError } from '../../../src/competition/errors/boulder-has-no-photo.error';
 
 const boulderRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -32,8 +40,16 @@ const userServiceMock: ServiceMock = {
   getOrFail: jest.fn(),
 };
 
+const holdsRecognitionServiceMock: ServiceMock = {
+  detect: jest.fn(),
+};
+
+/* eslint-disable sonarjs/no-duplicate-string */
+/* eslint-disable sonarjs/no-identical-functions */
+
 describe('Boulder service (unit)', () => {
   let boulderService: BoulderService;
+  let configurationService: ConfigurationService;
   let utils: TestUtils;
 
   beforeEach(async () => {
@@ -52,10 +68,15 @@ describe('Boulder service (unit)', () => {
           provide: ConfigurationService,
           useClass: ConfigurationService,
         },
+        {
+          provide: HoldsRecognitionService,
+          useValue: holdsRecognitionServiceMock,
+        },
       ],
     }).compile();
 
     boulderService = module.get(BoulderService);
+    configurationService = module.get(ConfigurationService);
     utils = new TestUtils();
   });
 
@@ -351,7 +372,6 @@ describe('Boulder service (unit)', () => {
 
     const boulder = ({
       judges: {
-        // eslint-disable-next-line sonarjs/no-identical-functions
         async init() {
           return {
             contains,
@@ -365,5 +385,147 @@ describe('Boulder service (unit)', () => {
     return expect(
       boulderService.removeJudgeAssignment(boulder, 1),
     ).rejects.toBeInstanceOf(JudgeNotAssignedError);
+  });
+
+  it('uploads a photo', async () => {
+    const boulder = {
+      id: utils.getRandomId(),
+    } as Boulder;
+
+    const photo = Buffer.from([]);
+    const writeFileSpy = jest.spyOn(fs, 'writeFile');
+
+    holdsRecognitionServiceMock.detect.mockImplementation(async () => [
+      [1, 2, 3, 4],
+    ]);
+
+    boulderRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderService.uploadPhoto(boulder, photo, 'jpg');
+    const expectedPath = path.resolve(
+      configurationService.get('BOULDER_STORAGE_PATH'),
+      `${boulder.id}.jpg`,
+    );
+
+    expect(boulder.boundingBoxes).toEqual([[1, 2, 3, 4]]);
+
+    expect(writeFileSpy).toHaveBeenCalledTimes(1);
+    expect(writeFileSpy).toHaveBeenCalledWith(expectedPath, photo);
+
+    expect(holdsRecognitionServiceMock.detect).toHaveBeenCalledTimes(1);
+    expect(holdsRecognitionServiceMock.detect).toHaveBeenCalledWith(
+      expectedPath,
+    );
+
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(2);
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenNthCalledWith(
+      1,
+      boulder,
+    );
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenNthCalledWith(
+      2,
+      boulder,
+    );
+  });
+
+  it('emits holdsRecognitionDone on photo upload', async () => {
+    const boulder = {
+      id: utils.getRandomId(),
+    } as Boulder;
+
+    const photo = Buffer.from([]);
+
+    holdsRecognitionServiceMock.detect.mockImplementation(async () => [
+      [1, 2, 3, 4],
+    ]);
+
+    boulderRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    const [payload] = ((await Promise.all([
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      pEvent(boulderService, 'holdsRecognitionDone'),
+      boulderService.uploadPhoto(boulder, photo, 'jpg'),
+    ])) as unknown) as [HoldsRecognitionDoneEventPayload];
+
+    expect(payload.boulderId).toEqual(boulder.id);
+    expect(payload.boundingBoxes).toEqual([[1, 2, 3, 4]]);
+  });
+
+  it('removes the photo if it already exists', async () => {
+    const unlinkSpy = jest.spyOn(fs, 'unlink');
+    unlinkSpy.mockImplementation(async () => undefined);
+
+    const boulder = {
+      id: utils.getRandomId(),
+      photo: 'photo-path.jpg',
+    } as Boulder;
+
+    const photo = Buffer.from([]);
+
+    holdsRecognitionServiceMock.detect.mockImplementation(async () => [
+      [1, 2, 3, 4],
+    ]);
+
+    boulderRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderService.uploadPhoto(boulder, photo, 'jpg');
+
+    expect(unlinkSpy).toHaveBeenCalledTimes(1);
+    expect(unlinkSpy).toHaveBeenCalledWith('photo-path.jpg');
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(3);
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenNthCalledWith(
+      1,
+      boulder,
+    );
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenNthCalledWith(
+      2,
+      boulder,
+    );
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenNthCalledWith(
+      3,
+      boulder,
+    );
+  });
+
+  it('removes a photo', async () => {
+    const unlinkSpy = jest.spyOn(fs, 'unlink');
+    unlinkSpy.mockImplementation(async () => undefined);
+
+    const boulder = {
+      id: utils.getRandomId(),
+      photo: 'photo-path.jpg',
+      boundingBoxes: [[1, 2, 3, 4]],
+      polygones: [],
+    } as Boulder;
+
+    boulderRepositoryMock.persistAndFlush.mockImplementation(
+      async () => undefined,
+    );
+
+    await boulderService.removePhoto(boulder);
+
+    expect(boulder.photo).toBeUndefined();
+    expect(boulder.boundingBoxes).toBeUndefined();
+    expect(boulder.polygones).toBeUndefined();
+
+    expect(unlinkSpy).toHaveBeenCalledTimes(1);
+    expect(unlinkSpy).toHaveBeenCalledWith('photo-path.jpg');
+
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenCalledTimes(1);
+    expect(boulderRepositoryMock.persistAndFlush).toHaveBeenCalledWith(boulder);
+  });
+
+  it('throws boulder has no photo error when deleting a boulder with no photo', () => {
+    const boulder = {} as Boulder;
+    return expect(boulderService.removePhoto(boulder)).rejects.toBeInstanceOf(
+      BoulderHasNoPhotoError,
+    );
   });
 });

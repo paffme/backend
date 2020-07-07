@@ -30,6 +30,7 @@ import { ClimberRankingInfosMapper } from './mappers/climber-ranking-infos.mappe
 import { BoulderingUnlimitedContestRankingMapper } from './mappers/bouldering-unlimited-contest-ranking.mapper';
 import { BoulderingLimitedContestRankingMapper } from './mappers/bouldering-limited-contest-ranking.mapper';
 import { BoulderingCircuitRankingMapper } from './mappers/bouldering-circuit-ranking.mapper';
+import { HoldsMapper } from './mappers/holds.mapper';
 
 @Global()
 @Module({
@@ -57,6 +58,7 @@ import { BoulderingCircuitRankingMapper } from './mappers/bouldering-circuit-ran
     BoulderingCircuitRankingMapper,
     BoulderingGroupRankingsMapper,
     JudgementAssignmentsMapper,
+    HoldsMapper,
     UserAuthorizationService,
     PaginationService,
   ],
@@ -83,6 +85,7 @@ import { BoulderingCircuitRankingMapper } from './mappers/bouldering-circuit-ran
     BoulderingCircuitRankingMapper,
     BoulderingGroupRankingsMapper,
     JudgementAssignmentsMapper,
+    HoldsMapper,
     UserAuthorizationService,
     PaginationService,
   ],

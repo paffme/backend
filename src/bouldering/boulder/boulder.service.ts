@@ -1,8 +1,12 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { Collection, EntityRepository } from 'mikro-orm';
-import { Boulder } from './boulder.entity';
+import { Boulder, BoundingBox } from './boulder.entity';
 import { BoulderingGroup } from '../group/bouldering-group.entity';
 import { CreateBoulderDto } from '../../competition/dto/in/body/create-boulder.dto';
 import { validateIndex } from '../../shared/utils/indexing.helper';
@@ -15,15 +19,31 @@ import path from 'path';
 import { promises as fs } from 'fs';
 import { BoulderHasNoPhotoError } from '../../competition/errors/boulder-has-no-photo.error';
 import { ConfigurationService } from '../../shared/configuration/configuration.service';
+import { HoldsRecognitionService } from '../../holds-recognition/holds-recognition.service';
+import { EventEmitter as EE } from 'ee-ts';
+
+export interface HoldsRecognitionDoneEventPayload {
+  boulderId: typeof Boulder.prototype.id;
+  boundingBoxes: BoundingBox[];
+}
+
+export interface BoulderServiceEvents {
+  holdsRecognitionDone(payload: HoldsRecognitionDoneEventPayload): void;
+}
 
 @Injectable()
-export class BoulderService {
+export class BoulderService extends EE<BoulderServiceEvents> {
+  private readonly logger = new Logger(BoulderService.name);
+
   constructor(
     @InjectRepository(Boulder)
     private readonly boulderRepository: EntityRepository<Boulder>,
     private readonly userService: UserService,
     private readonly configurationService: ConfigurationService,
-  ) {}
+    private readonly holdsRecognitionService: HoldsRecognitionService,
+  ) {
+    super();
+  }
 
   async getOrFail(boulderId: typeof Boulder.prototype.id): Promise<Boulder> {
     const boulder = await this.boulderRepository.findOne(boulderId);
@@ -141,6 +161,31 @@ export class BoulderService {
     }
   }
 
+  private startHoldsRecognitionInBackground(boulder: Boulder): void {
+    const photo = boulder.photo;
+
+    if (typeof photo !== 'string') {
+      return;
+    }
+
+    (async () => {
+      try {
+        boulder.boundingBoxes = await this.holdsRecognitionService.detect(
+          photo,
+        );
+
+        await this.boulderRepository.persistAndFlush(boulder);
+
+        this.emit('holdsRecognitionDone', {
+          boulderId: boulder.id,
+          boundingBoxes: boulder.boundingBoxes,
+        });
+      } catch (err) {
+        this.logger.error('Error while doing holds recognition', err);
+      }
+    })();
+  }
+
   async uploadPhoto(
     boulder: Boulder,
     photo: Buffer,
@@ -158,6 +203,7 @@ export class BoulderService {
     await fs.writeFile(filepath, photo);
     boulder.photo = filepath;
     await this.boulderRepository.persistAndFlush(boulder);
+    this.startHoldsRecognitionInBackground(boulder);
   }
 
   async removePhoto(boulder: Boulder): Promise<void> {
@@ -167,6 +213,8 @@ export class BoulderService {
 
     await fs.unlink(boulder.photo);
     boulder.photo = undefined;
+    boulder.boundingBoxes = undefined;
+    boulder.polygones = undefined;
     await this.boulderRepository.persistAndFlush(boulder);
   }
 }

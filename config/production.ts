@@ -19,6 +19,18 @@ const config: Config = {
   REDIS_PORT: process.env.REDIS_PORT as string,
   REDIS_PREFIX: process.env.REDIS_PREFIX as string,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD as string,
+  HOLDS_RECOGNITION_WEIGHTS_PATH: path.resolve(
+    env.HOME as string,
+    './ia/mask_rcnn_climbing-hold-recognition_0024.h5',
+  ),
+  HOLDS_RECOGNITION_TMP_STORAGE_PATH: path.resolve(
+    env.HOME as string,
+    './storage/tmp',
+  ),
+  HOLDS_RECOGNITION_SCRIPT_PATH: path.resolve(
+    env.HOME as string,
+    './climbing-holds-recognition/detection.py',
+  ),
 };
 
 export default config;

@@ -19,6 +19,12 @@ const config: Config = {
   REDIS_PORT: '6379',
   REDIS_PREFIX: 'apaffme',
   REDIS_PASSWORD: '',
+  HOLDS_RECOGNITION_SCRIPT_PATH: path.resolve(
+    __dirname,
+    '../test/fixture/detection.py',
+  ),
+  HOLDS_RECOGNITION_TMP_STORAGE_PATH: '/tmp',
+  HOLDS_RECOGNITION_WEIGHTS_PATH: '_',
 };
 
 export default config;

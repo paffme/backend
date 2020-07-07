@@ -3,6 +3,8 @@ import { Collection, Entity, ManyToMany, ManyToOne, Property } from 'mikro-orm';
 import { BoulderingGroup } from '../group/bouldering-group.entity';
 import { User } from '../../user/user.entity';
 
+export type BoundingBox = [number, number, number, number];
+
 @Entity()
 export class Boulder extends BaseEntity {
   @ManyToOne()
@@ -21,7 +23,7 @@ export class Boulder extends BaseEntity {
   photo?: string;
 
   @Property()
-  boundingBox?: [];
+  boundingBoxes?: BoundingBox[];
 
   @Property()
   polygones?: [];

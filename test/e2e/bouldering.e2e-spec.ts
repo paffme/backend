@@ -31,10 +31,8 @@ import {
   CircuitGroupRankingsDto,
 } from '../../src/bouldering/dto/out/bouldering-group-rankings.dto';
 import { BoulderingGroupDto } from '../../src/bouldering/dto/out/bouldering-group.dto';
-import * as path from 'path';
-import { existsSync, promises as fs } from 'fs';
 import { ConfigurationService } from '../../src/shared/configuration/configuration.service';
-import { BoulderHasNoPhotoError } from '../../src/competition/errors/boulder-has-no-photo.error';
+import { BoundingBox } from '../../src/bouldering/boulder/boulder.entity';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -757,191 +755,6 @@ describe('Bouldering (e2e)', () => {
         )
         .set('Authorization', `Bearer ${auth.token}`)
         .expect(403);
-    });
-  });
-
-  const boulderPhoto = path.resolve(__dirname, '../assets/boulder_photo.jpg');
-
-  describe('PUT /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders/{boulderId}/photo', () => {
-    it('uploads a boulder photo', async () => {
-      const { competition, round, boulder } = await utils.givenReadyCompetition(
-        BoulderingRoundRankingType.CIRCUIT,
-      );
-
-      const {
-        user: juryPresident,
-        credentials: juryPresidentCredentials,
-      } = await utils.givenUser();
-
-      const presidentJuryAuth = await utils.login(juryPresidentCredentials);
-      await utils.addJuryPresidentInCompetition(juryPresident, competition);
-
-      await api
-        .put(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/photo`,
-        )
-        .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
-        .attach('photo', boulderPhoto)
-        .expect(204);
-
-      expect(
-        existsSync(
-          `${configurationService.get('BOULDER_STORAGE_PATH')}/${
-            boulder.id
-          }.jpg`,
-        ),
-      ).toEqual(true);
-
-      expect(
-        (
-          await fs.readFile(
-            `${configurationService.get('BOULDER_STORAGE_PATH')}/${
-              boulder.id
-            }.jpg`,
-          )
-        ).toString(),
-      ).toEqual((await fs.readFile(boulderPhoto)).toString());
-    });
-
-    it('throws 401 when trying to upload a photo without auth', async () => {
-      const { competition, round, boulder } = await utils.givenReadyCompetition(
-        BoulderingRoundRankingType.CIRCUIT,
-      );
-
-      await api
-        .put(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/photo`,
-        )
-        .attach('photo', boulderPhoto)
-        .expect(401);
-    });
-
-    it('throws 403 when trying to upload a photo without having the appropriate role', async () => {
-      const { competition, round, boulder } = await utils.givenReadyCompetition(
-        BoulderingRoundRankingType.CIRCUIT,
-      );
-
-      const { credentials } = await utils.givenUser();
-      const auth = await utils.login(credentials);
-
-      await api
-        .put(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/photo`,
-        )
-        .set('Authorization', `Bearer ${auth.token}`)
-        .attach('photo', boulderPhoto)
-        .expect(403);
-    });
-  });
-
-  describe('DELETE /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders/{boulderId}/photo', () => {
-    it('deletes a boulder photo', async () => {
-      const { competition, round, boulder } = await utils.givenReadyCompetition(
-        BoulderingRoundRankingType.CIRCUIT,
-      );
-
-      const {
-        user: juryPresident,
-        credentials: juryPresidentCredentials,
-      } = await utils.givenUser();
-
-      const presidentJuryAuth = await utils.login(juryPresidentCredentials);
-      await utils.addJuryPresidentInCompetition(juryPresident, competition);
-
-      await utils.addBoulderPhoto(
-        boulder,
-        await fs.readFile(boulderPhoto),
-        'jpg',
-      );
-
-      expect(
-        existsSync(
-          `${configurationService.get('BOULDER_STORAGE_PATH')}/${
-            boulder.id
-          }.jpg`,
-        ),
-      ).toEqual(true);
-
-      await api
-        .delete(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/photo`,
-        )
-        .set('Authorization', `Bearer ${presidentJuryAuth.token}`)
-        .expect(204);
-
-      expect(
-        existsSync(
-          `${configurationService.get('BOULDER_STORAGE_PATH')}/${
-            boulder.id
-          }.jpg`,
-        ),
-      ).toEqual(false);
-    });
-
-    it('throws 401 when trying to delete a photo without auth', async () => {
-      const { competition, round, boulder } = await utils.givenReadyCompetition(
-        BoulderingRoundRankingType.CIRCUIT,
-      );
-
-      await api
-        .delete(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/photo`,
-        )
-        .expect(401);
-    });
-
-    it('throws 403 when trying to delete a photo without having the appropriate role', async () => {
-      const { competition, round, boulder } = await utils.givenReadyCompetition(
-        BoulderingRoundRankingType.CIRCUIT,
-      );
-
-      const { credentials } = await utils.givenUser();
-      const auth = await utils.login(credentials);
-
-      await api
-        .delete(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/photo`,
-        )
-        .set('Authorization', `Bearer ${auth.token}`)
-        .expect(403);
-    });
-  });
-
-  describe('GET /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders/{boulderId}/photo', () => {
-    it('redirects', async () => {
-      const { competition, round, boulder } = await utils.givenReadyCompetition(
-        BoulderingRoundRankingType.CIRCUIT,
-      );
-
-      await utils.addBoulderPhoto(
-        boulder,
-        await fs.readFile(boulderPhoto),
-        'jpg',
-      );
-
-      const res = await api
-        .get(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/photo`,
-        )
-        .expect(302);
-
-      expect(res.header.location).toEqual(
-        `${configurationService.get('BOULDER_STORAGE_URL')}/${boulder.id}.jpg`,
-      );
-    });
-
-    it('throws 404 if boulder has no photo', async () => {
-      const { competition, round, boulder } = await utils.givenReadyCompetition(
-        BoulderingRoundRankingType.CIRCUIT,
-      );
-
-      const { body } = await api
-        .get(
-          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/photo`,
-        )
-        .expect(404);
-
-      expect(body.code).toEqual(new BoulderHasNoPhotoError().code);
     });
   });
 
@@ -1857,6 +1670,26 @@ describe('Bouldering (e2e)', () => {
       expect(body.boulders[0].judges[0].id).toEqual(judge.id);
       expect(body.climbers).toHaveLength(1);
       expect(body.climbers[0].id).toEqual(climber.id);
+    });
+  });
+
+  describe('GET /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders/{boulderId}/holds', () => {
+    it('gets holds', async () => {
+      const { competition, round, boulder } = await utils.givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const boundingBoxes: BoundingBox[] = [[1, 2, 3, 4]];
+      boulder.boundingBoxes = boundingBoxes;
+      await utils.updateBoulder(boulder);
+
+      const { body } = await api
+        .get(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/holds`,
+        )
+        .expect(200);
+
+      expect(body.boundingBoxes).toEqual(boundingBoxes);
     });
   });
 });
