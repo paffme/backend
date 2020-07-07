@@ -47,11 +47,11 @@ jobs:
     - name: Install external dependencies for testing purposes
       run: sudo apt install graphicsmagick imagemagick python3
     - name: Create storage folders
-      run:
-        - mkdir -p ${HOME}/storage/boulders
-        - mkdir -p ${HOME}/storage/tmp
-        - mkdir ${HOME}/climbing-holds-recognition
-        - cp test/fixture/detection.py ${HOME}/climbing-holds-recognition
+      run: |
+        mkdir -p ${HOME}/storage/boulders
+        mkdir -p ${HOME}/storage/tmp
+        mkdir ${HOME}/climbing-holds-recognition
+        cp test/fixture/detection.py ${HOME}/climbing-holds-recognition
     - run: npm ci
     - run: npm run lint
     - run: npm run migrate
