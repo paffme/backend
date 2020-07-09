@@ -89,6 +89,9 @@ describe('Boulder photo GET (e2e)', () => {
       expect(res.body.url).toEqual(
         `${configurationService.get('BOULDER_STORAGE_URL')}/${boulder.id}.jpg`,
       );
+
+      expect(res.body.width).toEqual(670);
+      expect(res.body.height).toEqual(475);
     });
   });
 });

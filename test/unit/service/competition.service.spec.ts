@@ -48,6 +48,7 @@ import { User } from '../../../src/user/user.entity';
 import { PdfService } from '../../../src/pdf/pdf.service';
 import { CannotStartRoundNoBoulderError } from '../../../src/competition/errors/cannot-start-round-no-boulder.error';
 import { NoPreviousRoundRankingsError } from '../../../src/competition/errors/no-previous-round-rankings.error';
+import { ConfigurationService } from '../../../src/shared/configuration/configuration.service';
 
 const competitionRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -139,6 +140,10 @@ describe('Competition service (unit)', () => {
         {
           provide: PdfService,
           useValue: pdfServiceMock,
+        },
+        {
+          provide: ConfigurationService,
+          useClass: ConfigurationService,
         },
       ],
     }).compile();
