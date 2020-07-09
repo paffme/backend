@@ -46,6 +46,7 @@ import {
   BoulderingGroupRankings,
 } from '../group/bouldering-group.entity';
 import { AddBoulderHoldsDto } from '../../competition/dto/in/body/add-boulder-holds.dto';
+import { RemoveBoulderHoldsDto } from '../../competition/dto/in/body/remove-boulder-holds.dto';
 
 export interface BoulderingRoundRankingsUpdateEventPayload {
   roundId: typeof BoulderingRound.prototype.id;
@@ -552,5 +553,16 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
   ): Promise<Boulder> {
     const group = await this.getGroupOrFail(round, groupId, ['boulders']);
     return this.boulderingGroupService.addBoulderHolds(group, boulderId, dto);
+  }
+
+  async removeBoulderHolds(
+    round: BoulderingRound,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    dto: RemoveBoulderHoldsDto,
+  ): Promise<void> {
+    const group = await this.getGroupOrFail(round, groupId, ['boulders']);
+
+    await this.boulderingGroupService.removeBoulderHolds(group, boulderId, dto);
   }
 }

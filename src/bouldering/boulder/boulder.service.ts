@@ -22,6 +22,7 @@ import { ConfigurationService } from '../../shared/configuration/configuration.s
 import { HoldsRecognitionService } from '../../holds-recognition/holds-recognition.service';
 import { EventEmitter as EE } from 'ee-ts';
 import { AddBoulderHoldsDto } from '../../competition/dto/in/body/add-boulder-holds.dto';
+import { RemoveBoulderHoldsDto } from '../../competition/dto/in/body/remove-boulder-holds.dto';
 
 export interface HoldsRecognitionDoneEventPayload {
   boulderId: typeof Boulder.prototype.id;
@@ -221,5 +222,28 @@ export class BoulderService extends EE<BoulderServiceEvents> {
     boulder.boundingBoxes.push(...dto.boundingBoxes);
     await this.boulderRepository.persistAndFlush(boulder);
     return boulder;
+  }
+
+  async removeHolds(
+    boulder: Boulder,
+    dto: RemoveBoulderHoldsDto,
+  ): Promise<void> {
+    if (Array.isArray(boulder.boundingBoxes)) {
+      boulder.boundingBoxes = boulder.boundingBoxes.filter(
+        (existingBoundingBox) => {
+          const foundInDto = !!dto.boundingBoxes.find(
+            (dtoB) =>
+              dtoB.type === existingBoundingBox.type &&
+              dtoB.coordinates.every(
+                (c, index) => existingBoundingBox.coordinates[index] === c,
+              ),
+          );
+
+          return !foundInDto;
+        },
+      );
+
+      await this.boulderRepository.persistAndFlush(boulder);
+    }
   }
 }

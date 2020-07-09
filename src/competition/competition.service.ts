@@ -71,6 +71,7 @@ import ReadableStream = NodeJS.ReadableStream;
 import { PdfService } from '../pdf/pdf.service';
 import { CannotStartRoundNoBoulderError } from './errors/cannot-start-round-no-boulder.error';
 import { AddBoulderHoldsDto } from './dto/in/body/add-boulder-holds.dto';
+import { RemoveBoulderHoldsDto } from './dto/in/body/remove-boulder-holds.dto';
 
 export interface CompetitionRankingsUpdateEventPayload {
   competitionId: typeof Competition.prototype.id;
@@ -1064,6 +1065,26 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     );
 
     return this.boulderingRoundService.addBoulderHolds(
+      round,
+      groupId,
+      boulderId,
+      dto,
+    );
+  }
+
+  async removeBoulderHolds(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+    dto: RemoveBoulderHoldsDto,
+  ): Promise<void> {
+    const { round } = await this.getBoulderingRoundOrFail(
+      competitionId,
+      roundId,
+    );
+
+    await this.boulderingRoundService.removeBoulderHolds(
       round,
       groupId,
       boulderId,

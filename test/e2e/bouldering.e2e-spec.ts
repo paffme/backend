@@ -37,6 +37,7 @@ import {
   BoundingBoxType,
 } from '../../src/bouldering/boulder/boulder.entity';
 import { AddBoulderHoldsDto } from '../../src/competition/dto/in/body/add-boulder-holds.dto';
+import { RemoveBoulderHoldsDto } from '../../src/competition/dto/in/body/remove-boulder-holds.dto';
 
 describe('Bouldering (e2e)', () => {
   let app: NestExpressApplication;
@@ -1786,6 +1787,115 @@ describe('Bouldering (e2e)', () => {
 
       await api
         .post(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/holds`,
+        )
+        .set('Authorization', `Bearer ${token}`)
+        .send(dto)
+        .expect(403);
+    });
+  });
+
+  describe('DELETE /competitions/{competitionId}/bouldering-rounds/{roundId}/groups/{groupId}/boulders/{boulderId}/holds', () => {
+    it('delete holds', async () => {
+      const {
+        competition,
+        round,
+        boulder,
+        juryPresidentAuth,
+      } = await utils.givenReadyCompetition(BoulderingRoundRankingType.CIRCUIT);
+
+      const baseBoundingBoxes: BoundingBox[] = [
+        {
+          type: BoundingBoxType.NORMAL,
+          coordinates: [1, 2, 3, 4],
+        },
+        {
+          type: BoundingBoxType.START,
+          coordinates: [1, 2, 3, 4],
+        },
+        {
+          type: BoundingBoxType.NORMAL,
+          coordinates: [4, 3, 2, 1],
+        },
+      ];
+
+      boulder.boundingBoxes = baseBoundingBoxes;
+      await utils.updateBoulder(boulder);
+
+      const dto: RemoveBoulderHoldsDto = {
+        boundingBoxes: [
+          {
+            type: BoundingBoxType.NORMAL,
+            coordinates: [1, 2, 3, 4],
+          },
+        ],
+      };
+
+      await api
+        .delete(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/holds`,
+        )
+        .set('Authorization', `Bearer ${juryPresidentAuth.token}`)
+        .send(dto)
+        .expect(204);
+
+      utils.clearORM();
+
+      const updatedBoulder = await utils.getBoulder(boulder.id);
+
+      expect(updatedBoulder.boundingBoxes).toEqual([
+        {
+          type: BoundingBoxType.START,
+          coordinates: [1, 2, 3, 4],
+        },
+        {
+          type: BoundingBoxType.NORMAL,
+          coordinates: [4, 3, 2, 1],
+        },
+      ]);
+    });
+
+    it('throws 401 when removing holds without auth', async () => {
+      const { competition, round, boulder } = await utils.givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const dto: RemoveBoulderHoldsDto = {
+        boundingBoxes: [
+          {
+            type: BoundingBoxType.NORMAL,
+            coordinates: [4, 3, 2, 1],
+          },
+        ],
+      };
+
+      await api
+        .delete(
+          `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/holds`,
+        )
+        .send(dto)
+        .expect(401);
+    });
+
+    it('throws 403 when removing holds without the correct role', async () => {
+      const { competition, round, boulder } = await utils.givenReadyCompetition(
+        BoulderingRoundRankingType.CIRCUIT,
+      );
+
+      const { credentials } = await utils.givenUser();
+      const { token } = await utils.login(credentials);
+
+      const dto: RemoveBoulderHoldsDto = {
+        boundingBoxes: [
+          {
+            type: BoundingBoxType.NORMAL,
+            coordinates: [4, 3, 2, 1],
+          },
+        ],
+      };
+
+      await api
+        .delete(
           `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/holds`,
         )
         .set('Authorization', `Bearer ${token}`)
