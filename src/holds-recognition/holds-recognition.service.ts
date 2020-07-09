@@ -4,7 +4,11 @@ import { exec } from 'child_process';
 import { ConfigurationService } from '../shared/configuration/configuration.service';
 import * as uuid from 'uuid';
 import { promises as fs } from 'fs';
-import { BoundingBox } from '../bouldering/boulder/boulder.entity';
+import {
+  BoundingBox,
+  BoundingBoxCoordinates,
+  BoundingBoxType,
+} from '../bouldering/boulder/boulder.entity';
 
 const execAsync = promisify(exec);
 
@@ -38,6 +42,13 @@ export class HoldsRecognitionService {
     const fileContent = await fs.readFile(tmpFile);
     await fs.unlink(tmpFile);
 
-    return JSON.parse(fileContent.toString());
+    const coordinates: BoundingBoxCoordinates[] = JSON.parse(
+      fileContent.toString(),
+    );
+
+    return coordinates.map((c) => ({
+      coordinates: c,
+      type: BoundingBoxType.NORMAL,
+    }));
   }
 }

@@ -18,6 +18,7 @@ import {
   BoulderService,
   HoldsRecognitionDoneEventPayload,
 } from '../../src/bouldering/boulder/boulder.service';
+import { BoundingBoxType } from '../../src/bouldering/boulder/boulder.entity';
 
 const boulderPhoto = path.resolve(__dirname, '../assets/boulder_photo.jpg');
 
@@ -84,6 +85,11 @@ describe('Boulder websocket (e2e)', () => {
     ])) as [HoldsRecognitionDoneEventPayload, unknown];
 
     expect(data.boulderId).toEqual(boulder.id);
-    expect(data.boundingBoxes).toEqual([[1, 2, 3, 4]]);
+    expect(data.boundingBoxes).toEqual([
+      {
+        type: BoundingBoxType.NORMAL,
+        coordinates: [1, 2, 3, 4],
+      },
+    ]);
   });
 });

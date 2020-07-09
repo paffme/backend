@@ -34,6 +34,7 @@ import {
   RankingDiffInput,
   RankingsDiff,
 } from '../ranking/ranking.utils';
+import { AddBoulderHoldsDto } from '../../competition/dto/in/body/add-boulder-holds.dto';
 
 export interface BoulderingGroupRankingsUpdateEventPayload {
   groupId: typeof BoulderingGroup.prototype.id;
@@ -232,5 +233,14 @@ export class BoulderingGroupService extends EE<BoulderingGroupServiceEvents> {
     }
 
     await this.boulderingGroupRepository.flush();
+  }
+
+  async addBoulderHolds(
+    group: BoulderingGroup,
+    boulderId: typeof Boulder.prototype.id,
+    dto: AddBoulderHoldsDto,
+  ): Promise<Boulder> {
+    const boulder = await this.getBoulderInGroupOrFail(group, boulderId);
+    return this.boulderService.addHolds(boulder, dto);
   }
 }

@@ -21,6 +21,7 @@ import { BoulderHasNoPhotoError } from '../../competition/errors/boulder-has-no-
 import { ConfigurationService } from '../../shared/configuration/configuration.service';
 import { HoldsRecognitionService } from '../../holds-recognition/holds-recognition.service';
 import { EventEmitter as EE } from 'ee-ts';
+import { AddBoulderHoldsDto } from '../../competition/dto/in/body/add-boulder-holds.dto';
 
 export interface HoldsRecognitionDoneEventPayload {
   boulderId: typeof Boulder.prototype.id;
@@ -161,19 +162,16 @@ export class BoulderService extends EE<BoulderServiceEvents> {
     }
   }
 
-  private startHoldsRecognitionInBackground(boulder: Boulder): void {
-    const photo = boulder.photo;
-
-    if (typeof photo !== 'string') {
-      return;
-    }
-
+  private startHoldsRecognitionInBackground(
+    boulderId: typeof Boulder.prototype.id,
+    photo: string,
+  ): void {
     (async () => {
       try {
-        boulder.boundingBoxes = await this.holdsRecognitionService.detect(
-          photo,
-        );
-
+        const boundingBoxes = await this.holdsRecognitionService.detect(photo);
+        const boulder = await this.getOrFail(boulderId);
+        boulder.boundingBoxes = boulder.boundingBoxes || [];
+        boulder.boundingBoxes.push(...boundingBoxes);
         await this.boulderRepository.persistAndFlush(boulder);
 
         this.emit('holdsRecognitionDone', {
@@ -203,7 +201,7 @@ export class BoulderService extends EE<BoulderServiceEvents> {
     await fs.writeFile(filepath, photo);
     boulder.photo = filepath;
     await this.boulderRepository.persistAndFlush(boulder);
-    this.startHoldsRecognitionInBackground(boulder);
+    this.startHoldsRecognitionInBackground(boulder.id, boulder.photo);
   }
 
   async removePhoto(boulder: Boulder): Promise<void> {
@@ -216,5 +214,12 @@ export class BoulderService extends EE<BoulderServiceEvents> {
     boulder.boundingBoxes = undefined;
     boulder.polygones = undefined;
     await this.boulderRepository.persistAndFlush(boulder);
+  }
+
+  async addHolds(boulder: Boulder, dto: AddBoulderHoldsDto): Promise<Boulder> {
+    boulder.boundingBoxes = boulder.boundingBoxes || [];
+    boulder.boundingBoxes.push(...dto.boundingBoxes);
+    await this.boulderRepository.persistAndFlush(boulder);
+    return boulder;
   }
 }
