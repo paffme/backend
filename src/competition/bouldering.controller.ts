@@ -95,6 +95,7 @@ import { BoulderHasNoPhotoError } from './errors/boulder-has-no-photo.error';
 import { HoldsDto } from './dto/out/holds.dto';
 import { GetBoulderHoldsParamsDto } from './dto/in/params/get-boulder-holds-params.dto';
 import { HoldsMapper } from '../shared/mappers/holds.mapper';
+import { BoulderPhotoDto } from './dto/out/boulder-photo.dto';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -459,14 +460,10 @@ export class BoulderingController {
     '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/photo',
   )
   @ApiOperation(GetOperationId(Competition.name, 'GetBoulderPhoto'))
-  @HttpCode(HttpStatus.FOUND)
-  @Redirect()
+  @ApiOkResponse({ type: BoulderPhotoDto })
   async getBoulderPhoto(
     @Param() params: GetBoulderPhotoParamsDto,
-  ): Promise<{
-    url: string;
-    statusCode: HttpStatus;
-  }> {
+  ): Promise<BoulderPhotoDto> {
     const boulder = await this.competitionService.getBoulder(
       params.competitionId,
       params.roundId,
@@ -482,7 +479,6 @@ export class BoulderingController {
       url: `${this.configurationService.get(
         'BOULDER_STORAGE_URL',
       )}/${path.basename(boulder.photo)}`,
-      statusCode: HttpStatus.FOUND,
     };
   }
 

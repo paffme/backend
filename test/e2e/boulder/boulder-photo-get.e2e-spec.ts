@@ -69,7 +69,7 @@ describe('Boulder photo GET (e2e)', () => {
       expect(body.code).toEqual(new BoulderHasNoPhotoError().code);
     });
 
-    it('redirects', async () => {
+    it('gets url', async () => {
       const { competition, round, boulder } = await utils.givenReadyCompetition(
         BoulderingRoundRankingType.CIRCUIT,
       );
@@ -84,9 +84,9 @@ describe('Boulder photo GET (e2e)', () => {
         .get(
           `/competitions/${competition.id}/bouldering-rounds/${round.id}/groups/${round.groups[0].id}/boulders/${boulder.id}/photo`,
         )
-        .expect(302);
+        .expect(200);
 
-      expect(res.header.location).toEqual(
+      expect(res.body.url).toEqual(
         `${configurationService.get('BOULDER_STORAGE_URL')}/${boulder.id}.jpg`,
       );
     });
