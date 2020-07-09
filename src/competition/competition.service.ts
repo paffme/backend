@@ -72,6 +72,14 @@ import { PdfService } from '../pdf/pdf.service';
 import { CannotStartRoundNoBoulderError } from './errors/cannot-start-round-no-boulder.error';
 import { AddBoulderHoldsDto } from './dto/in/body/add-boulder-holds.dto';
 import { RemoveBoulderHoldsDto } from './dto/in/body/remove-boulder-holds.dto';
+import { BoulderPhotoDto } from './dto/out/boulder-photo.dto';
+import { BoulderHasNoPhotoError } from './errors/boulder-has-no-photo.error';
+import path from 'path';
+import { ConfigurationService } from '../shared/configuration/configuration.service';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+import probeImageSize from 'probe-image-size';
+import * as fs from 'fs';
 
 export interface CompetitionRankingsUpdateEventPayload {
   competitionId: typeof Competition.prototype.id;
@@ -100,6 +108,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     private readonly boulderingRoundService: BoulderingRoundService,
     private readonly boulderingRankingService: BoulderingRankingService,
     private readonly pdfService: PdfService,
+    private readonly configurationService: ConfigurationService,
   ) {
     super();
   }
@@ -1090,5 +1099,35 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
       boulderId,
       dto,
     );
+  }
+
+  async getBoulderPhoto(
+    competitionId: typeof Competition.prototype.id,
+    roundId: typeof BoulderingRound.prototype.id,
+    groupId: typeof BoulderingGroup.prototype.id,
+    boulderId: typeof Boulder.prototype.id,
+  ): Promise<BoulderPhotoDto> {
+    const boulder = await this.getBoulder(
+      competitionId,
+      roundId,
+      groupId,
+      boulderId,
+    );
+
+    if (typeof boulder.photo !== 'string') {
+      throw new BoulderHasNoPhotoError();
+    }
+
+    const readStream = fs.createReadStream(boulder.photo);
+    const imgData = await probeImageSize(readStream);
+    readStream.destroy();
+
+    return {
+      url: `${this.configurationService.get(
+        'BOULDER_STORAGE_URL',
+      )}/${path.basename(boulder.photo)}`,
+      height: imgData.height,
+      width: imgData.width,
+    };
   }
 }

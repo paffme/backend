@@ -90,8 +90,6 @@ import multer from 'multer';
 import * as path from 'path';
 import { DeleteBoulderPhotoParamsDto } from './dto/in/params/delete-boulder-photo-params.dto';
 import { GetBoulderPhotoParamsDto } from './dto/in/params/get-boulder-photo-params.dto';
-import { ConfigurationService } from '../shared/configuration/configuration.service';
-import { BoulderHasNoPhotoError } from './errors/boulder-has-no-photo.error';
 import { HoldsDto } from './dto/out/holds.dto';
 import { GetBoulderHoldsParamsDto } from './dto/in/params/get-boulder-holds-params.dto';
 import { HoldsMapper } from '../shared/mappers/holds.mapper';
@@ -115,7 +113,6 @@ export class BoulderingController {
     private readonly boulderMapper: BoulderMapper,
     private readonly boulderingGroupMapper: BoulderingGroupMapper,
     private readonly boulderingGroupRankingsMapper: BoulderingGroupRankingsMapper,
-    private readonly configurationService: ConfigurationService,
     private readonly holdsMapper: HoldsMapper,
   ) {}
 
@@ -464,25 +461,15 @@ export class BoulderingController {
   )
   @ApiOperation(GetOperationId(Competition.name, 'GetBoulderPhoto'))
   @ApiOkResponse({ type: BoulderPhotoDto })
-  async getBoulderPhoto(
+  getBoulderPhoto(
     @Param() params: GetBoulderPhotoParamsDto,
   ): Promise<BoulderPhotoDto> {
-    const boulder = await this.competitionService.getBoulder(
+    return this.competitionService.getBoulderPhoto(
       params.competitionId,
       params.roundId,
       params.groupId,
       params.boulderId,
     );
-
-    if (typeof boulder.photo !== 'string') {
-      throw new BoulderHasNoPhotoError();
-    }
-
-    return {
-      url: `${this.configurationService.get(
-        'BOULDER_STORAGE_URL',
-      )}/${path.basename(boulder.photo)}`,
-    };
   }
 
   @Get(
