@@ -14,8 +14,6 @@ import { BoulderingResultService } from '../result/bouldering-result.service';
 import { BoulderingResult } from '../result/bouldering-result.entity';
 import { BulkBoulderingResultsDto } from '../../competition/dto/in/body/bulk-bouldering-results.dto';
 import { EventEmitter as EE } from 'ee-ts';
-import { promises as fs } from 'fs';
-import * as path from 'path';
 
 import {
   BoulderingGroup,
@@ -34,6 +32,8 @@ import {
   RankingDiffInput,
   RankingsDiff,
 } from '../ranking/ranking.utils';
+import { AddBoulderHoldsDto } from '../../competition/dto/in/body/add-boulder-holds.dto';
+import { RemoveBoulderHoldsDto } from '../../competition/dto/in/body/remove-boulder-holds.dto';
 
 export interface BoulderingGroupRankingsUpdateEventPayload {
   groupId: typeof BoulderingGroup.prototype.id;
@@ -232,5 +232,23 @@ export class BoulderingGroupService extends EE<BoulderingGroupServiceEvents> {
     }
 
     await this.boulderingGroupRepository.flush();
+  }
+
+  async addBoulderHolds(
+    group: BoulderingGroup,
+    boulderId: typeof Boulder.prototype.id,
+    dto: AddBoulderHoldsDto,
+  ): Promise<Boulder> {
+    const boulder = await this.getBoulderInGroupOrFail(group, boulderId);
+    return this.boulderService.addHolds(boulder, dto);
+  }
+
+  async removeBoulderHolds(
+    group: BoulderingGroup,
+    boulderId: typeof Boulder.prototype.id,
+    dto: RemoveBoulderHoldsDto,
+  ): Promise<void> {
+    const boulder = await this.getBoulderInGroupOrFail(group, boulderId);
+    return this.boulderService.removeHolds(boulder, dto);
   }
 }

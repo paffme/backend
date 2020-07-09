@@ -96,6 +96,9 @@ import { HoldsDto } from './dto/out/holds.dto';
 import { GetBoulderHoldsParamsDto } from './dto/in/params/get-boulder-holds-params.dto';
 import { HoldsMapper } from '../shared/mappers/holds.mapper';
 import { BoulderPhotoDto } from './dto/out/boulder-photo.dto';
+import { AddBoulderHoldsParamsDto } from './dto/in/params/add-boulder-holds-params.dto';
+import { AddBoulderHoldsDto } from './dto/in/body/add-boulder-holds.dto';
+import { RemoveBoulderHoldsDto } from './dto/in/body/remove-boulder-holds.dto';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -486,7 +489,7 @@ export class BoulderingController {
     '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/holds',
   )
   @ApiOperation(GetOperationId(Competition.name, 'GetBoulderPhotoHolds'))
-  @ApiOkResponse()
+  @ApiOkResponse({ type: HoldsDto })
   async getBoulderHolds(
     @Param() params: GetBoulderHoldsParamsDto,
   ): Promise<HoldsDto> {
@@ -498,6 +501,69 @@ export class BoulderingController {
     );
 
     return this.holdsMapper.map(boulder);
+  }
+
+  @Post(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/holds',
+  )
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    OrGuard(
+      JuryPresidentAuthorizationGuard,
+      JudgeAuthorizationGuard,
+      ChiefRouteSetterAuthorizationGuard,
+      RouteSetterAuthorizationGuard,
+    ),
+  )
+  @ApiOperation(GetOperationId(Competition.name, 'AddBoulderPhotoHolds'))
+  @ApiCreatedResponse({ type: HoldsDto })
+  async addBoulderHolds(
+    @Param() params: AddBoulderHoldsParamsDto,
+    @Body() dto: AddBoulderHoldsDto,
+  ): Promise<HoldsDto> {
+    const boulder = await this.competitionService.addBoulderHolds(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      params.boulderId,
+      dto,
+    );
+
+    return this.holdsMapper.map(boulder);
+  }
+
+  @Delete(
+    '/:competitionId/bouldering-rounds/:roundId/groups/:groupId/boulders/:boulderId/holds',
+  )
+  @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
+  @AllowedAppRoles(AppRoles.OWNER)
+  @UseGuards(
+    AuthGuard('jwt'),
+    AuthenticationGuard,
+    OrGuard(
+      JuryPresidentAuthorizationGuard,
+      JudgeAuthorizationGuard,
+      ChiefRouteSetterAuthorizationGuard,
+      RouteSetterAuthorizationGuard,
+    ),
+  )
+  @ApiOperation(GetOperationId(Competition.name, 'RemoveBoulderHolds'))
+  @ApiNoContentResponse()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async removeBoulderHolds(
+    @Param() params: AddBoulderHoldsParamsDto,
+    @Body() dto: RemoveBoulderHoldsDto,
+  ): Promise<void> {
+    await this.competitionService.removeBoulderHolds(
+      params.competitionId,
+      params.roundId,
+      params.groupId,
+      params.boulderId,
+      dto,
+    );
   }
 
   @Delete(

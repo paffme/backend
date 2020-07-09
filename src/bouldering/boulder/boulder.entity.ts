@@ -3,7 +3,19 @@ import { Collection, Entity, ManyToMany, ManyToOne, Property } from 'mikro-orm';
 import { BoulderingGroup } from '../group/bouldering-group.entity';
 import { User } from '../../user/user.entity';
 
-export type BoundingBox = [number, number, number, number];
+export enum BoundingBoxType {
+  START = 'START',
+  NORMAL = 'NORMAL',
+  ZONE = 'ZONE',
+  TOP = 'TOP',
+}
+
+export type BoundingBoxCoordinates = [number, number, number, number];
+
+export interface BoundingBox {
+  coordinates: BoundingBoxCoordinates;
+  type: BoundingBoxType;
+}
 
 @Entity()
 export class Boulder extends BaseEntity {

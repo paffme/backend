@@ -385,4 +385,8 @@ export default class TestUtils {
   async updateBoulder(boulder: Boulder): Promise<void> {
     await this.orm!.em.persistAndFlush(boulder);
   }
+
+  async getBoulder(boulderId: typeof Boulder.prototype.id): Promise<Boulder> {
+    return this.boulderService!.getOrFail(boulderId);
+  }
 }
