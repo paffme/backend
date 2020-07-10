@@ -448,7 +448,7 @@ describe('User (e2e)', () => {
 
       const registration = res.body.find(
         (r: CompetitionRegistrationDto): boolean =>
-          r.userId === user.id && r.competitionId === competition.id,
+          r.user.id === user.id && r.competitionId === competition.id,
       );
 
       expect(registration).toBeTruthy();
@@ -485,7 +485,7 @@ describe('User (e2e)', () => {
 
       const registration = res.body.find(
         (r: CompetitionRegistrationDto): boolean =>
-          r.userId === user.id && r.competitionId === competition.id,
+          r.user.id === user.id && r.competitionId === competition.id,
       );
 
       expect(registration).toBeTruthy();

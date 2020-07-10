@@ -1,4 +1,8 @@
-import { Injectable, NotImplementedException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotImplementedException,
+} from '@nestjs/common';
 import { Competition } from '../competition/competition.entity';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -25,6 +29,9 @@ import {
 import { RankingsNotFoundError } from '../competition/errors/rankings-not-found.error';
 import { RankingsMap } from '../bouldering/types/rankings-map';
 import * as uuid from 'uuid';
+import { isDefined, isNil } from '../shared/utils/objects.helper';
+
+/* eslint-disable sonarjs/no-duplicate-string */
 
 type PdfRanking = { ranking: number; climber: ClimberRankingInfos };
 
@@ -210,7 +217,7 @@ export class PdfService {
   private getRoundRankingsMap(
     round?: BoulderingRound,
   ): RankingsMap | undefined {
-    if (round && round.rankings) {
+    if (isDefined(round) && isDefined(round.rankings)) {
       return (round.rankings
         .rankings as BoulderingRoundRankingsStandalone).reduce(
         (map, ranking) => {
@@ -530,10 +537,14 @@ export class PdfService {
 
   private getGroupRankingsColumn(group: BoulderingGroup): Column {
     const round = group.round;
-    const rankings = round.rankings!;
+    const roundRankings = round.rankings;
 
-    if (rankings.type === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
-      const sortedRankings = this.sortRankings(rankings.rankings);
+    if (isNil(roundRankings)) {
+      throw new InternalServerErrorException('No round rankings');
+    }
+
+    if (roundRankings.type === BoulderingRoundRankingType.UNLIMITED_CONTEST) {
+      const sortedRankings = this.sortRankings(roundRankings.rankings);
 
       return this.getBoulderingUnlimitedContestTable(
         group.round,
@@ -541,13 +552,13 @@ export class PdfService {
       );
     }
 
-    if (rankings.type === BoulderingRoundRankingType.LIMITED_CONTEST) {
-      const sortedRankings = this.sortRankings(rankings.rankings);
+    if (roundRankings.type === BoulderingRoundRankingType.LIMITED_CONTEST) {
+      const sortedRankings = this.sortRankings(roundRankings.rankings);
       return this.getBoulderingLimitedContestTable(group.round, sortedRankings);
     }
 
-    if (rankings.type === BoulderingRoundRankingType.CIRCUIT) {
-      const sortedRankings = this.sortRankings(rankings.rankings);
+    if (roundRankings.type === BoulderingRoundRankingType.CIRCUIT) {
+      const sortedRankings = this.sortRankings(roundRankings.rankings);
       return this.getBoulderingCircuitTable(group.round, sortedRankings);
     }
 
@@ -555,7 +566,12 @@ export class PdfService {
   }
 
   private getRoundRankingsColumn(round: BoulderingRound): Column {
-    const rankings = round.rankings!;
+    const rankings = round.rankings;
+
+    if (isNil(rankings)) {
+      throw new InternalServerErrorException('No round rankings');
+    }
+
     const nextRound = round.competition.getNextRound(round);
     const nextRoundRankingsMap = this.getRoundRankingsMap(nextRound);
 
@@ -614,15 +630,30 @@ export class PdfService {
     category: Category,
     competition: Competition,
   ): Column[] {
-    const sortedMainRankings = this.sortRankings(
-      competition.rankings[category.name]![category.sex]!,
-    );
+    const competitionRankings = competition.rankings;
 
+    if (isNil(competitionRankings)) {
+      throw new InternalServerErrorException('No competition rankings');
+    }
+
+    const categoryNameRankings = competitionRankings[category.name];
+
+    if (isNil(categoryNameRankings)) {
+      throw new InternalServerErrorException('No category name rankings');
+    }
+
+    const categoryRankings = categoryNameRankings[category.sex];
+
+    if (isNil(categoryRankings)) {
+      throw new InternalServerErrorException('No category rankings');
+    }
+
+    const sortedMainRankings = this.sortRankings(categoryRankings);
     const mainColumn = this.getMainRankingsColumn(sortedMainRankings);
 
     const categoryRounds = competition
       .getCategoryRounds(category)
-      .filter((round) => typeof round.rankings !== 'undefined');
+      .filter((round) => !!round.rankings);
 
     const roundsColumns = categoryRounds.map((round) =>
       this.getRoundRankingsColumn(round),
@@ -632,8 +663,14 @@ export class PdfService {
   }
 
   private getRoundRankingsColumns(round: BoulderingRound): Column[] {
+    const roundRankings = round.rankings;
+
+    if (isNil(roundRankings)) {
+      throw new InternalServerErrorException('No round rankings');
+    }
+
     const sortedRankings = this.sortRankings(
-      round.rankings!.rankings as BoulderingRoundRankingsStandalone,
+      roundRankings.rankings as BoulderingRoundRankingsStandalone,
     );
 
     const mainColumn = this.getMainRankingsColumn(sortedRankings);
@@ -642,8 +679,14 @@ export class PdfService {
   }
 
   private getGroupRankingsColumns(group: BoulderingGroup): Column[] {
+    const groupRankings = group.rankings;
+
+    if (isNil(groupRankings)) {
+      throw new NotImplementedException('No group rankings');
+    }
+
     const sortedRankings = this.sortRankings(
-      group.rankings!.rankings as BoulderingGroupRankingsStandalone,
+      groupRankings.rankings as BoulderingGroupRankingsStandalone,
     );
 
     const mainColumn = this.getMainRankingsColumn(sortedRankings);
@@ -758,7 +801,7 @@ export class PdfService {
   }
 
   generateBoulderingRoundPdf(round: BoulderingRound): NodeJS.ReadableStream {
-    if (typeof round.rankings === 'undefined') {
+    if (isNil(round.rankings)) {
       throw new RankingsNotFoundError();
     }
 
@@ -794,12 +837,12 @@ export class PdfService {
       );
 
     for (const [categoryName, sexes] of Object.entries(competition.rankings)) {
-      if (!sexes) {
+      if (isNil(sexes)) {
         continue;
       }
 
       for (const [sex, rankings] of Object.entries(sexes)) {
-        if (!rankings) {
+        if (isNil(rankings)) {
           continue;
         }
 

@@ -17,6 +17,7 @@ import { CompetitionType } from './types/competition-type.enum';
 import { Category } from '../shared/types/category.interface';
 import { CompetitionRoundType } from './competition-round-type.enum';
 import { ClimberRankingInfos } from './types/climber-ranking-infos.interface';
+import { isDefined } from '../shared/utils/objects.helper';
 
 export interface ClimberRanking {
   ranking: number;
@@ -160,15 +161,15 @@ export class Competition extends BaseEntity {
     const fRound = this.getFinalRound(category);
     const rounds = [];
 
-    if (qRound) {
+    if (isDefined(qRound)) {
       rounds.push(qRound);
     }
 
-    if (sRound) {
+    if (isDefined(sRound)) {
       rounds.push(sRound);
     }
 
-    if (fRound) {
+    if (isDefined(fRound)) {
       rounds.push(fRound);
     }
 

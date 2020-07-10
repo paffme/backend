@@ -10,6 +10,7 @@ import { validateOrReject } from 'class-validator';
 import { ClassType } from 'class-transformer/ClassTransformer';
 import { CustomValidationError } from '../errors/custom-validation.error';
 import { BaseError } from '../errors/base.error';
+import { isDefined, isNil } from '../utils/objects.helper';
 
 export interface SearchOptions {
   mandatoryQuery: boolean;
@@ -41,12 +42,12 @@ async function getFilter<Dto, T>(
   dto?: ClassType<Dto>,
   options?: SearchOptions,
 ): Promise<FilterQuery<T>> {
-  if (typeof dto === 'undefined') {
+  if (isNil(dto)) {
     return {};
   }
 
-  if (typeof query === 'undefined') {
-    if (options?.mandatoryQuery) {
+  if (isNil(query)) {
+    if (isDefined(options?.mandatoryQuery)) {
       throw new MissingQuery();
     }
 
@@ -78,7 +79,7 @@ async function getFilter<Dto, T>(
 function getOrderKey(key?: string): QueryOrder {
   const defaultOrder = QueryOrder.asc;
 
-  if (typeof key === 'string') {
+  if (isDefined(key)) {
     key = key.toLowerCase();
   } else {
     return defaultOrder;
@@ -92,7 +93,7 @@ function getOrderKey(key?: string): QueryOrder {
 }
 
 function getOrder(sort?: string, order?: string): QueryOrderMap {
-  if (typeof sort !== 'string') {
+  if (isNil(sort)) {
     return {};
   }
 

@@ -11,6 +11,7 @@ import {
   AuthorizationMetadata,
 } from '../decorators/allowed-app-roles.decorator';
 import { BaseAuthorizationService } from '../authorization/base.authorization.service';
+import { isDefined } from '../utils/objects.helper';
 
 type Grants = {
   [role in AppRoles]?: {
@@ -57,10 +58,10 @@ export abstract class BaseAuthorizationGuard implements CanActivate {
     const action = this.getActionFromHTTPMethod(request.method);
 
     // Set user roles and resource possession
-    const user: User = request.user;
+    const user: User | undefined | false = request.user;
     let userRoles: AppRoles[] = [];
 
-    if (user) {
+    if (isDefined(user) && typeof user !== 'boolean') {
       if (user.systemRole === SystemRole.Admin) {
         return true;
       }
@@ -73,7 +74,9 @@ export abstract class BaseAuthorizationGuard implements CanActivate {
     let possession: ResourcePossession = 'any';
 
     if (
-      typeof resourceId !== 'undefined' &&
+      isDefined(resourceId) &&
+      isDefined(user) &&
+      typeof user !== 'boolean' &&
       (await authorizationService.authorize(user.id, resourceId))
     ) {
       userRoles.push(AppRoles.OWNER);

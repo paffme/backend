@@ -5,6 +5,7 @@ import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { Boulder } from '../../bouldering/boulder/boulder.entity';
 import { BoulderNotFoundError } from '../../bouldering/errors/boulder-not-found.error';
+import { isNil } from '../../shared/utils/objects.helper';
 
 @Injectable()
 export class BoulderJudgeAuthorizationService extends BaseAuthorizationService {
@@ -21,7 +22,7 @@ export class BoulderJudgeAuthorizationService extends BaseAuthorizationService {
   ): Promise<boolean> {
     const boulder = await this.boulderRepository.findOne(boulderId, ['judges']);
 
-    if (!boulder) {
+    if (isNil(boulder)) {
       throw new BoulderNotFoundError();
     }
 
