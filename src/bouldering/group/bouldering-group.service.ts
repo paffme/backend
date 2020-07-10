@@ -34,6 +34,7 @@ import {
 } from '../ranking/ranking.utils';
 import { AddBoulderHoldsDto } from '../../competition/dto/in/body/add-boulder-holds.dto';
 import { RemoveBoulderHoldsDto } from '../../competition/dto/in/body/remove-boulder-holds.dto';
+import { isNil } from '../../shared/utils/objects.helper';
 
 export interface BoulderingGroupRankingsUpdateEventPayload {
   groupId: typeof BoulderingGroup.prototype.id;
@@ -83,7 +84,7 @@ export class BoulderingGroupService extends EE<BoulderingGroupServiceEvents> {
 
     const boulder = boulders.getItems()[0];
 
-    if (!boulder) {
+    if (isNil(boulder)) {
       throw new BoulderNotFoundError();
     }
 

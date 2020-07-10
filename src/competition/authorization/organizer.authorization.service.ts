@@ -5,6 +5,7 @@ import { Competition } from '../competition.entity';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { EntityRepository } from 'mikro-orm';
 import { CompetitionNotFoundError } from '../errors/competition-not-found.error';
+import { isNil } from '../../shared/utils/objects.helper';
 
 @Injectable()
 export class OrganizerAuthorizationService extends BaseAuthorizationService {
@@ -24,7 +25,7 @@ export class OrganizerAuthorizationService extends BaseAuthorizationService {
       ['organizers'],
     );
 
-    if (!competition) {
+    if (isNil(competition)) {
       throw new CompetitionNotFoundError();
     }
 

@@ -372,7 +372,7 @@ export class UserController {
   @AllowedSystemRoles(SystemRole.Admin, SystemRole.User)
   @AllowedAppRoles(AppRoles.OWNER)
   @UseGuards(AuthGuard('jwt'), AuthenticationGuard, UserAuthorizationGuard)
-  @ApiOkResponse({ type: undefined })
+  @ApiOkResponse({ type: JudgementAssignmentDto, isArray: true })
   @ApiOperation(
     GetOperationId(User.name, 'GetCompetitionJudgementsAssignments'),
   )

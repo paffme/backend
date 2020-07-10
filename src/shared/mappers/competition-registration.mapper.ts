@@ -3,17 +3,18 @@ import { BaseMapper } from './base.mapper';
 import { morphism } from 'morphism';
 import { CompetitionRegistrationDto } from '../../competition/dto/out/competition-registration.dto';
 import { CompetitionRegistration } from '../entity/competition-registration.entity';
+import { LimitedUserMapper } from './limited-user.mapper';
 
 @Injectable()
 export class CompetitionRegistrationMapper extends BaseMapper<
   CompetitionRegistrationDto,
   CompetitionRegistration
 > {
-  constructor() {
+  constructor(limitedUserMapper: LimitedUserMapper) {
     super({
       createdAt: 'createdAt',
       updatedAt: 'updatedAt',
-      userId: 'climber.id',
+      user: (registration) => limitedUserMapper.map(registration.climber),
       competitionId: 'competition.id',
     });
   }

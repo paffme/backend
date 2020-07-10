@@ -23,6 +23,7 @@ import { HoldsRecognitionService } from '../../holds-recognition/holds-recogniti
 import { EventEmitter as EE } from 'ee-ts';
 import { AddBoulderHoldsDto } from '../../competition/dto/in/body/add-boulder-holds.dto';
 import { RemoveBoulderHoldsDto } from '../../competition/dto/in/body/remove-boulder-holds.dto';
+import { isDefined, isNil } from '../../shared/utils/objects.helper';
 
 export interface HoldsRecognitionDoneEventPayload {
   boulderId: typeof Boulder.prototype.id;
@@ -50,7 +51,7 @@ export class BoulderService extends EE<BoulderServiceEvents> {
   async getOrFail(boulderId: typeof Boulder.prototype.id): Promise<Boulder> {
     const boulder = await this.boulderRepository.findOne(boulderId);
 
-    if (!boulder) {
+    if (isNil(boulder)) {
       throw new BoulderNotFoundError();
     }
 
@@ -112,7 +113,7 @@ export class BoulderService extends EE<BoulderServiceEvents> {
 
     const boulder = boulders.getItems()[0];
 
-    if (!boulder) {
+    if (isNil(boulder)) {
       throw new BoulderNotFoundError();
     }
 
@@ -190,7 +191,7 @@ export class BoulderService extends EE<BoulderServiceEvents> {
     photo: Buffer,
     extension: string,
   ): Promise<void> {
-    if (typeof boulder.photo === 'string') {
+    if (isDefined(boulder.photo)) {
       await this.removePhoto(boulder);
     }
 
@@ -206,7 +207,7 @@ export class BoulderService extends EE<BoulderServiceEvents> {
   }
 
   async removePhoto(boulder: Boulder): Promise<void> {
-    if (typeof boulder.photo !== 'string') {
+    if (isNil(boulder.photo)) {
       throw new BoulderHasNoPhotoError();
     }
 

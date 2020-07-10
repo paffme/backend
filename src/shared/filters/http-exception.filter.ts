@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { isNil } from '../utils/objects.helper';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -15,10 +16,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const req = ctx.getRequest();
     const status = error.getStatus();
 
-    if (
-      status === HttpStatus.UNAUTHORIZED &&
-      typeof error.response !== 'string'
-    ) {
+    if (status === HttpStatus.UNAUTHORIZED && isNil(error.response)) {
       error.response.message =
         error.response.message ||
         'You do not have permission to access this resource';

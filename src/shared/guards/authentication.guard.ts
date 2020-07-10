@@ -3,6 +3,7 @@ import { Reflector } from '@nestjs/core';
 import { SystemRole } from '../../user/user-role.enum';
 import { User } from '../../user/user.entity';
 import { UnauthorizedError } from '../authentication/unauthorized.error';
+import { isDefined, isNil } from '../utils/objects.helper';
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
@@ -14,14 +15,18 @@ export class AuthenticationGuard implements CanActivate {
       context.getHandler(),
     );
 
-    if (!roles || roles.length === 0) {
+    if (isNil(roles) || roles.length === 0) {
       return true;
     }
 
     const request = context.switchToHttp().getRequest();
-    const user: User = request.user;
+    const user: User | undefined | false = request.user;
 
-    if (user && roles.includes(user.systemRole)) {
+    if (
+      isDefined(user) &&
+      typeof user !== 'boolean' &&
+      roles.includes(user.systemRole)
+    ) {
       return true;
     }
 

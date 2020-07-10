@@ -3,6 +3,7 @@ import { BoulderingRound } from '../round/bouldering-round.entity';
 import { getExAequoClimbers, handleExAequosRankings } from './ranking.utils';
 import { RankingsMap } from '../types/rankings-map';
 import { CompetitionRoundTypeOrdering } from '../../competition/competition-round-type.enum';
+import { isNil } from '../../shared/utils/objects.helper';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -39,7 +40,7 @@ export class BoulderingRankingService {
   private getRoundRankingsMap(round: BoulderingRound): RankingsMap {
     const roundRankingsMap: RankingsMap = new Map();
 
-    if (typeof round.rankings === 'undefined') {
+    if (isNil(round.rankings)) {
       return roundRankingsMap;
     }
 
@@ -75,7 +76,7 @@ export class BoulderingRankingService {
       .reduce((count, g) => count + g.climbers.count(), 0);
 
     for (const round of sortedRoundsByReverseOrder) {
-      if (!round.rankings) {
+      if (isNil(round.rankings)) {
         continue;
       }
 

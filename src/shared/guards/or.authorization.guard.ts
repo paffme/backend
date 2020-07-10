@@ -8,6 +8,7 @@ import {
   Optional,
   Type,
 } from '@nestjs/common';
+import { isDefined, isNil } from '../utils/objects.helper';
 
 interface Constructor<AuthorizationGuard> {
   new (...args: any[]): AuthorizationGuard;
@@ -37,11 +38,11 @@ export function OrGuard<
     ) {
       this.guards.push(firstGuard, secondGuard);
 
-      if (typeof thirdGuard !== 'undefined') {
+      if (isDefined(thirdGuard)) {
         this.guards.push(thirdGuard);
       }
 
-      if (typeof fourthGuard !== 'undefined') {
+      if (isDefined(fourthGuard)) {
         this.guards.push(fourthGuard);
       }
     }

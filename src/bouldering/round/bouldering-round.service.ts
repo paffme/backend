@@ -47,6 +47,7 @@ import {
 } from '../group/bouldering-group.entity';
 import { AddBoulderHoldsDto } from '../../competition/dto/in/body/add-boulder-holds.dto';
 import { RemoveBoulderHoldsDto } from '../../competition/dto/in/body/remove-boulder-holds.dto';
+import { isDefined, isNil } from '../../shared/utils/objects.helper';
 
 export interface BoulderingRoundRankingsUpdateEventPayload {
   roundId: typeof BoulderingRound.prototype.id;
@@ -80,7 +81,7 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
       populate,
     );
 
-    if (!round) {
+    if (isNil(round)) {
       throw new RoundNotFoundError();
     }
 
@@ -103,12 +104,12 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
     }
 
     if (dto.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST) {
-      if (typeof dto.maxTries !== 'number') {
+      if (isNil(dto.maxTries)) {
         throw new InvalidRoundError(
           'maxTries is mandatory for a limited contest',
         );
       }
-    } else if (typeof dto.maxTries === 'number') {
+    } else if (isDefined(dto.maxTries)) {
       throw new InvalidRoundError(
         'maxTries should not be defined for an non limited contest',
       );
@@ -195,7 +196,7 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
     };
 
     for (const group of round.groups.getItems()) {
-      if (group.rankings) {
+      if (isDefined(group.rankings)) {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         mergedRankings.rankings.push(...group.rankings.rankings);
@@ -244,7 +245,7 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
 
     const group = round.groups.getItems().find((g) => g.id === groupId);
 
-    if (!group) {
+    if (isNil(group)) {
       throw new GroupNotFoundError();
     }
 
@@ -317,7 +318,7 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
       quota = RoundQuotaConfig.get(climbers);
     }
 
-    if (!quota) {
+    if (isNil(quota)) {
       return 0;
     }
 
@@ -338,7 +339,7 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
 
     const group = groups.getItems()[0];
 
-    if (!group) {
+    if (isNil(group)) {
       throw new GroupNotFoundError();
     }
 
@@ -402,7 +403,7 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
       .getItems()
       .filter((r) => r !== round);
 
-    if (dto.type) {
+    if (isDefined(dto.type)) {
       const roundWithTypeExists = otherRounds.some((r) => r.type === dto.type);
 
       if (roundWithTypeExists) {
@@ -410,7 +411,7 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
       }
     }
 
-    if (dto.state) {
+    if (isDefined(dto.state)) {
       const groups = await round.groups.loadItems();
       await this.boulderingGroupService.updateState(groups, dto.state);
       delete dto.state;
@@ -480,7 +481,7 @@ export class BoulderingRoundService extends EE<BoulderingRoundServiceEvents> {
   ): Promise<BoulderingGroupRankings> {
     const group = await this.getGroupOrFail(round, groupId);
 
-    if (typeof group.rankings === 'undefined') {
+    if (isNil(group.rankings)) {
       throw new RankingsNotFoundError();
     }
 
