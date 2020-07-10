@@ -80,6 +80,7 @@ import { ConfigurationService } from '../shared/configuration/configuration.serv
 // @ts-ignore
 import probeImageSize from 'probe-image-size';
 import * as fs from 'fs';
+import { isDefined, isNil } from '../shared/utils/objects.helper';
 
 export interface CompetitionRankingsUpdateEventPayload {
   competitionId: typeof Competition.prototype.id;
@@ -122,7 +123,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
       populate,
     );
 
-    if (!competition) {
+    if (isNil(competition)) {
       throw new CompetitionNotFoundError();
     }
 
@@ -266,7 +267,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
       climber,
     });
 
-    if (!registration) {
+    if (isNil(registration)) {
       throw new RegistrationNotFoundError();
     }
 
@@ -481,7 +482,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
       (r) => r.climber.id === user.id,
     );
 
-    if (!climberRegistered) {
+    if (isNil(climberRegistered)) {
       throw new ClimberNotRegisteredError();
     }
 
@@ -629,7 +630,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
 
     const round = rounds.getItems()[0];
 
-    if (!round) {
+    if (isNil(round)) {
       throw new RoundNotFoundError();
     }
 
@@ -676,7 +677,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
       roundId,
     );
 
-    if (!round.rankings) {
+    if (isNil(round.rankings)) {
       throw new RankingsNotFoundError();
     }
 
@@ -757,8 +758,8 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
     for (const r of startedRounds) {
       const previousRound = competition.getPreviousRound(r);
 
-      if (previousRound) {
-        if (!previousRound.rankings) {
+      if (isDefined(previousRound)) {
+        if (isNil(previousRound.rankings)) {
           throw new NoPreviousRoundRankingsError();
         }
 
@@ -1114,7 +1115,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
       boulderId,
     );
 
-    if (typeof boulder.photo !== 'string') {
+    if (isNil(boulder.photo)) {
       throw new BoulderHasNoPhotoError();
     }
 

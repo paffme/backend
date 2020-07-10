@@ -1,5 +1,6 @@
 import { User } from '../../user/user.entity';
 import { RankingsMap } from '../types/rankings-map';
+import { isDefined, isNil } from '../../shared/utils/objects.helper';
 
 export function getExAequoClimbers(
   rankings: RankingsMap,
@@ -60,7 +61,7 @@ export function handleExAequosRankings<Results>(
     let ranking: number;
 
     if (
-      typeof previousClimberRanking === 'number' &&
+      isDefined(previousClimberRanking) &&
       previousClimberEntry &&
       exAequoFn(entry, previousClimberEntry)
     ) {
@@ -108,7 +109,7 @@ export function getRankingDiff(
     const oldRanking = oldRankings.find((r) => r.climberId === climberId);
     const newRanking = newRankings.find((r) => r.climberId === climberId);
 
-    if (typeof oldRanking === 'undefined') {
+    if (isNil(oldRanking)) {
       diff.push({
         climberId,
         added: true,
@@ -117,7 +118,7 @@ export function getRankingDiff(
       continue;
     }
 
-    if (typeof newRanking === 'undefined') {
+    if (isNil(newRanking)) {
       diff.push({
         climberId,
         removed: true,

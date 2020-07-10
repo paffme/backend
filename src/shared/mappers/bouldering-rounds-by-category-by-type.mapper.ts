@@ -12,6 +12,7 @@ import { CategoryName } from '../types/category-name.enum';
 import { BoulderingLimitedRoundMapper } from './bouldering-limited-round.mapper';
 import { Sex } from '../types/sex.enum';
 import { CompetitionRoundType } from '../../competition/competition-round-type.enum';
+import { isDefined } from '../utils/objects.helper';
 
 @Injectable()
 export class RoundByTypeMapper extends BaseMapper<
@@ -23,21 +24,21 @@ export class RoundByTypeMapper extends BaseMapper<
       [CompetitionRoundType.QUALIFIER]: (roundByType) => {
         const round = roundByType[CompetitionRoundType.QUALIFIER];
 
-        if (round) {
+        if (isDefined(round)) {
           return boulderingMapper.map(round);
         }
       },
       [CompetitionRoundType.SEMI_FINAL]: (roundByType) => {
         const round = roundByType[CompetitionRoundType.SEMI_FINAL];
 
-        if (round) {
+        if (isDefined(round)) {
           return boulderingMapper.map(round);
         }
       },
       [CompetitionRoundType.FINAL]: (roundByType) => {
         const round = roundByType[CompetitionRoundType.FINAL];
 
-        if (round) {
+        if (isDefined(round)) {
           return boulderingMapper.map(round);
         }
       },
@@ -67,14 +68,14 @@ export class RoundBySexMapper extends BaseMapper<
       [Sex.Female]: (roundBySex) => {
         const roundByType = roundBySex[Sex.Female];
 
-        if (roundByType) {
+        if (isDefined(roundByType)) {
           return roundByTypeMapper.map(roundByType);
         }
       },
       [Sex.Male]: (roundBySex) => {
         const roundByType = roundBySex[Sex.Male];
 
-        if (roundByType) {
+        if (isDefined(roundByType)) {
           return roundByTypeMapper.map(roundByType);
         }
       },
@@ -106,56 +107,56 @@ export class BoulderingRoundsByCategoryByTypeMapper extends BaseMapper<
       [CategoryName.Microbe]: (roundByCategory) => {
         const roundBySex = roundByCategory[CategoryName.Microbe];
 
-        if (roundBySex) {
+        if (isDefined(roundBySex)) {
           return roundBySexMapper.map(roundBySex);
         }
       },
       [CategoryName.Poussin]: (roundByCategory) => {
         const roundBySex = roundByCategory[CategoryName.Poussin];
 
-        if (roundBySex) {
+        if (isDefined(roundBySex)) {
           return roundBySexMapper.map(roundBySex);
         }
       },
       [CategoryName.Benjamin]: (roundByCategory) => {
         const roundBySex = roundByCategory[CategoryName.Benjamin];
 
-        if (roundBySex) {
+        if (isDefined(roundBySex)) {
           return roundBySexMapper.map(roundBySex);
         }
       },
       [CategoryName.Minime]: (roundByCategory) => {
         const roundBySex = roundByCategory[CategoryName.Minime];
 
-        if (roundBySex) {
+        if (isDefined(roundBySex)) {
           return roundBySexMapper.map(roundBySex);
         }
       },
       [CategoryName.Cadet]: (roundByCategory) => {
         const roundBySex = roundByCategory[CategoryName.Cadet];
 
-        if (roundBySex) {
+        if (isDefined(roundBySex)) {
           return roundBySexMapper.map(roundBySex);
         }
       },
       [CategoryName.Junior]: (roundByCategory) => {
         const roundBySex = roundByCategory[CategoryName.Junior];
 
-        if (roundBySex) {
+        if (isDefined(roundBySex)) {
           return roundBySexMapper.map(roundBySex);
         }
       },
       [CategoryName.Senior]: (roundByCategory) => {
         const roundBySex = roundByCategory[CategoryName.Senior];
 
-        if (roundBySex) {
+        if (isDefined(roundBySex)) {
           return roundBySexMapper.map(roundBySex);
         }
       },
       [CategoryName.Veteran]: (roundByCategory) => {
         const roundBySex = roundByCategory[CategoryName.Veteran];
 
-        if (roundBySex) {
+        if (isDefined(roundBySex)) {
           return roundBySexMapper.map(roundBySex);
         }
       },

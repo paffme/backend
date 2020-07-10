@@ -6,6 +6,7 @@ import { AuthenticationService } from '../authentication.service';
 import { JwtPayload } from '../jwt-payload.interface';
 import { User } from '../../../user/user.entity';
 import { UnauthorizedError } from '../unauthorized.error';
+import { isNil } from '../../utils/objects.helper';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -23,7 +24,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: JwtPayload): Promise<User> {
     const user = await this.authService.validateUser(payload);
 
-    if (!user) {
+    if (isNil(user)) {
       throw new UnauthorizedError();
     }
 

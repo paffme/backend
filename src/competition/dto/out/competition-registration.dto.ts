@@ -1,13 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { User } from '../../../user/user.entity';
 import { Competition } from '../../competition.entity';
 import { BaseDto } from '../../../shared/base.dto';
+import { UserLimitedDto } from '../../../user/dto/out/user-limited.dto';
 
 export class CompetitionRegistrationDto extends BaseDto {
   @ApiProperty({
-    type: Number,
+    type: UserLimitedDto,
   })
-  userId!: typeof User.prototype.id;
+  user!: UserLimitedDto;
 
   @ApiProperty({
     type: Number,

@@ -97,6 +97,7 @@ import { BoulderPhotoDto } from './dto/out/boulder-photo.dto';
 import { AddBoulderHoldsParamsDto } from './dto/in/params/add-boulder-holds-params.dto';
 import { AddBoulderHoldsDto } from './dto/in/body/add-boulder-holds.dto';
 import { RemoveBoulderHoldsDto } from './dto/in/body/remove-boulder-holds.dto';
+import { isNil } from '../shared/utils/objects.helper';
 
 /* eslint-disable sonarjs/no-duplicate-string */
 
@@ -243,11 +244,7 @@ export class BoulderingController {
     @Param() params: AddBoulderingResultParamsDto,
     @Body() dto: CreateBoulderingResultDto,
   ): Promise<BoulderingResultDto> {
-    if (
-      typeof dto.try === 'undefined' &&
-      typeof dto.zone === 'undefined' &&
-      typeof dto.top === 'undefined'
-    ) {
+    if (isNil(dto.try) && isNil(dto.zone) && isNil(dto.top)) {
       throw new InvalidResultError();
     }
 

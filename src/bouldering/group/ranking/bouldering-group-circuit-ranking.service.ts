@@ -18,6 +18,7 @@ import {
 
 import { CompetitionRoundType } from '../../../competition/competition-round-type.enum';
 import { BoulderingRoundRankingType } from '../../round/bouldering-round.entity';
+import { isNil } from '../../../shared/utils/objects.helper';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -314,7 +315,7 @@ export class BoulderingGroupCircuitRankingService
         const climberA = climbers[i];
         const climberATryOccurrence = tryOccurrence.get(climberA)!.get(tryId);
 
-        if (typeof climberATryOccurrence === 'undefined') {
+        if (isNil(climberATryOccurrence)) {
           continue;
         }
 
@@ -328,7 +329,7 @@ export class BoulderingGroupCircuitRankingService
           const climberBTryOccurrence = tryOccurrence.get(climberB)!.get(tryId);
 
           if (
-            typeof climberBTryOccurrence === 'undefined' ||
+            isNil(climberBTryOccurrence) ||
             climberATryOccurrence > climberBTryOccurrence
           ) {
             rankings.set(climberB, rankings.get(climberB)! + 1);

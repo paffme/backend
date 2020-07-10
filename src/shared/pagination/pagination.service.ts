@@ -8,6 +8,7 @@ import {
 import LinkHeader from 'http-link-header';
 import { Response } from 'express';
 import { ConfigurationService } from '../configuration/configuration.service';
+import { isNil } from '../utils/objects.helper';
 
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 
@@ -118,7 +119,7 @@ export class PaginationService {
   private getCurrentPage(url: URL): number {
     const param = url.searchParams.get(PAGE);
 
-    if (param === null) {
+    if (isNil(param)) {
       return DEFAULT_PAGE;
     }
 
@@ -128,7 +129,7 @@ export class PaginationService {
   private getCurrentPerPage(url: URL): number {
     const param = url.searchParams.get(PER_PAGE);
 
-    if (param === null) {
+    if (isNil(param)) {
       return DEFAULT_PER_PAGE;
     }
 

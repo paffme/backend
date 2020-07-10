@@ -22,6 +22,7 @@ import {
 } from '../../competition/dto/in/body/bulk-bouldering-results.dto';
 import { BoulderingRoundRankingType } from '../round/bouldering-round.entity';
 import { BoulderingResultNotFoundError } from '../errors/bouldering-result-not-found.error';
+import { isDefined, isNil } from '../../shared/utils/objects.helper';
 
 @Injectable()
 export class BoulderingResultService {
@@ -71,7 +72,7 @@ export class BoulderingResultService {
   ): Promise<BoulderingResult> {
     const result = await this.get(group, boulder, climber);
 
-    if (!result) {
+    if (isNil(result)) {
       throw new BoulderingResultNotFoundError();
     }
 
@@ -85,7 +86,7 @@ export class BoulderingResultService {
   ): Promise<BoulderingResult> {
     const result = await this.get(group, boulder, climber);
 
-    if (!result) {
+    if (isNil(result)) {
       return this.createNewInstance(group, boulder, climber);
     }
 
@@ -105,7 +106,7 @@ export class BoulderingResultService {
 
     const result = await this.getOrCreateNewInstance(group, boulder, climber);
 
-    if (typeof dto.try === 'number') {
+    if (isDefined(dto.try)) {
       if (!group.round.isRankingWithCountedTries()) {
         throw new WrongResultForRoundError(
           "Can't modify tries for this kind of round",
@@ -113,7 +114,7 @@ export class BoulderingResultService {
       }
 
       if (
-        typeof group.round.maxTries === 'number' &&
+        isDefined(group.round.maxTries) &&
         result.tries + dto.try > group.round.maxTries
       ) {
         throw new MaxTriesReachedError();
@@ -122,7 +123,7 @@ export class BoulderingResultService {
       result.tries = Math.max(0, result.tries + dto.try);
     }
 
-    if (typeof dto.top === 'boolean') {
+    if (isDefined(dto.top)) {
       result.top = dto.top;
 
       if (group.round.isRankingWithCountedTries()) {
@@ -139,7 +140,7 @@ export class BoulderingResultService {
       }
     }
 
-    if (typeof dto.zone === 'boolean') {
+    if (isDefined(dto.zone)) {
       if (!group.round.isRankingWithCountedZones()) {
         throw new WrongResultForRoundError(
           "Can't add a zone for this kind of round",
@@ -217,13 +218,13 @@ export class BoulderingResultService {
       dto.results.map((result) => {
         const boulder = boulders.find((b) => b.id === result.boulderId);
 
-        if (!boulder) {
+        if (isNil(boulder)) {
           throw new BoulderNotInGroupError();
         }
 
         const climber = climbers.find((c) => c.id === result.climberId);
 
-        if (!climber) {
+        if (isNil(climber)) {
           throw new ClimberNotInGroupError();
         }
 

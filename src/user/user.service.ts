@@ -23,6 +23,7 @@ import { InvalidCredentialsError } from './errors/invalid-credentials.error';
 import { UserNotFoundError } from './errors/user-not-found.error';
 import { JudgementAssignment } from './interfaces/judgement-assignement.type';
 import { BoulderingRoundState } from '../bouldering/round/bouldering-round.entity';
+import { isDefined, isNil } from '../shared/utils/objects.helper';
 
 @Injectable()
 export class UserService {
@@ -42,7 +43,7 @@ export class UserService {
 
     return new Promise((resolve, reject) => {
       scrypt(password, salt, scryptLen, (err, derivedKey) => {
-        if (err) {
+        if (isDefined(err)) {
           return reject(err);
         }
 
@@ -71,7 +72,7 @@ export class UserService {
         Buffer.from(salt, this.SCRYPT_MEMBERS_ENCODING),
         Number(scryptLen),
         (err, derivedKey) => {
-          if (err) {
+          if (isDefined(err)) {
             return reject(err);
           }
 
@@ -141,7 +142,7 @@ export class UserService {
       email,
     });
 
-    if (!user) {
+    if (isNil(user)) {
       throw new InvalidCredentialsError();
     }
 
@@ -175,11 +176,11 @@ export class UserService {
   ): Promise<User> {
     const user = await this.getOrFail(userId);
 
-    if (dto.password) {
+    if (isDefined(dto.password)) {
       dto.password = await this.hashPassword(dto.password);
     }
 
-    if (dto.email) {
+    if (isDefined(dto.email)) {
       const exists = await this.userRepository.count({
         email: dto.email,
       });
@@ -203,13 +204,13 @@ export class UserService {
       id: userId,
     };
 
-    if (where) {
+    if (isDefined(where)) {
       Object.assign(whereQuery, where);
     }
 
     const user = await this.userRepository.findOne(whereQuery, populate);
 
-    if (!user) {
+    if (isNil(user)) {
       throw new UserNotFoundError();
     }
 
