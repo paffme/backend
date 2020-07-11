@@ -242,6 +242,7 @@ export class CompetitionService extends EE<CompetitionServiceEvents> {
         competition,
       },
       {
+        populate: ['climber'],
         limit: offsetLimitRequest.limit,
         offset: offsetLimitRequest.offset,
       },

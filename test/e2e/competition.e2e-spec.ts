@@ -490,6 +490,9 @@ describe('Competition (e2e)', () => {
         expect(registration).toBeTruthy();
         expect(registration).toHaveProperty('createdAt');
         expect(registration).toHaveProperty('updatedAt');
+        expect(registration.user.id).toEqual(user.id);
+        expect(registration.user.firstName).toEqual(user.firstName);
+        expect(registration.user.lastName).toEqual(user.lastName);
       });
 
       it('gets registrations with pagination', async function () {
