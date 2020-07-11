@@ -1,5 +1,5 @@
 import { WebSocketGateway } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { BaseWebsocket } from './base.websocket';
 import { BoulderService } from '../bouldering/boulder/boulder.service';
 import { HoldsRecognitionDoneEventDto } from './dto/out/holds-recognition-done-event.dto';
@@ -10,8 +10,8 @@ enum BoulderEvents {
 
 @WebSocketGateway({ namespace: 'boulders' })
 export class BoulderWebsocket extends BaseWebsocket {
-  constructor(private readonly boulderService: BoulderService) {
-    super(new Logger(BoulderWebsocket.name));
+  constructor(private readonly boulderService: BoulderService, logger: Logger) {
+    super(logger);
 
     boulderService.on('holdsRecognitionDone', (eventPayload) => {
       this.server

@@ -43,6 +43,7 @@
     "morphism": "^2.2.3",
     "ms": "^2.1.2",
     "nestjs-mikro-orm": "^1.0.3",
+    "nestjs-pino": "^1.2.0",
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "pdfmake": "^0.1.66",

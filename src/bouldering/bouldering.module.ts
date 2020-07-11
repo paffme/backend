@@ -14,6 +14,7 @@ import { BoulderingGroupLimitedContestRankingService } from './group/ranking/bou
 import { BoulderingGroupUnlimitedContestRankingService } from './group/ranking/bouldering-group-unlimited-contest-ranking.service';
 import { BoulderingGroupCircuitRankingService } from './group/ranking/bouldering-group-circuit-ranking.service';
 import { HoldsRecognitionModule } from '../holds-recognition/holds-recognition.module';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { HoldsRecognitionModule } from '../holds-recognition/holds-recognition.m
     MikroOrmModule.forFeature({
       entities: [BoulderingResult, BoulderingRound, Boulder, BoulderingGroup],
     }),
+    LoggerModule.forRoot(),
   ],
   controllers: [],
   providers: [

@@ -1,5 +1,5 @@
 import { WebSocketGateway } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { BaseWebsocket } from './base.websocket';
 import { CompetitionService } from '../competition/competition.service';
 import { CompetitionRankingsUpdateEventDto } from './dto/out/competition-rankings-update-event.dto';
@@ -10,8 +10,11 @@ enum CompetitionRankingsEvents {
 
 @WebSocketGateway({ namespace: 'competition-rankings' })
 export class CompetitionRankingsWebsocket extends BaseWebsocket {
-  constructor(private readonly competitionService: CompetitionService) {
-    super(new Logger(CompetitionRankingsWebsocket.name));
+  constructor(
+    private readonly competitionService: CompetitionService,
+    logger: Logger,
+  ) {
+    super(logger);
 
     competitionService.on('rankingsUpdate', (eventPayload) => {
       this.server

@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
-
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectRepository } from 'nestjs-mikro-orm';
 import { Collection, EntityRepository } from 'mikro-orm';
 import { Boulder, BoundingBox } from './boulder.entity';
@@ -24,6 +19,7 @@ import { EventEmitter as EE } from 'ee-ts';
 import { AddBoulderHoldsDto } from '../../competition/dto/in/body/add-boulder-holds.dto';
 import { RemoveBoulderHoldsDto } from '../../competition/dto/in/body/remove-boulder-holds.dto';
 import { isDefined, isNil } from '../../shared/utils/objects.helper';
+import { Logger } from 'nestjs-pino';
 
 export interface HoldsRecognitionDoneEventPayload {
   boulderId: typeof Boulder.prototype.id;
@@ -36,14 +32,13 @@ export interface BoulderServiceEvents {
 
 @Injectable()
 export class BoulderService extends EE<BoulderServiceEvents> {
-  private readonly logger = new Logger(BoulderService.name);
-
   constructor(
     @InjectRepository(Boulder)
     private readonly boulderRepository: EntityRepository<Boulder>,
     private readonly userService: UserService,
     private readonly configurationService: ConfigurationService,
     private readonly holdsRecognitionService: HoldsRecognitionService,
+    private readonly logger: Logger,
   ) {
     super();
   }

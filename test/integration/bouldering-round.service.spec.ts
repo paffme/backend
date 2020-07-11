@@ -45,6 +45,7 @@ import { BoulderingGroupLimitedContestRankingService } from '../../src/boulderin
 import { BoulderingGroupCircuitRankingService } from '../../src/bouldering/group/ranking/bouldering-group-circuit-ranking.service';
 import { PdfService } from '../../src/pdf/pdf.service';
 import { HoldsRecognitionService } from '../../src/holds-recognition/holds-recognition.service';
+import { LoggerModule } from 'nestjs-pino/dist';
 
 describe('Bouldering round service (integration)', () => {
   let boulderingRoundService: BoulderingRoundService;
@@ -82,6 +83,7 @@ describe('Bouldering round service (integration)', () => {
           ],
         }),
         SharedModule,
+        LoggerModule.forRoot(),
       ],
     }).compile();
 

@@ -5,9 +5,10 @@ import { RoundRankingsWebsocket } from './round-rankings.websocket';
 import { CompetitionRankingsWebsocket } from './competition-rankings.websocket';
 import { CompetitionModule } from '../competition/competition.module';
 import { BoulderWebsocket } from './boulder.websocket';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
-  imports: [BoulderingModule, CompetitionModule],
+  imports: [BoulderingModule, CompetitionModule, LoggerModule.forRoot()],
   providers: [
     GroupRankingsWebsocket,
     RoundRankingsWebsocket,

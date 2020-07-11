@@ -29,6 +29,7 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 import pEvent from 'p-event';
 import { BoulderHasNoPhotoError } from '../../../src/competition/errors/boulder-has-no-photo.error';
+import { LoggerModule } from 'nestjs-pino/dist';
 
 const boulderRepositoryMock: RepositoryMock = {
   persistAndFlush: jest.fn(),
@@ -76,6 +77,7 @@ describe('Boulder service (unit)', () => {
           useValue: holdsRecognitionServiceMock,
         },
       ],
+      imports: [LoggerModule.forRoot()],
     }).compile();
 
     boulderService = module.get(BoulderService);

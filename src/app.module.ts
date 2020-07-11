@@ -9,6 +9,7 @@ import { SharedModule } from './shared/shared.module';
 import { AppService } from './app.service';
 import { CompetitionModule } from './competition/competition.module';
 import { WebsocketModule } from './websocket/websocket.module';
+import { LoggerModule } from 'nestjs-pino';
 
 @Module({
   controllers: [AppController],
@@ -18,6 +19,7 @@ import { WebsocketModule } from './websocket/websocket.module';
     UserModule,
     CompetitionModule,
     WebsocketModule,
+    LoggerModule.forRoot(),
   ],
   providers: [AppService],
 })
