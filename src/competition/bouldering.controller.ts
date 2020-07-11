@@ -401,7 +401,7 @@ export class BoulderingController {
     FileInterceptor('photo', {
       limits: {
         files: 1,
-        fileSize: 1.2e7,
+        fileSize: 9.6e7,
       },
       storage: multer.memoryStorage(),
     }),
