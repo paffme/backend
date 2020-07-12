@@ -179,14 +179,16 @@ export class BoulderingResultService {
       group.round.rankingType === BoulderingRoundRankingType.LIMITED_CONTEST
     ) {
       const countedTriesResult = result as CircuitResult;
-
+      const topInTries = countedTriesResult.topInTries ?? instance.topInTries;
       const zoneInTries =
         countedTriesResult.zoneInTries ?? instance.zoneInTries;
 
-      const topInTries = Math.max(
-        zoneInTries,
-        countedTriesResult.topInTries ?? instance.topInTries,
-      );
+      //
+      // if (zoneInTries > topInTries && topInTries > 0) {
+      //   throw new InvalidBulkResultError(
+      //     'zoneInTries cannot be greater than topInTries',
+      //   );
+      // }
 
       const top = topInTries > 0;
       const zone = zoneInTries > 0;
