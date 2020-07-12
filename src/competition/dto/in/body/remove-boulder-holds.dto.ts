@@ -7,7 +7,7 @@ import {
   IsArray,
   IsEnum,
   IsInt,
-  IsPositive,
+  Min,
   ValidateNested,
 } from 'class-validator';
 
@@ -24,7 +24,7 @@ class BoundingBoxDto {
   @ArrayMinSize(4)
   @ArrayMaxSize(4)
   @IsInt({ each: true })
-  @IsPositive({ each: true })
+  @Min(0, { each: true })
   coordinates!: BoundingBoxCoordinates;
 
   @ApiProperty({ enum: BoundingBoxType })
